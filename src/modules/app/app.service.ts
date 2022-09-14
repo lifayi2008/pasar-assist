@@ -9,7 +9,7 @@ import { Cache } from 'cache-manager';
 import { OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Chain } from '../utils/enums';
-import { AppConfig } from "../../app-config";
+import { AppConfig } from '../../app-config';
 
 @Injectable()
 export class AppService {
@@ -286,15 +286,12 @@ export class AppService {
     //   })
     //   .then(console.log);
 
-    // this.web3Service.pasarContractRPC[Chain.ELA].methods
-    //   .getOrderById(1)
-    //   .call()
-    //   .then(console.log);
-    // this.web3Service.pasarContractWS[Chain.ELA]
-    //   .getPastEvents('OrderForAuction', {
-    //     fromBlock,
-    //     toBlock: fromBlock + 50000,
-    //   })
-    //   .then(console.log);
+    // this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(34).call().then(console.log);
+    this.web3Service.pasarContractWS[Chain.ELA]
+      .getPastEvents('OrderCanceled', {
+        fromBlock,
+        toBlock: fromBlock + 50000,
+      })
+      .then(console.log);
   }
 }

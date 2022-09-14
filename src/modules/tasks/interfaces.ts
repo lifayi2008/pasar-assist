@@ -34,6 +34,8 @@ export interface ContractOrderInfo {
   isBlindBox: boolean;
   createTime: number;
   updateTime: number;
+  chain: string;
+  contract: string;
 }
 
 export interface ContractUserInfo {

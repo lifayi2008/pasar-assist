@@ -45,7 +45,7 @@ export class TasksService {
     this.rpc = this.web3Service.web3RPC[Chain.ELA];
   }
 
-  // @Timeout('transfer', 1000)
+  @Timeout('transfer', 1000)
   async handleTransferEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getTokenEventLastHeight(
@@ -148,7 +148,7 @@ export class TasksService {
     }
   }
 
-  // @Timeout('orderForAuction', 30 * 1000)
+  @Timeout('orderForAuction', 30 * 1000)
   async handleOrderForAuctionEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -209,6 +209,7 @@ export class TasksService {
       seller: event.returnValues._seller,
       orderId: event.returnValues._orderId,
       tokenId: event.returnValues._tokenId,
+      baseToken: event.returnValues._baseToken,
       amount: event.returnValues._amount,
       quoteToken: event.returnValues._quoteToken,
       minPrice: event.returnValues._minPrice,
@@ -233,6 +234,9 @@ export class TasksService {
       Chain.ELA,
     );
 
+    contractOrderInfo.chain = Chain.ELA;
+    contractOrderInfo.contract = this.pasarContract;
+
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
@@ -247,10 +251,14 @@ export class TasksService {
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  //@Timeout('orderBid', 60 * 1000)
+  @Timeout('orderBid', 60 * 1000)
   async handleOrderBidEvent() {
-    const nowHeight = await this.web3Service.web3RPC[Chain.ELA].eth.getBlockNumber();
-    const lastHeight = await this.dbService.getBidOrderEventLastHeight();
+    const nowHeight = await this.rpc.eth.getBlockNumber();
+    const lastHeight = await this.dbService.getOrderEventLastHeight(
+      Chain.ELA,
+      this.stickerContract,
+      OrderEventType.OrderBid,
+    );
 
     let syncStartBlock = lastHeight;
 
@@ -261,7 +269,7 @@ export class TasksService {
       let toBlock = fromBlock + this.step;
       while (fromBlock <= nowHeight) {
         this.logger.log(`Sync past OrderBid events from [${fromBlock}] to [${toBlock}]`);
-        this.web3Service.pasarContractWS[Chain.ELA]
+        this.pasarContractWS
           .getPastEvents('OrderBid', {
             fromBlock,
             toBlock,
@@ -306,33 +314,11 @@ export class TasksService {
 
     this.logger.log(`Received BidOrder Event: ${JSON.stringify(eventInfo)}`);
 
-    await this.orderDataQueue.add(
-      'update-order-price',
-      {
-        blockNumber: event.blockNumber,
-        orderId: parseInt(eventInfo.orderId),
-        orderPrice: parseInt(eventInfo.price),
-      },
-      { removeOnComplete: true },
-    );
-
-    await this.orderDataQueue.add(
-      'update-order-buyer',
-      {
-        blockNumber: event.blockNumber,
-        orderId: parseInt(eventInfo.orderId),
-        buyer: eventInfo.buyer,
-      },
-      { removeOnComplete: true },
-    );
-
-    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, txInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
-          method: this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(
-            event.returnValues._orderId,
-          ).call,
+          method: this.pasarContractRPC.methods.getOrderById(event.returnValues._orderId).call,
           params: {},
         },
       ],
@@ -342,31 +328,23 @@ export class TasksService {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
+      chain: Chain.ELA,
+      contract: this.pasarContract,
       eventType: OrderEventType.OrderBid,
-      // gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
       timestamp: blockInfo.timestamp,
     });
 
     await orderEvent.save();
 
     await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
-      orderState: parseInt(contractOrderInfo.orderState),
-      buyerAddr: contractOrderInfo.buyerAddr,
-      buyerUri: contractOrderInfo.buyerUri,
-      filled: parseInt(contractOrderInfo.filled),
-      platformAddr: contractOrderInfo.platformAddr,
-      platformFee: parseInt(contractOrderInfo.platformFee),
-      updateTime: parseInt(contractOrderInfo.updateTime),
-      bids: parseInt(contractOrderInfo.bids),
-      lastBid: parseInt(contractOrderInfo.lastBid),
-      lastBidder: contractOrderInfo.lastBidder,
-      price: contractOrderInfo.price,
+      ...contractOrderInfo,
     });
   }
 
-  //@Timeout('orderForSale', 30 * 1000)
+  @Timeout('orderForSale', 30 * 1000)
   async handleOrderForSaleEvent() {
-    const nowHeight = await this.web3Service.web3RPC[Chain.ELA].eth.getBlockNumber();
+    const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       this.stickerContract,
@@ -383,7 +361,7 @@ export class TasksService {
 
       while (fromBlock <= nowHeight) {
         this.logger.log(`Sync past OrderForSale events from [${fromBlock}] to [${toBlock}]`);
-        this.web3Service.pasarContractWS[Chain.ELA]
+        this.pasarContractWS
           .getPastEvents('OrderForSale', {
             fromBlock,
             toBlock,
@@ -425,56 +403,47 @@ export class TasksService {
       seller: event.returnValues._seller,
       orderId: event.returnValues._orderId,
       tokenId: event.returnValues._id,
+      baseToken: event.returnValues._baseToken,
+      amount: event.returnValues._amount,
+      quoteToken: event.returnValues._quoteToken,
       price: event.returnValues._price,
+      startTime: event.returnValues._startTime,
     };
 
     this.logger.log(`Received OrderForSale Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, txInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
-          method: this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(
-            event.returnValues._orderId,
-          ).call,
+          method: this.pasarContractRPC.methods.getOrderById(event.returnValues._orderId).call,
           params: {},
         },
       ],
       Chain.ELA,
     );
 
+    contractOrderInfo.chain = Chain.ELA;
+    contractOrderInfo.contract = this.pasarContract;
+
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
+      chain: Chain.ELA,
+      contract: this.pasarContract,
       eventType: OrderEventType.OrderForSale,
-      // gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
       timestamp: blockInfo.timestamp,
     });
 
     await orderEvent.save();
 
-    await this.orderDataQueue.add(
-      'new-order',
-      {
-        blockNumber: event.blockNumber,
-        tokenId: eventInfo.tokenId,
-        orderId: parseInt(eventInfo.orderId),
-        seller: eventInfo.seller,
-        orderType: OrderType.Sale,
-        orderState: OrderState.Created,
-        orderPrice: parseInt(eventInfo.price),
-        createTime: parseInt(contractOrderInfo.createTime),
-        isBlindBox: contractOrderInfo.isBlindBox,
-      },
-      { removeOnComplete: true },
-    );
-
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  //@Timeout('orderPriceChanged', 60 * 1000)
+  @Timeout('orderPriceChanged', 60 * 1000)
   async handleOrderPriceChangedEvent() {
-    const nowHeight = await this.web3Service.web3RPC[Chain.ELA].eth.getBlockNumber();
+    const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       this.stickerContract,
@@ -492,7 +461,7 @@ export class TasksService {
       while (fromBlock <= nowHeight) {
         this.logger.log(`Sync past OrderPriceChanged events from [${fromBlock}] to [${toBlock}]`);
 
-        this.web3Service.pasarContractWS[Chain.ELA]
+        this.pasarContractWS
           .getPastEvents('OrderPriceChanged', {
             fromBlock,
             toBlock,
@@ -536,21 +505,17 @@ export class TasksService {
       orderId: event.returnValues._orderId,
       oldPrice: event.returnValues._oldPrice,
       newPrice: event.returnValues._newPrice,
+      oldReservePrice: event.returnValues._olderReservePrice,
+      newReservePrice: event.returnValues._newReservePrice,
+      oldBuyoutPrice: event.returnValues._olderBuyoutPrice,
+      newBuyoutPrice: event.returnValues._newBuyoutPrice,
+      oldQuoteToken: event.returnValues._olderQuoteToken,
+      newQuoteToken: event.returnValues._newQuoteToken,
     };
 
     this.logger.log(`Received OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`);
 
-    await this.orderDataQueue.add(
-      'update-order-price',
-      {
-        blockNumber: event.blockNumber,
-        orderId: parseInt(eventInfo.orderId),
-        orderPrice: parseInt(eventInfo.newPrice),
-      },
-      { removeOnComplete: true },
-    );
-
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, txInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA)],
       Chain.ELA,
     );
@@ -559,7 +524,7 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       eventType: OrderEventType.OrderPriceChanged,
-      // gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
       timestamp: blockInfo.timestamp,
     });
 
@@ -567,13 +532,16 @@ export class TasksService {
 
     await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
       price: parseInt(eventInfo.newPrice),
+      reservePrice: parseInt(eventInfo.newReservePrice),
+      buyoutPrice: parseInt(eventInfo.newBuyoutPrice),
+      quoteToken: eventInfo.newQuoteToken,
       updateTime: orderEvent.timestamp,
     });
   }
 
-  //@Timeout('orderFilled', 60 * 1000)
+  @Timeout('orderFilled', 60 * 1000)
   async handleOrderFilledEvent() {
-    const nowHeight = await this.web3Service.web3RPC[Chain.ELA].eth.getBlockNumber();
+    const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       this.stickerContract,
@@ -591,7 +559,7 @@ export class TasksService {
       while (fromBlock <= nowHeight) {
         this.logger.log(`Sync past OrderFilled events from [${fromBlock}] to [${toBlock}]`);
 
-        this.web3Service.pasarContractWS[Chain.ELA]
+        this.pasarContractWS
           .getPastEvents('OrderFilled', {
             fromBlock,
             toBlock,
@@ -612,7 +580,7 @@ export class TasksService {
     }
 
     this.logger.log(`Start sync OrderFilled events from [${syncStartBlock + 1}] 💪💪💪 `);
-    this.web3Service.pasarContractWS[Chain.ELA].events
+    this.pasarContractWS.events
       .OrderFilled({
         fromBlock: syncStartBlock + 1,
       })
@@ -631,17 +599,16 @@ export class TasksService {
       seller: event.returnValues._seller,
       buyer: event.returnValues._buyer,
       orderId: event.returnValues._orderId,
+      baseToken: event.returnValues._baseToken,
       quoteToken: event.returnValues._quoteToken,
       price: event.returnValues._price,
-      royaltyOwner: event.returnValues._royaltyOwner,
       royaltyFee: event.returnValues._royaltyFee,
-      platformAddress: event.returnValues._platformAddr,
       platformFee: event.returnValues._platformFee,
     };
 
     this.logger.log(`Received OrderFilled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, txInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
@@ -658,62 +625,28 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       eventType: OrderEventType.OrderFilled,
-      // gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      chain: Chain.ELA,
+      stickerContract: this.stickerContract,
+      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
       timestamp: blockInfo.timestamp,
     });
 
     await orderEvent.save();
-
-    await this.orderDataQueue.add(
-      'notification',
-      {
-        orderId: parseInt(eventInfo.orderId),
-        address: eventInfo.seller,
-        price: parseInt(eventInfo.price),
-        royaltyOwner: eventInfo.royaltyOwner,
-        royaltyFee: parseInt(eventInfo.royaltyFee),
-        buyer: eventInfo.buyer,
-        timestamp: orderEvent.timestamp,
-      },
-      { removeOnComplete: true },
-    );
-
-    await this.orderDataQueue.add(
-      'update-order-state',
-      {
-        blockNumber: event.blockNumber,
-        orderId: parseInt(eventInfo.orderId),
-        orderState: OrderState.Filled,
-      },
-      { removeOnComplete: true },
-    );
-
-    await this.orderDataQueue.add(
-      'update-order-buyer',
-      {
-        blockNumber: event.blockNumber,
-        orderId: parseInt(eventInfo.orderId),
-        buyer: eventInfo.buyer,
-      },
-      { removeOnComplete: true },
-    );
 
     await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
       orderState: parseInt(contractOrderInfo.orderState),
       buyerAddr: contractOrderInfo.buyerAddr,
       buyerUri: contractOrderInfo.buyerUri,
       filled: parseInt(contractOrderInfo.filled),
-      platformAddr: contractOrderInfo.platformAddr,
       platformFee: parseInt(contractOrderInfo.platformFee),
-      updateTime: parseInt(contractOrderInfo.updateTime),
-      royaltyOwner: eventInfo.royaltyOwner,
       royaltyFee: parseInt(eventInfo.royaltyFee),
+      updateTime: parseInt(contractOrderInfo.updateTime),
     });
   }
 
-  //@Timeout('orderCancelled', 60 * 1000)
+  @Timeout('orderCancelled', 60 * 1000)
   async handleOrderCancelledEvent() {
-    const nowHeight = await this.web3Service.web3RPC[Chain.ELA].eth.getBlockNumber();
+    const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       this.stickerContract,
@@ -776,7 +709,7 @@ export class TasksService {
 
     this.logger.log(`Received OrderCancelled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, txInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA)],
       Chain.ELA,
     );
@@ -785,120 +718,14 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       eventType: OrderEventType.OrderCancelled,
-      // gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
       timestamp: blockInfo.timestamp,
     });
 
     await orderEvent.save();
-
-    await this.orderDataQueue.add(
-      'update-order-state',
-      {
-        blockNumber: event.blockNumber,
-        orderId: parseInt(eventInfo.orderId),
-        orderState: OrderState.Cancelled,
-      },
-      { removeOnComplete: true },
-    );
 
     await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
       orderState: OrderState.Cancelled,
-      updateTime: orderEvent.timestamp,
-    });
-  }
-
-  //@Timeout('orderTakenDown', 60 * 1000)
-  async handleOrderTakenDownEvent() {
-    const nowHeight = await this.web3Service.web3RPC[Chain.ELA].eth.getBlockNumber();
-    const lastHeight = await this.dbService.getOrderEventLastHeight(
-      Chain.ELA,
-      this.stickerContract,
-      OrderEventType.OrderTakenDown,
-    );
-
-    let syncStartBlock = lastHeight;
-
-    if (nowHeight - lastHeight > this.step + 1) {
-      syncStartBlock = nowHeight;
-
-      let fromBlock = lastHeight + 1;
-      let toBlock = fromBlock + this.step;
-
-      while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past OrderTakenDown events from [${fromBlock}] to [${toBlock}]`);
-
-        this.web3Service.pasarContractWS[Chain.ELA]
-          .getPastEvents('OrderTakenDown', {
-            fromBlock,
-            toBlock,
-          })
-          .then((events) => {
-            events.forEach(async (event) => {
-              await this.handleOrderTakenDownEventData(event);
-            });
-          });
-        fromBlock = toBlock + 1;
-        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
-        await Sleep(this.stepInterval);
-      }
-
-      this.logger.log(
-        `Sync past OrderTakenDown events from [${
-          lastHeight + 1
-        }] to [${nowHeight}] finished ✅☕🚾️️`,
-      );
-    }
-
-    this.logger.log(`Start sync OrderTakenDown events from [${syncStartBlock + 1}] 💪💪💪 `);
-    this.web3Service.pasarContractWS[Chain.ELA].events
-      .OrderTakenDown({
-        fromBlock: syncStartBlock,
-      })
-      .on('error', (error) => {
-        this.logger.error(error);
-      })
-      .on('data', async (event) => {
-        await this.handleOrderTakenDownEventData(event);
-      });
-  }
-
-  private async handleOrderTakenDownEventData(event: any) {
-    const eventInfo = {
-      blockNumber: event.blockNumber,
-      transactionHash: event.transactionHash,
-      seller: event.returnValues._seller,
-      orderId: event.returnValues._orderId,
-    };
-
-    this.logger.log(`Received OrderTakenDown Event: ${JSON.stringify(eventInfo)}`);
-
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
-      [...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA)],
-      Chain.ELA,
-    );
-
-    const OrderEventModel = getOrderEventModel(this.connection);
-    const orderEvent = new OrderEventModel({
-      ...eventInfo,
-      eventType: OrderEventType.OrderTakenDown,
-      // gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
-      timestamp: blockInfo.timestamp,
-    });
-
-    await orderEvent.save();
-
-    await this.orderDataQueue.add(
-      'update-order-state',
-      {
-        blockNumber: event.blockNumber,
-        orderId: parseInt(eventInfo.orderId),
-        orderState: OrderState.TakenDown,
-      },
-      { removeOnComplete: true },
-    );
-
-    await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
-      orderState: OrderState.TakenDown,
       updateTime: orderEvent.timestamp,
     });
   }

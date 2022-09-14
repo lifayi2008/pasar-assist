@@ -2,6 +2,9 @@ import { ContractUserInfo, OrderState } from '../tasks/interfaces';
 
 export interface UpdateOrderParams {
   price?: number;
+  reservePrice?: number;
+  buyoutPrice?: number;
+  quoteToken?: string;
   updateTime?: number;
   orderState?: OrderState;
   buyerInfo?: ContractUserInfo;
