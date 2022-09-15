@@ -287,11 +287,11 @@ export class AppService {
     //   .then(console.log);
 
     // this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(34).call().then(console.log);
-    this.web3Service.pasarContractWS[Chain.ELA]
-      .getPastEvents('OrderCanceled', {
-        fromBlock,
-        toBlock: fromBlock + 50000,
-      })
-      .then(console.log);
+    // this.web3Service.pasarContractWS[Chain.ELA]
+    //   .getPastEvents('OrderCanceled', {
+    //     fromBlock,
+    //     toBlock: fromBlock + 50000,
+    //   })
+    //   .then(console.log);
   }
 }

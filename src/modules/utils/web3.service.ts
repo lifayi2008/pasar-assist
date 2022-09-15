@@ -186,10 +186,10 @@ export class Web3Service {
 
   getBaseBatchRequestParam(event: any, chain: Chain): CallOfBatch[] {
     return [
-      {
-        method: this.web3RPC[chain].eth.getTransaction,
-        params: event.transactionHash,
-      },
+      // {
+      //   method: this.web3RPC[chain].eth.getTransaction,
+      //   params: event.transactionHash,
+      // },
       {
         method: this.web3RPC[chain].eth.getBlock,
         params: event.blockNumber,

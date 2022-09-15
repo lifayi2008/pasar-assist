@@ -9,14 +9,11 @@ import { SubTasksService } from './sub-tasks.service';
 import { ContractTokenInfo, OrderEventType, OrderState, OrderType } from './interfaces';
 import { ConfigService } from '@nestjs/config';
 import { getOrderEventModel } from '../common/models/OrderEventModel';
-import { CallOfBatch } from '../utils/interfaces';
-import { Timeout } from '@nestjs/schedule';
 import { Sleep } from '../utils/utils.service';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
 import { Chain } from '../utils/enums';
 import Web3 from 'web3';
 import { AppConfig } from '../../app-config';
+import { Timeout } from '@nestjs/schedule';
 
 @Injectable()
 export class TasksService {
@@ -40,7 +37,6 @@ export class TasksService {
     private dbService: DbService,
     private web3Service: Web3Service,
     @InjectConnection() private readonly connection: Connection,
-    @InjectQueue('order-data-queue') private orderDataQueue: Queue,
   ) {
     this.rpc = this.web3Service.web3RPC[Chain.ELA];
   }
@@ -110,7 +106,7 @@ export class TasksService {
 
     this.logger.log(`Received Transfer Event: ${JSON.stringify(eventInfo)}`);
 
-    const [txInfo, blockInfo, contractTokenInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, contractTokenInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
@@ -126,7 +122,7 @@ export class TasksService {
       ...eventInfo,
       chain: Chain.ELA,
       contract: this.stickerContract,
-      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -221,7 +217,7 @@ export class TasksService {
 
     this.logger.log(`Received OrderForAuction Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, txInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
@@ -234,6 +230,7 @@ export class TasksService {
       Chain.ELA,
     );
 
+    const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = Chain.ELA;
     contractOrderInfo.contract = this.pasarContract;
 
@@ -243,7 +240,7 @@ export class TasksService {
       chain: Chain.ELA,
       contract: this.pasarContract,
       eventType: OrderEventType.OrderForAuction,
-      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -314,7 +311,7 @@ export class TasksService {
 
     this.logger.log(`Received BidOrder Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, txInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
@@ -331,7 +328,7 @@ export class TasksService {
       chain: Chain.ELA,
       contract: this.pasarContract,
       eventType: OrderEventType.OrderBid,
-      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -412,7 +409,7 @@ export class TasksService {
 
     this.logger.log(`Received OrderForSale Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, txInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
@@ -423,6 +420,7 @@ export class TasksService {
       Chain.ELA,
     );
 
+    const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = Chain.ELA;
     contractOrderInfo.contract = this.pasarContract;
 
@@ -432,7 +430,7 @@ export class TasksService {
       chain: Chain.ELA,
       contract: this.pasarContract,
       eventType: OrderEventType.OrderForSale,
-      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -485,7 +483,7 @@ export class TasksService {
 
     this.logger.log(`Start sync OrderPriceChanged events from [${syncStartBlock + 1}] 💪💪💪 `);
 
-    this.web3Service.pasarContractWS[Chain.ELA].events
+    this.pasarContractWS.events
       .OrderPriceChanged({
         fromBlock: syncStartBlock + 1,
       })
@@ -515,7 +513,7 @@ export class TasksService {
 
     this.logger.log(`Received OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, txInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA)],
       Chain.ELA,
     );
@@ -524,7 +522,7 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       eventType: OrderEventType.OrderPriceChanged,
-      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -608,13 +606,11 @@ export class TasksService {
 
     this.logger.log(`Received OrderFilled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, txInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA),
         {
-          method: this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(
-            event.returnValues._orderId,
-          ).call,
+          method: this.pasarContractRPC.methods.getOrderById(event.returnValues._orderId).call,
           params: {},
         },
       ],
@@ -627,7 +623,7 @@ export class TasksService {
       eventType: OrderEventType.OrderFilled,
       chain: Chain.ELA,
       stickerContract: this.stickerContract,
-      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -664,7 +660,7 @@ export class TasksService {
       while (fromBlock <= nowHeight) {
         this.logger.log(`Sync past OrderCancelled events from [${fromBlock}] to [${toBlock}]`);
 
-        this.web3Service.pasarContractWS[Chain.ELA]
+        this.pasarContractWS
           .getPastEvents('OrderCanceled', {
             fromBlock,
             toBlock,
@@ -687,7 +683,7 @@ export class TasksService {
     }
 
     this.logger.log(`Start sync OrderCancelled events from [${syncStartBlock + 1}] 💪💪💪 `);
-    this.web3Service.pasarContractWS[Chain.ELA].events
+    this.pasarContractWS.events
       .OrderCanceled({
         fromBlock: syncStartBlock + 1,
       })
@@ -709,7 +705,7 @@ export class TasksService {
 
     this.logger.log(`Received OrderCancelled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, txInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, Chain.ELA)],
       Chain.ELA,
     );
@@ -718,7 +714,7 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       eventType: OrderEventType.OrderCancelled,
-      gasFee: (txInfo.gas * txInfo.gasPrice) / Constants.ELA_ESC_PRECISION,
+      gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 

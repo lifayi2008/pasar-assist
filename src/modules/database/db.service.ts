@@ -45,21 +45,7 @@ export class DbService {
     if (results.length > 0) {
       return results[0].blockNumber;
     } else {
-      return parseInt(this.configService.get('CONTRACT_MARKET_DEPLOY'));
-    }
-  }
-
-  async getBidOrderEventLastHeight(): Promise<number> {
-    const results = await this.connection
-      .collection('order_events')
-      .find({ eventType: OrderEventType.OrderBid })
-      .sort({ blockNumber: -1 })
-      .limit(1)
-      .toArray();
-    if (results.length > 0) {
-      return results[0].blockNumber;
-    } else {
-      return parseInt(this.configService.get('CONTRACT_MARKET_DEPLOY'));
+      return parseInt(AppConfig[this.configService.get('NETWORK')][chain].pasarContractDeploy);
     }
   }
 
