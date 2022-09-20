@@ -6,7 +6,7 @@ import { Connection } from 'mongoose';
 import { getTokenEventModel } from '../common/models/TokenEventModel';
 import { Constants } from '../../constants';
 import { SubTasksService } from './sub-tasks.service';
-import { ContractTokenInfo, OrderEventType, OrderState, OrderType } from './interfaces';
+import { ContractTokenInfo, OrderEventType, OrderState } from './interfaces';
 import { ConfigService } from '@nestjs/config';
 import { getOrderEventModel } from '../common/models/OrderEventModel';
 import { Sleep } from '../utils/utils.service';
@@ -17,7 +17,7 @@ import { Timeout } from '@nestjs/schedule';
 
 @Injectable()
 export class PasarV1Service {
-  private readonly logger = new Logger('PasrV1Service');
+  private readonly logger = new Logger('PasarV1Service');
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
@@ -108,7 +108,7 @@ export class PasarV1Service {
 
     this.logger.log(`Received Transfer Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractTokenInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -118,6 +118,10 @@ export class PasarV1Service {
       ],
       this.chain,
     );
+
+    const contractTokenInfo = { ...tokenInfo };
+    contractTokenInfo.chain = this.chain;
+    contractTokenInfo.contract = this.stickerContract;
 
     const TokenEventModel = getTokenEventModel(this.connection);
     const tokenEvent = new TokenEventModel({
@@ -151,7 +155,6 @@ export class PasarV1Service {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderForSale,
     );
 
@@ -226,13 +229,11 @@ export class PasarV1Service {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.contract = this.stickerContract;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderForSale,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -247,7 +248,6 @@ export class PasarV1Service {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderPriceChanged,
     );
 
@@ -319,7 +319,6 @@ export class PasarV1Service {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderPriceChanged,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -338,7 +337,6 @@ export class PasarV1Service {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderFilled,
     );
 
@@ -414,9 +412,8 @@ export class PasarV1Service {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
-      eventType: OrderEventType.OrderFilled,
       chain: this.chain,
-      stickerContract: this.stickerContract,
+      eventType: OrderEventType.OrderFilled,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
@@ -438,7 +435,6 @@ export class PasarV1Service {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderCancelled,
     );
 
@@ -506,6 +502,7 @@ export class PasarV1Service {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
+      chain: this.chain,
       eventType: OrderEventType.OrderCancelled,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,

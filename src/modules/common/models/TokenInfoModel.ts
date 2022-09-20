@@ -21,6 +21,9 @@ export const TokenInfoSchema = new mongoose.Schema(
     adult: Boolean,
     properties: Object,
     blockNumber: Number,
+
+    chain: String,
+    contract: String,
   },
   { versionKey: false },
 );

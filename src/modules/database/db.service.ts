@@ -33,12 +33,11 @@ export class DbService {
 
   async getOrderEventLastHeight(
     chain: Chain,
-    contract: string,
     orderEventType: OrderEventType,
   ): Promise<number> {
     const results = await this.connection
       .collection('order_events')
-      .find({ chain, contract, eventType: orderEventType })
+      .find({ chain, eventType: orderEventType })
       .sort({ blockNumber: -1 })
       .limit(1)
       .toArray();

@@ -31,6 +31,7 @@ export const OrderInfoSchema = new mongoose.Schema(
     isBlindBox: Boolean,
     createTime: Number,
     updateTime: Number,
+    chain: String,
   },
   { versionKey: false },
 );

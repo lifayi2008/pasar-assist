@@ -9,6 +9,8 @@ export interface ContractTokenInfo {
   tokenMinter: string;
   createTime: number;
   updateTime: number;
+  chain: string;
+  contract: string;
 }
 
 export interface ContractOrderInfo {
@@ -43,7 +45,6 @@ export interface ContractOrderInfo {
   createTime: number;
   updateTime: number;
   chain: string;
-  contract: string;
 }
 
 export interface ContractUserInfo {

@@ -3,8 +3,6 @@ import { Chain } from './modules/utils/enums';
 export const AppConfig = {
   mainnet: {
     [Chain.ELA]: {
-      chainType: 1,
-
       wsUrl: 'wss://api.elastos.io/eth-ws',
       rpcUrl: 'https://api.elastos.io/eth',
 
@@ -20,8 +18,6 @@ export const AppConfig = {
     },
 
     [Chain.V1]: {
-      chainType: 4,
-
       wsUrl: 'wss://api.elastos.io/eth-ws',
       rpcUrl: 'https://api.elastos.io/eth',
 
@@ -36,8 +32,6 @@ export const AppConfig = {
     },
 
     [Chain.ETH]: {
-      chainType: 2,
-
       wsUrl: 'wss://mainnet.infura.io/ws/v3/02505ed478e64ee481a74236dc9e91f1',
       rpcUrl: 'https://mainnet.infura.io/v3/02505ed478e64ee481a74236dc9e91f1',
 
@@ -53,8 +47,6 @@ export const AppConfig = {
     },
 
     [Chain.FSN]: {
-      chainType: 3,
-
       wsUrl: 'wss://mainnet.fusionnetwork.io',
       rpcUrl: 'https://mainnet.fusionnetwork.io',
 
@@ -70,8 +62,6 @@ export const AppConfig = {
 
   testnet: {
     [Chain.ELA]: {
-      chainType: 1,
-
       wsUrl: 'wss://api-testnet.elastos.io/eth-ws',
       rpcUrl: 'https://api-testnet.elastos.io/eth',
 
@@ -87,8 +77,6 @@ export const AppConfig = {
     },
 
     [Chain.V1]: {
-      chainType: 4,
-
       wsUrl: 'wss://api-testnet.elastos.io/eth-ws',
       rpcUrl: 'https://api-testnet.elastos.io/eth',
 
@@ -104,8 +92,6 @@ export const AppConfig = {
     },
 
     [Chain.ETH]: {
-      chainType: 2,
-
       wsUrl: 'wss://ropsten.infura.io/ws/v3/02505ed478e64ee481a74236dc9e91f1',
       rpcUrl: 'https://ropsten.infura.io/v3/02505ed478e64ee481a74236dc9e91f1',
 
@@ -121,8 +107,6 @@ export const AppConfig = {
     },
 
     [Chain.FSN]: {
-      chainType: 3,
-
       wsUrl: 'wss://testnet.fusionnetwork.io',
       rpcUrl: 'https://testnet.fusionnetwork.io',
 

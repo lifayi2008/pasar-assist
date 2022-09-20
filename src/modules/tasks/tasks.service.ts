@@ -111,7 +111,7 @@ export class TasksService {
 
     this.logger.log(`Received Transfer Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractTokenInfo] = await this.web3Service.web3BatchRequest(
+    const [blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -121,6 +121,10 @@ export class TasksService {
       ],
       this.chain,
     );
+
+    const contractTokenInfo = { ...tokenInfo };
+    contractTokenInfo.chain = this.chain;
+    contractTokenInfo.contract = this.stickerContract;
 
     const TokenEventModel = getTokenEventModel(this.connection);
     const tokenEvent = new TokenEventModel({
@@ -154,7 +158,6 @@ export class TasksService {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderForAuction,
     );
 
@@ -237,13 +240,11 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.contract = this.stickerContract;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderForAuction,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -258,7 +259,6 @@ export class TasksService {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderBid,
     );
 
@@ -331,7 +331,6 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderBid,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -349,7 +348,6 @@ export class TasksService {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderForSale,
     );
 
@@ -427,13 +425,11 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.contract = this.stickerContract;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderForSale,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -449,7 +445,6 @@ export class TasksService {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderPriceChanged,
     );
 
@@ -527,7 +522,6 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderPriceChanged,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -549,7 +543,6 @@ export class TasksService {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderFilled,
     );
 
@@ -629,7 +622,6 @@ export class TasksService {
       ...eventInfo,
       eventType: OrderEventType.OrderFilled,
       chain: this.chain,
-      stickerContract: this.stickerContract,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
@@ -652,7 +644,6 @@ export class TasksService {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       this.chain,
-      this.stickerContract,
       OrderEventType.OrderCancelled,
     );
 

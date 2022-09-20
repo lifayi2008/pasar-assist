@@ -8,6 +8,7 @@ import { DataCheckService } from './data-check.service';
 import { BullModule } from '@nestjs/bull';
 import { TokenDataConsumer } from './token-data.consumer';
 import { OrderDataConsumer } from './order-data.consumer';
+import { PasarV1Service } from './tasks.pasarV1';
 
 @Module({
   imports: [
@@ -19,18 +20,13 @@ import { OrderDataConsumer } from './order-data.consumer';
         name: 'token-data-queue-local',
       },
       {
-        name: 'token-data-queue',
-      },
-      {
         name: 'order-data-queue-local',
-      },
-      {
-        name: 'order-data-queue',
       },
     ),
   ],
   providers: [
     TasksService,
+    PasarV1Service,
     SubTasksService,
     DataCheckService,
     TokenDataConsumer,
