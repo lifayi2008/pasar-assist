@@ -277,20 +277,21 @@ export class AppService {
     //   })
     //   .then(console.log);
 
-    const fromBlock = AppConfig[this.configService.get('NETWORK')][Chain.ELA].stickerContractDeploy;
-
-    // this.web3Service.stickerV1ContractWS
+    const fromBlock =
+      AppConfig[this.configService.get('NETWORK')][Chain.ELA].stickerV1ContractDeploy;
+    //
+    // this.web3Service.stickerContractWS['V1']
     //   .getPastEvents('TransferSingle', {
     //     fromBlock,
     //     toBlock: fromBlock + 100000,
     //   })
     //   .then(console.log);
 
-    // this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(34).call().then(console.log);
-    // this.web3Service.pasarContractWS[Chain.ELA]
-    //   .getPastEvents('OrderCanceled', {
+    // this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(19).call().then(console.log);
+    // this.web3Service.registerContractWS[Chain.ELA]
+    //   .getPastEvents('TokenRegistered', {
     //     fromBlock,
-    //     toBlock: fromBlock + 50000,
+    //     toBlock: 'latest',
     //   })
     //   .then(console.log);
   }

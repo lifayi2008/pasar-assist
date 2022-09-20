@@ -15,9 +15,14 @@ export interface ContractOrderInfo {
   orderId: number;
   orderType: OrderType;
   orderState: OrderState;
+  baseToken: string;
   tokenId: string;
+  amount: number;
   quoteToken: string;
   price: number;
+  reservedPrice: number;
+  buyoutPrice: number;
+  startTime: number;
   endTime: number;
   sellerAddr: string;
   buyerAddr: string;
@@ -26,7 +31,10 @@ export interface ContractOrderInfo {
   lastBid: number;
   filled: number;
   royaltyOwner: string;
+  royaltyOwners: string[];
   royaltyFee: number;
+  royaltyFees: number[];
+  royaltyFeeTotal: number;
   sellerUri: string;
   buyerUri: string;
   platformAddr: string;
@@ -65,6 +73,11 @@ export interface IPFSTokenInfo {
   data: TokenData;
   adult: boolean;
   properties: TokenProperties;
+
+  image: string;
+  kind: string;
+  size: number;
+  thumbnail: string;
 }
 
 export enum OrderEventType {

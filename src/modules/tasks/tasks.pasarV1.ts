@@ -16,25 +16,22 @@ import { AppConfig } from '../../app-config';
 import { Timeout } from '@nestjs/schedule';
 
 @Injectable()
-export class TasksService {
-  private readonly logger = new Logger('TasksService');
+export class PasarV1Service {
+  private readonly logger = new Logger('PasrV1Service');
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
-  private readonly chain = Chain.ELA;
+  private readonly chain = Chain.V1;
   private readonly rpc: Web3;
   private readonly stickerContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].stickerContract;
+    AppConfig[this.configService.get('NETWORK')][this.chain].stickerV1Contract;
   private readonly pasarContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].pasarContract;
-  private readonly registerContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].registerContract;
+    AppConfig[this.configService.get('NETWORK')][this.chain].pasarV1Contract;
+
   private readonly stickerContractWS = this.web3Service.stickerContractWS[this.chain];
   private readonly stickerContractRPC = this.web3Service.stickerContractRPC[this.chain];
   private readonly pasarContractWS = this.web3Service.pasarContractWS[this.chain];
   private readonly pasarContractRPC = this.web3Service.pasarContractRPC[this.chain];
-  private readonly registerContractWS = this.web3Service.registerContractWS[this.chain];
-  private readonly registerContractRPC = this.web3Service.registerContractRPC[this.chain];
 
   constructor(
     private subTasksService: SubTasksService,
@@ -46,7 +43,7 @@ export class TasksService {
     this.rpc = this.web3Service.web3RPC[this.chain];
   }
 
-  @Timeout('transfer', 1000)
+  @Timeout('transferV1', 1000)
   async handleTransferEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getTokenEventLastHeight(
@@ -149,202 +146,7 @@ export class TasksService {
     }
   }
 
-  @Timeout('orderForAuction', 30 * 1000)
-  async handleOrderForAuctionEvent() {
-    const nowHeight = await this.rpc.eth.getBlockNumber();
-    const lastHeight = await this.dbService.getOrderEventLastHeight(
-      this.chain,
-      this.stickerContract,
-      OrderEventType.OrderForAuction,
-    );
-
-    let syncStartBlock = lastHeight;
-
-    if (nowHeight - lastHeight > this.step + 1) {
-      syncStartBlock = nowHeight;
-
-      let fromBlock = lastHeight + 1;
-      let toBlock = fromBlock + this.step;
-      while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past OrderForAuction events from [${fromBlock}] to [${toBlock}]`);
-        this.pasarContractWS
-          .getPastEvents('OrderForAuction', {
-            fromBlock,
-            toBlock,
-          })
-          .then((events) => {
-            events.forEach(async (event) => {
-              await this.handleOrderForAuctionEventData(event);
-            });
-          });
-        fromBlock = toBlock + 1;
-        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
-        await Sleep(this.stepInterval);
-      }
-
-      this.logger.log(
-        `Sync past OrderForAuction events from [${
-          lastHeight + 1
-        }] to [${nowHeight}] finished ✅☕🚾️️`,
-      );
-    }
-
-    this.logger.log(`Start sync OrderForAuction events from [${syncStartBlock + 1}] 💪💪💪 `);
-
-    this.pasarContractWS.events
-      .OrderForAuction({
-        fromBlock: syncStartBlock + 1,
-      })
-      .on('error', (error) => {
-        this.logger.error(error);
-      })
-      .on('data', async (event) => {
-        await this.handleOrderForAuctionEventData(event);
-      });
-  }
-
-  private async handleOrderForAuctionEventData(event: any) {
-    const eventInfo = {
-      blockNumber: event.blockNumber,
-      transactionHash: event.transactionHash,
-      seller: event.returnValues._seller,
-      orderId: event.returnValues._orderId,
-      tokenId: event.returnValues._tokenId,
-      baseToken: event.returnValues._baseToken,
-      amount: event.returnValues._amount,
-      quoteToken: event.returnValues._quoteToken,
-      minPrice: event.returnValues._minPrice,
-      reservePrice: event.returnValues._reservePrice,
-      buyoutPrice: event.returnValues._buyoutPrice,
-      startTime: event.returnValues._startTime,
-      endTime: event.returnValues._endTime,
-    };
-
-    this.logger.log(`Received OrderForAuction Event: ${JSON.stringify(eventInfo)}`);
-
-    const [blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
-      [
-        ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
-        {
-          method: this.web3Service.pasarContractRPC[this.chain].methods.getOrderById(
-            event.returnValues._orderId,
-          ).call,
-          params: {},
-        },
-      ],
-      this.chain,
-    );
-
-    const contractOrderInfo = { ...contractOrder };
-    contractOrderInfo.chain = this.chain;
-    contractOrderInfo.contract = this.stickerContract;
-
-    const OrderEventModel = getOrderEventModel(this.connection);
-    const orderEvent = new OrderEventModel({
-      ...eventInfo,
-      chain: this.chain,
-      contract: this.stickerContract,
-      eventType: OrderEventType.OrderForAuction,
-      gasFee: blockInfo.gasUsed,
-      timestamp: blockInfo.timestamp,
-    });
-
-    await orderEvent.save();
-    await this.subTasksService.dealWithNewOrder(contractOrderInfo);
-  }
-
-  @Timeout('orderBid', 60 * 1000)
-  async handleOrderBidEvent() {
-    const nowHeight = await this.rpc.eth.getBlockNumber();
-    const lastHeight = await this.dbService.getOrderEventLastHeight(
-      this.chain,
-      this.stickerContract,
-      OrderEventType.OrderBid,
-    );
-
-    let syncStartBlock = lastHeight;
-
-    if (nowHeight - lastHeight > this.step + 1) {
-      syncStartBlock = nowHeight;
-
-      let fromBlock = lastHeight + 1;
-      let toBlock = fromBlock + this.step;
-      while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past OrderBid events from [${fromBlock}] to [${toBlock}]`);
-        this.pasarContractWS
-          .getPastEvents('OrderBid', {
-            fromBlock,
-            toBlock,
-          })
-          .then((events) => {
-            events.forEach(async (event) => {
-              await this.handleOrderBidEventData(event);
-            });
-          });
-        fromBlock = toBlock + 1;
-        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
-        await Sleep(this.stepInterval);
-      }
-
-      this.logger.log(
-        `Sync past OrderBid events from [${lastHeight + 1}] to [${nowHeight}] finished ✅☕🚾️️`,
-      );
-    }
-
-    this.logger.log(`Start sync OrderBid events from [${syncStartBlock + 1}] 💪💪💪 `);
-    this.web3Service.pasarContractWS[this.chain].events
-      .OrderBid({
-        fromBlock: syncStartBlock + 1,
-      })
-      .on('error', (error) => {
-        this.logger.error(error);
-      })
-      .on('data', async (event) => {
-        await this.handleOrderBidEventData(event);
-      });
-  }
-
-  private async handleOrderBidEventData(event: any) {
-    const eventInfo = {
-      blockNumber: event.blockNumber,
-      transactionHash: event.transactionHash,
-      seller: event.returnValues._seller,
-      buyer: event.returnValues._buyer,
-      orderId: event.returnValues._orderId,
-      price: event.returnValues._price,
-    };
-
-    this.logger.log(`Received BidOrder Event: ${JSON.stringify(eventInfo)}`);
-
-    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
-      [
-        ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
-        {
-          method: this.pasarContractRPC.methods.getOrderById(event.returnValues._orderId).call,
-          params: {},
-        },
-      ],
-      this.chain,
-    );
-
-    const OrderEventModel = getOrderEventModel(this.connection);
-    const orderEvent = new OrderEventModel({
-      ...eventInfo,
-      chain: this.chain,
-      contract: this.stickerContract,
-      eventType: OrderEventType.OrderBid,
-      gasFee: blockInfo.gasUsed,
-      timestamp: blockInfo.timestamp,
-    });
-
-    await orderEvent.save();
-
-    await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
-      ...contractOrderInfo,
-    });
-  }
-
-  @Timeout('orderForSale', 30 * 1000)
+  @Timeout('orderForSaleV1', 30 * 1000)
   async handleOrderForSaleEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -405,11 +207,8 @@ export class TasksService {
       seller: event.returnValues._seller,
       orderId: event.returnValues._orderId,
       tokenId: event.returnValues._id,
-      baseToken: event.returnValues._baseToken,
       amount: event.returnValues._amount,
-      quoteToken: event.returnValues._quoteToken,
       price: event.returnValues._price,
-      startTime: event.returnValues._startTime,
     };
 
     this.logger.log(`Received OrderForSale Event: ${JSON.stringify(eventInfo)}`);
@@ -440,11 +239,10 @@ export class TasksService {
     });
 
     await orderEvent.save();
-
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  @Timeout('orderPriceChanged', 60 * 1000)
+  @Timeout('orderPriceChangedV1', 60 * 1000)
   async handleOrderPriceChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -508,12 +306,6 @@ export class TasksService {
       orderId: event.returnValues._orderId,
       oldPrice: event.returnValues._oldPrice,
       newPrice: event.returnValues._newPrice,
-      oldReservePrice: event.returnValues._olderReservePrice,
-      newReservePrice: event.returnValues._newReservePrice,
-      oldBuyoutPrice: event.returnValues._olderBuyoutPrice,
-      newBuyoutPrice: event.returnValues._newBuyoutPrice,
-      oldQuoteToken: event.returnValues._olderQuoteToken,
-      newQuoteToken: event.returnValues._newQuoteToken,
     };
 
     this.logger.log(`Received OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`);
@@ -537,14 +329,11 @@ export class TasksService {
 
     await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
       price: parseInt(eventInfo.newPrice),
-      reservePrice: parseInt(eventInfo.newReservePrice),
-      buyoutPrice: parseInt(eventInfo.newBuyoutPrice),
-      quoteToken: eventInfo.newQuoteToken,
       updateTime: orderEvent.timestamp,
     });
   }
 
-  @Timeout('orderFilled', 60 * 1000)
+  @Timeout('orderFilledV1', 60 * 1000)
   async handleOrderFilledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -604,11 +393,9 @@ export class TasksService {
       seller: event.returnValues._seller,
       buyer: event.returnValues._buyer,
       orderId: event.returnValues._orderId,
-      baseToken: event.returnValues._baseToken,
-      quoteToken: event.returnValues._quoteToken,
       price: event.returnValues._price,
-      royaltyFee: event.returnValues._royaltyFee,
-      platformFee: event.returnValues._platformFee,
+      royaltyFee: event.returnValues._royalty,
+      royaltyOwner: event.returnValues._royaltyOwner,
     };
 
     this.logger.log(`Received OrderFilled Event: ${JSON.stringify(eventInfo)}`);
@@ -641,13 +428,12 @@ export class TasksService {
       buyerAddr: contractOrderInfo.buyerAddr,
       buyerUri: contractOrderInfo.buyerUri,
       filled: parseInt(contractOrderInfo.filled),
-      platformFee: parseInt(contractOrderInfo.platformFee),
       royaltyFee: parseInt(eventInfo.royaltyFee),
       updateTime: parseInt(contractOrderInfo.updateTime),
     });
   }
 
-  @Timeout('orderCancelled', 60 * 1000)
+  @Timeout('orderCancelledV1', 60 * 1000)
   async handleOrderCancelledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -720,8 +506,6 @@ export class TasksService {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
-      chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderCancelled,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,

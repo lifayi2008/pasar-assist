@@ -16,12 +16,21 @@ export const AppConfig = {
       stickerContractDeploy: 12695430,
       registerContractDeploy: 12698059,
 
-      pasarV1Contract: '0x02E8AD0687D583e2F6A7e5b82144025f30e26aA0',
-      stickerV1Contract: '0x020c7303664bc88ae92cE3D380BF361E03B78B81',
+      ELAToken: '0x0000000000000000000000000000000000000000',
+    },
+
+    [Chain.V1]: {
+      chainType: 4,
+
+      wsUrl: 'wss://api.elastos.io/eth-ws',
+      rpcUrl: 'https://api.elastos.io/eth',
+
+      pasarContract: '0x02E8AD0687D583e2F6A7e5b82144025f30e26aA0',
+      stickerContract: '0x020c7303664bc88ae92cE3D380BF361E03B78B81',
       diaTokenContract: '0x2C8010Ae4121212F836032973919E8AeC9AEaEE5',
 
-      pasarV1ContractDeploy: 7744408,
-      stickerV1ContractDeploy: 7744408,
+      pasarContractDeploy: 7744408,
+      stickerContractDeploy: 7744408,
 
       ELAToken: '0x0000000000000000000000000000000000000000',
     },
@@ -74,11 +83,20 @@ export const AppConfig = {
       stickerContractDeploy: 12311834,
       registerContractDeploy: 12311838,
 
-      pasarV1Contract: '0x2652d10A5e525959F7120b56f2D7a9cD0f6ee087',
-      stickerV1Contract: '0xed1978c53731997f4DAfBA47C9b07957Ef6F3961',
+      ELAToken: '0x0000000000000000000000000000000000000000',
+    },
 
-      pasarV1ContractDeploy: 7377671,
-      stickerV1ContractDeploy: 7377671,
+    [Chain.V1]: {
+      chainType: 4,
+
+      wsUrl: 'wss://api-testnet.elastos.io/eth-ws',
+      rpcUrl: 'https://api-testnet.elastos.io/eth',
+
+      pasarContract: '0x2652d10A5e525959F7120b56f2D7a9cD0f6ee087',
+      stickerContract: '0xed1978c53731997f4DAfBA47C9b07957Ef6F3961',
+
+      pasarContractDeploy: 7377671,
+      stickerContractDeploy: 7377671,
 
       diaTokenContract: '0x85946E4b6AB7C5c5C60A7b31415A52C0647E3272',
 

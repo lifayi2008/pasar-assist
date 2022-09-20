@@ -107,14 +107,14 @@ export class Web3Service {
       AppConfig[env][Chain.FSN].registerContract,
     );
 
-    this.pasarContractWS['V1'] = new this.web3WS[Chain.ELA].eth.Contract(
+    this.pasarContractWS[Chain.V1] = new this.web3WS[Chain.ELA].eth.Contract(
       PASAR_V1_ABI,
-      AppConfig[env][Chain.ELA].pasarV1Contract,
+      AppConfig[env][Chain.V1].pasarContract,
     );
 
-    this.stickerContractWS['V1'] = new this.web3WS[Chain.ELA].eth.Contract(
+    this.stickerContractWS[Chain.V1] = new this.web3WS[Chain.ELA].eth.Contract(
       STICKER_V1_ABI,
-      AppConfig[env][Chain.ELA].stickerV1Contract,
+      AppConfig[env][Chain.V1].stickerContract,
     );
 
     //Contract RPC
@@ -158,14 +158,14 @@ export class Web3Service {
       AppConfig[env][Chain.FSN].registerContract,
     );
 
-    this.pasarContractRPC['V1'] = new this.web3RPC[Chain.ELA].eth.Contract(
+    this.pasarContractRPC[Chain.V1] = new this.web3RPC[Chain.ELA].eth.Contract(
       PASAR_V1_ABI,
-      AppConfig[env][Chain.ELA].pasarV1Contract,
+      AppConfig[env][Chain.V1].pasarContract,
     );
 
-    this.stickerContractRPC['V1'] = new this.web3RPC[Chain.ELA].eth.Contract(
+    this.stickerContractRPC[Chain.V1] = new this.web3RPC[Chain.ELA].eth.Contract(
       STICKER_V1_ABI,
-      AppConfig[env][Chain.ELA].stickerV1Contract,
+      AppConfig[env][Chain.V1].stickerContract,
     );
   }
 
