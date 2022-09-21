@@ -24,9 +24,9 @@ export class PasarV1Service {
   private readonly chain = Chain.V1;
   private readonly rpc: Web3;
   private readonly stickerContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].stickerV1Contract;
+    AppConfig[this.configService.get('NETWORK')][this.chain].stickerContract;
   private readonly pasarContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].pasarV1Contract;
+    AppConfig[this.configService.get('NETWORK')][this.chain].pasarContract;
 
   private readonly stickerContractWS = this.web3Service.stickerContractWS[this.chain];
   private readonly stickerContractRPC = this.web3Service.stickerContractRPC[this.chain];

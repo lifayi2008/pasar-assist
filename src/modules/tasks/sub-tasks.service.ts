@@ -16,6 +16,7 @@ import { UpdateOrderParams } from '../database/interfaces';
 import { Sleep } from '../utils/utils.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { Chain } from '../utils/enums';
 
 @Injectable()
 export class SubTasksService {
@@ -60,7 +61,10 @@ export class SubTasksService {
   }
 
   async dealWithNewOrder(orderInfo: ContractOrderInfo) {
-    const ipfsUserInfo = await this.getInfoByIpfsUri(orderInfo.sellerUri);
+    let ipfsUserInfo;
+    if (orderInfo.chain !== Chain.V1) {
+      ipfsUserInfo = await this.getInfoByIpfsUri(orderInfo.sellerUri);
+    }
 
     const OrderInfoModel = getOrderInfoModel(this.connection);
     const orderInfoDoc = new OrderInfoModel({
