@@ -6,7 +6,13 @@ import { Connection } from 'mongoose';
 import { getTokenEventModel } from '../common/models/TokenEventModel';
 import { Constants } from '../../constants';
 import { SubTasksService } from './sub-tasks.service';
-import { ContractTokenInfo, OrderEventType, OrderState, OrderType } from './interfaces';
+import {
+  CollectionEventType,
+  ContractTokenInfo,
+  OrderEventType,
+  OrderState,
+  OrderType,
+} from './interfaces';
 import { ConfigService } from '@nestjs/config';
 import { getOrderEventModel } from '../common/models/OrderEventModel';
 import { Sleep } from '../utils/utils.service';
@@ -14,6 +20,7 @@ import { Chain } from '../utils/enums';
 import Web3 from 'web3';
 import { AppConfig } from '../../app-config';
 import { Timeout } from '@nestjs/schedule';
+import { getTokenRegisteredEventModel } from '../common/models/TokenRegisteredEventModel';
 
 @Injectable()
 export class TasksService {
@@ -712,7 +719,6 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
-      contract: this.stickerContract,
       eventType: OrderEventType.OrderCancelled,
       gasFee: blockInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -724,5 +730,92 @@ export class TasksService {
       orderState: OrderState.Cancelled,
       updateTime: orderEvent.timestamp,
     });
+  }
+
+  @Timeout('tokenRegistered', 60 * 1000)
+  async handleTokenRegisteredEvent() {
+    const nowHeight = await this.rpc.eth.getBlockNumber();
+    const lastHeight = await this.dbService.getTokenRegisteredEventLastHeight(this.chain);
+
+    let syncStartBlock = lastHeight;
+
+    if (nowHeight - lastHeight > this.step + 1) {
+      syncStartBlock = nowHeight;
+
+      let fromBlock = lastHeight + 1;
+      let toBlock = fromBlock + this.step;
+
+      while (fromBlock <= nowHeight) {
+        this.logger.log(`Sync past Token Registered events from [${fromBlock}] to [${toBlock}]`);
+
+        this.pasarContractWS
+          .getPastEvents('TokenRegistered', {
+            fromBlock,
+            toBlock,
+          })
+          .then((events) => {
+            events.forEach(async (event) => {
+              await this.handleOrderCancelledEventData(event);
+            });
+          });
+        fromBlock = toBlock + 1;
+        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
+        await Sleep(this.stepInterval);
+      }
+
+      this.logger.log(
+        `Sync past Token Registered events from [${
+          lastHeight + 1
+        }] to [${nowHeight}] finished ✅☕🚾️️`,
+      );
+    }
+
+    this.logger.log(`Start sync Token Registered events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.pasarContractWS.events
+      .OrderCanceled({
+        fromBlock: syncStartBlock + 1,
+      })
+      .on('error', (error) => {
+        this.logger.error(error);
+      })
+      .on('data', async (event) => {
+        await this.handleTokenRegisteredEventData(event);
+      });
+  }
+
+  private async handleTokenRegisteredEventData(event: any) {
+    const eventInfo = {
+      blockNumber: event.blockNumber,
+      transactionHash: event.transactionHash,
+      token: event.returnValues._token,
+      owner: event.returnValues._owner,
+      name: event.returnValues._name,
+      uri: event.returnValues._uri,
+    };
+
+    this.logger.log(`Received Token Registered Event: ${JSON.stringify(eventInfo)}`);
+
+    const [blockInfo] = await this.web3Service.web3BatchRequest(
+      [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
+      this.chain,
+    );
+
+    const TokenRegisteredEventModel = getTokenRegisteredEventModel(this.connection);
+    const tokenRegisteredEvent = new TokenRegisteredEventModel({
+      ...eventInfo,
+      chain: this.chain,
+      eventType: CollectionEventType.TokenRegistered,
+      gasFee: blockInfo.gasUsed,
+      timestamp: blockInfo.timestamp,
+    });
+
+    await tokenRegisteredEvent.save();
+    await this.subTasksService.dealTokenRegistered(
+      eventInfo.token,
+      eventInfo.owner,
+      eventInfo.uri,
+      eventInfo.name,
+      this.chain,
+    );
   }
 }

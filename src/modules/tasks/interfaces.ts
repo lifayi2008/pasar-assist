@@ -51,6 +51,7 @@ export interface ContractUserInfo {
   did: string;
   description: string;
   name: string;
+  signature?: string;
 }
 
 interface TokenData {
@@ -81,6 +82,26 @@ export interface IPFSTokenInfo {
   thumbnail?: string;
 }
 
+export interface IPFSCollectionInfo {
+  version: number;
+  creator: ContractUserInfo;
+  data: {
+    avatar: string;
+    background: string;
+    description: string;
+    category: string;
+    social: {
+      website: string;
+      profile: string;
+      feeds: string;
+      twitter: string;
+      telegram: string;
+      discord: string;
+      medium: string;
+    };
+  };
+}
+
 export enum OrderEventType {
   OrderForAuction,
   OrderBid,
@@ -89,6 +110,12 @@ export enum OrderEventType {
   OrderCancelled,
   OrderPriceChanged,
   OrderTakenDown,
+}
+
+export enum CollectionEventType {
+  TokenRegistered,
+  TokenRoyaltyChanged,
+  TokenInfoUpdated,
 }
 
 export enum OrderType {

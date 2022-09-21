@@ -3,6 +3,7 @@ import {
   ContractOrderInfo,
   ContractTokenInfo,
   ContractUserInfo,
+  IPFSCollectionInfo,
   IPFSTokenInfo,
 } from './interfaces';
 import { InjectConnection } from '@nestjs/mongoose';
@@ -17,6 +18,7 @@ import { Sleep } from '../utils/utils.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Chain } from '../utils/enums';
+import { getCollectionInfoModel } from '../common/models/CollectionInfoModel';
 
 @Injectable()
 export class SubTasksService {
@@ -30,7 +32,9 @@ export class SubTasksService {
     @InjectQueue('token-data-queue-local') private tokenDataQueueLocal: Queue,
   ) {}
 
-  private async getInfoByIpfsUri(ipfsUri: string): Promise<IPFSTokenInfo | ContractUserInfo> {
+  private async getInfoByIpfsUri(
+    ipfsUri: string,
+  ): Promise<IPFSTokenInfo | ContractUserInfo | IPFSCollectionInfo> {
     const tokenCID = ipfsUri.split(':')[2];
 
     try {
@@ -111,5 +115,21 @@ export class SubTasksService {
         { removeOnComplete: true },
       );
     }
+  }
+
+  async dealTokenRegistered(token: string, owner: string, uri: string, name: string, chain: Chain) {
+    const ipfsCollectionInfo = (await this.getInfoByIpfsUri(uri)) as IPFSCollectionInfo;
+
+    const CollectionInfoModel = getCollectionInfoModel(this.connection);
+    const collectionInfoDoc = new CollectionInfoModel({
+      token,
+      owner,
+      uri,
+      name,
+      chain,
+      ...ipfsCollectionInfo,
+    });
+
+    await collectionInfoDoc.save();
   }
 }

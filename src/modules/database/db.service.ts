@@ -31,10 +31,7 @@ export class DbService {
     }
   }
 
-  async getOrderEventLastHeight(
-    chain: Chain,
-    orderEventType: OrderEventType,
-  ): Promise<number> {
+  async getOrderEventLastHeight(chain: Chain, orderEventType: OrderEventType): Promise<number> {
     const results = await this.connection
       .collection('order_events')
       .find({ chain, eventType: orderEventType })
@@ -58,5 +55,20 @@ export class DbService {
 
   async tokenCount() {
     return await this.connection.collection('tokens').countDocuments();
+  }
+
+  async getTokenRegisteredEventLastHeight(chain: Chain) {
+    const results = await this.connection
+      .collection('collection_events')
+      .find({ chain })
+      .sort({ blockNumber: -1 })
+      .limit(1)
+      .toArray();
+    if (results.length > 0) {
+      return results[0].blockNumber;
+    } else {
+      //TODO: change to more universal method to get contract deploy block
+      return parseInt(AppConfig[this.configService.get('NETWORK')][chain].registerContractDeploy);
+    }
   }
 }

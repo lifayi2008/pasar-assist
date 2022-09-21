@@ -278,7 +278,7 @@ export class AppService {
     //   .then(console.log);
 
     const fromBlock =
-      AppConfig[this.configService.get('NETWORK')][Chain.ELA].stickerV1ContractDeploy;
+      AppConfig[this.configService.get('NETWORK')][Chain.ELA].registerContractDeploy;
     //
     // this.web3Service.stickerContractWS['V1']
     //   .getPastEvents('TransferSingle', {
@@ -288,11 +288,11 @@ export class AppService {
     //   .then(console.log);
 
     // this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(19).call().then(console.log);
-    // this.web3Service.registerContractWS[Chain.ELA]
-    //   .getPastEvents('TokenRegistered', {
-    //     fromBlock,
-    //     toBlock: 'latest',
-    //   })
-    //   .then(console.log);
+    this.web3Service.registerContractWS[Chain.ELA]
+      .getPastEvents('TokenRegistered', {
+        fromBlock,
+        toBlock: 'latest',
+      })
+      .then(console.log);
   }
 }
