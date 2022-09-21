@@ -51,6 +51,12 @@ export class Web3Service {
     this.web3RPC[Chain.ELA] = new Web3(
       new Web3.providers.HttpProvider(AppConfig[env][Chain.ELA].rpcUrl),
     );
+    this.web3WS[Chain.V1] = new Web3(
+      new Web3.providers.WebsocketProvider(AppConfig[env][Chain.V1].wsUrl, options),
+    );
+    this.web3RPC[Chain.V1] = new Web3(
+      new Web3.providers.HttpProvider(AppConfig[env][Chain.V1].rpcUrl),
+    );
 
     this.web3WS[Chain.ETH] = new Web3(
       new Web3.providers.WebsocketProvider(AppConfig[env][Chain.ETH].wsUrl, options),
@@ -107,12 +113,12 @@ export class Web3Service {
       AppConfig[env][Chain.FSN].registerContract,
     );
 
-    this.pasarContractWS[Chain.V1] = new this.web3WS[Chain.ELA].eth.Contract(
+    this.pasarContractWS[Chain.V1] = new this.web3WS[Chain.V1].eth.Contract(
       PASAR_V1_ABI,
       AppConfig[env][Chain.V1].pasarContract,
     );
 
-    this.stickerContractWS[Chain.V1] = new this.web3WS[Chain.ELA].eth.Contract(
+    this.stickerContractWS[Chain.V1] = new this.web3WS[Chain.V1].eth.Contract(
       STICKER_V1_ABI,
       AppConfig[env][Chain.V1].stickerContract,
     );
@@ -158,12 +164,12 @@ export class Web3Service {
       AppConfig[env][Chain.FSN].registerContract,
     );
 
-    this.pasarContractRPC[Chain.V1] = new this.web3RPC[Chain.ELA].eth.Contract(
+    this.pasarContractRPC[Chain.V1] = new this.web3RPC[Chain.V1].eth.Contract(
       PASAR_V1_ABI,
       AppConfig[env][Chain.V1].pasarContract,
     );
 
-    this.stickerContractRPC[Chain.V1] = new this.web3RPC[Chain.ELA].eth.Contract(
+    this.stickerContractRPC[Chain.V1] = new this.web3RPC[Chain.V1].eth.Contract(
       STICKER_V1_ABI,
       AppConfig[env][Chain.V1].stickerContract,
     );
