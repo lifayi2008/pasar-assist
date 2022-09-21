@@ -70,15 +70,15 @@ export interface IPFSTokenInfo {
   type: string;
   name: string;
   description: string;
-  creator: ContractUserInfo;
-  data: TokenData;
-  adult: boolean;
-  properties: TokenProperties;
+  creator?: ContractUserInfo;
+  data?: TokenData;
+  adult?: boolean;
+  properties?: TokenProperties;
 
-  image: string;
-  kind: string;
-  size: number;
-  thumbnail: string;
+  image?: string;
+  kind?: string;
+  size?: number;
+  thumbnail?: string;
 }
 
 export enum OrderEventType {
