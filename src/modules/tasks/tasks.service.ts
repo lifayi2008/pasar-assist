@@ -14,7 +14,7 @@ import { Chain } from '../utils/enums';
 import Web3 from 'web3';
 import { AppConfig } from '../../app-config';
 import { Timeout } from '@nestjs/schedule';
-import { getTokenRegisteredEventModel } from '../common/models/TokenRegisteredEventModel';
+import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 
 @Injectable()
 export class TasksService {
@@ -743,7 +743,7 @@ export class TasksService {
       let toBlock = fromBlock + this.step;
 
       while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past Token Registered events from [${fromBlock}] to [${toBlock}]`);
+        this.logger.log(`Sync past TokenRegistered events from [${fromBlock}] to [${toBlock}]`);
 
         this.registerContractWS
           .getPastEvents('TokenRegistered', {
@@ -752,7 +752,7 @@ export class TasksService {
           })
           .then((events) => {
             events.forEach(async (event) => {
-              await this.handleOrderCancelledEventData(event);
+              await this.handleTokenRegisteredEventData(event);
             });
           });
         fromBlock = toBlock + 1;
@@ -761,13 +761,13 @@ export class TasksService {
       }
 
       this.logger.log(
-        `Sync past Token Registered events from [${
+        `Sync past TokenRegistered events from [${
           lastHeight + 1
         }] to [${nowHeight}] finished ✅☕🚾️️`,
       );
     }
 
-    this.logger.log(`Start sync Token Registered events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.logger.log(`Start sync TokenRegistered events from [${syncStartBlock + 1}] 💪💪💪 `);
     this.registerContractWS.events
       .TokenRegistered({
         fromBlock: syncStartBlock + 1,
@@ -790,15 +790,15 @@ export class TasksService {
       uri: event.returnValues._uri,
     };
 
-    this.logger.log(`Received Token Registered Event: ${JSON.stringify(eventInfo)}`);
+    this.logger.log(`Received TokenRegistered Event: ${JSON.stringify(eventInfo)}`);
 
     const [blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
 
-    const TokenRegisteredEventModel = getTokenRegisteredEventModel(this.connection);
-    const tokenRegisteredEvent = new TokenRegisteredEventModel({
+    const CollectionEventModel = getCollectionEventModel(this.connection);
+    const collectionEvent = new CollectionEventModel({
       ...eventInfo,
       chain: this.chain,
       eventType: CollectionEventType.TokenRegistered,
@@ -806,7 +806,7 @@ export class TasksService {
       timestamp: blockInfo.timestamp,
     });
 
-    await tokenRegisteredEvent.save();
+    await collectionEvent.save();
     await this.subTasksService.updateCollection(eventInfo.token, this.chain, {
       owner: eventInfo.owner,
       uri: eventInfo.uri,
@@ -850,7 +850,7 @@ export class TasksService {
       }
 
       this.logger.log(
-        `Sync past Token Registered events from [${
+        `Sync past TokenRoyaltyChanged events from [${
           lastHeight + 1
         }] to [${nowHeight}] finished ✅☕🚾️️`,
       );
@@ -885,8 +885,8 @@ export class TasksService {
       this.chain,
     );
 
-    const TokenRegisteredEventModel = getTokenRegisteredEventModel(this.connection);
-    const tokenRegisteredEvent = new TokenRegisteredEventModel({
+    const CollectionEventModel = getCollectionEventModel(this.connection);
+    const collectionEvent = new CollectionEventModel({
       ...eventInfo,
       chain: this.chain,
       eventType: CollectionEventType.TokenRoyaltyChanged,
@@ -894,7 +894,7 @@ export class TasksService {
       timestamp: blockInfo.timestamp,
     });
 
-    await tokenRegisteredEvent.save();
+    await collectionEvent.save();
     await this.subTasksService.updateCollection(eventInfo.token, this.chain, {
       royaltyOwners: eventInfo.royaltyOwners,
       royaltyFees: eventInfo.royaltyFees,
@@ -971,8 +971,8 @@ export class TasksService {
       this.chain,
     );
 
-    const TokenRegisteredEventModel = getTokenRegisteredEventModel(this.connection);
-    const tokenRegisteredEvent = new TokenRegisteredEventModel({
+    const CollectionEventModel = getCollectionEventModel(this.connection);
+    const collectionEvent = new CollectionEventModel({
       ...eventInfo,
       chain: this.chain,
       eventType: CollectionEventType.TokenInfoUpdated,
@@ -980,7 +980,7 @@ export class TasksService {
       timestamp: blockInfo.timestamp,
     });
 
-    await tokenRegisteredEvent.save();
+    await collectionEvent.save();
     await this.subTasksService.updateCollection(eventInfo.token, this.chain, {
       uri: eventInfo.uri,
       name: eventInfo.name,

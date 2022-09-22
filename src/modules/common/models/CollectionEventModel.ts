@@ -1,6 +1,6 @@
 import mongoose, { Connection, Model } from 'mongoose';
 
-export const TokenRegisteredEventSchema = new mongoose.Schema(
+export const CollectionEventSchema = new mongoose.Schema(
   {
     blockNumber: Number,
     transactionHash: String,
@@ -18,6 +18,6 @@ export const TokenRegisteredEventSchema = new mongoose.Schema(
   { versionKey: false },
 );
 
-export function getTokenRegisteredEventModel(connection: Connection): Model<any> {
-  return connection.model('collection_events', TokenRegisteredEventSchema);
+export function getCollectionEventModel(connection: Connection): Model<any> {
+  return connection.model('collection_events', CollectionEventSchema);
 }
