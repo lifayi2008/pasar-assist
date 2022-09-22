@@ -288,11 +288,11 @@ export class AppService {
     //   .then(console.log);
 
     // this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(19).call().then(console.log);
-    this.web3Service.registerContractWS[Chain.ELA]
-      .getPastEvents('TokenRegistered', {
-        fromBlock,
-        toBlock: 'latest',
-      })
-      .then(console.log);
+    // this.web3Service.registerContractWS[Chain.ELA]
+    //   .getPastEvents('TokenInfoUpdated', {
+    //     fromBlock,
+    //     toBlock: 'latest',
+    //   })
+    //   .then(console.log);
   }
 }

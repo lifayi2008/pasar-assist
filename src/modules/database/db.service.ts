@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { OrderEventType } from '../tasks/interfaces';
+import { CollectionEventType, OrderEventType, UpdateCollectionParams } from '../tasks/interfaces';
 import { UpdateOrderParams } from './interfaces';
 import { Chain } from '../utils/enums';
 import { AppConfig } from '../../app-config';
@@ -49,6 +49,12 @@ export class DbService {
     return await this.connection.collection('orders').updateOne({ orderId }, { $set: params });
   }
 
+  async updateCollection(token: string, collection: UpdateCollectionParams) {
+    return await this.connection
+      .collection('collections')
+      .updateOne({ token }, { $set: collection }, { upsert: true });
+  }
+
   async orderCount() {
     return await this.connection.collection('orders').countDocuments();
   }
@@ -57,10 +63,13 @@ export class DbService {
     return await this.connection.collection('tokens').countDocuments();
   }
 
-  async getTokenRegisteredEventLastHeight(chain: Chain) {
+  async getCollectionEventLastHeight(
+    chain: Chain,
+    eventType: CollectionEventType,
+  ): Promise<number> {
     const results = await this.connection
       .collection('collection_events')
-      .find({ chain })
+      .find({ chain, eventType })
       .sort({ blockNumber: -1 })
       .limit(1)
       .toArray();

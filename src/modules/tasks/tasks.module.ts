@@ -22,6 +22,9 @@ import { PasarV1Service } from './tasks.pasarV1';
       {
         name: 'order-data-queue-local',
       },
+      {
+        name: 'collection-data-queue-local',
+      },
     ),
   ],
   providers: [

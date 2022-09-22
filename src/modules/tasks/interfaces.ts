@@ -1,3 +1,5 @@
+import { Chain } from '../utils/enums';
+
 export interface ContractTokenInfo {
   tokenId: string;
   tokenIndex: number;
@@ -100,6 +102,15 @@ export interface IPFSCollectionInfo {
       medium: string;
     };
   };
+}
+
+export interface UpdateCollectionParams {
+  chain?: Chain;
+  owner?: string;
+  name?: string;
+  uri?: string;
+  royaltyOwners?: string[];
+  royaltyFees?: number[];
 }
 
 export enum OrderEventType {

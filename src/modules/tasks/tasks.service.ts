@@ -6,13 +6,7 @@ import { Connection } from 'mongoose';
 import { getTokenEventModel } from '../common/models/TokenEventModel';
 import { Constants } from '../../constants';
 import { SubTasksService } from './sub-tasks.service';
-import {
-  CollectionEventType,
-  ContractTokenInfo,
-  OrderEventType,
-  OrderState,
-  OrderType,
-} from './interfaces';
+import { CollectionEventType, ContractTokenInfo, OrderEventType, OrderState } from './interfaces';
 import { ConfigService } from '@nestjs/config';
 import { getOrderEventModel } from '../common/models/OrderEventModel';
 import { Sleep } from '../utils/utils.service';
@@ -735,7 +729,10 @@ export class TasksService {
   @Timeout('tokenRegistered', 60 * 1000)
   async handleTokenRegisteredEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
-    const lastHeight = await this.dbService.getTokenRegisteredEventLastHeight(this.chain);
+    const lastHeight = await this.dbService.getCollectionEventLastHeight(
+      this.chain,
+      CollectionEventType.TokenRegistered,
+    );
 
     let syncStartBlock = lastHeight;
 
@@ -748,7 +745,7 @@ export class TasksService {
       while (fromBlock <= nowHeight) {
         this.logger.log(`Sync past Token Registered events from [${fromBlock}] to [${toBlock}]`);
 
-        this.pasarContractWS
+        this.registerContractWS
           .getPastEvents('TokenRegistered', {
             fromBlock,
             toBlock,
@@ -771,8 +768,8 @@ export class TasksService {
     }
 
     this.logger.log(`Start sync Token Registered events from [${syncStartBlock + 1}] 💪💪💪 `);
-    this.pasarContractWS.events
-      .OrderCanceled({
+    this.registerContractWS.events
+      .TokenRegistered({
         fromBlock: syncStartBlock + 1,
       })
       .on('error', (error) => {
@@ -810,12 +807,183 @@ export class TasksService {
     });
 
     await tokenRegisteredEvent.save();
-    await this.subTasksService.dealTokenRegistered(
-      eventInfo.token,
-      eventInfo.owner,
-      eventInfo.uri,
-      eventInfo.name,
+    await this.subTasksService.updateCollection(eventInfo.token, {
+      owner: eventInfo.owner,
+      uri: eventInfo.uri,
+      name: eventInfo.name,
+      chain: this.chain,
+    });
+  }
+
+  @Timeout('tokenRoyaltyChanged', 60 * 1000)
+  async handleRoyaltyChangedEvent() {
+    const nowHeight = await this.rpc.eth.getBlockNumber();
+    const lastHeight = await this.dbService.getCollectionEventLastHeight(
+      this.chain,
+      CollectionEventType.TokenRoyaltyChanged,
+    );
+
+    let syncStartBlock = lastHeight;
+
+    if (nowHeight - lastHeight > this.step + 1) {
+      syncStartBlock = nowHeight;
+
+      let fromBlock = lastHeight + 1;
+      let toBlock = fromBlock + this.step;
+
+      while (fromBlock <= nowHeight) {
+        this.logger.log(`Sync past TokenRoyaltyChanged events from [${fromBlock}] to [${toBlock}]`);
+
+        this.registerContractWS
+          .getPastEvents('TokenRoyaltyChanged', {
+            fromBlock,
+            toBlock,
+          })
+          .then((events) => {
+            events.forEach(async (event) => {
+              await this.handleTokenRoyaltyChangedEventData(event);
+            });
+          });
+        fromBlock = toBlock + 1;
+        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
+        await Sleep(this.stepInterval);
+      }
+
+      this.logger.log(
+        `Sync past Token Registered events from [${
+          lastHeight + 1
+        }] to [${nowHeight}] finished ✅☕🚾️️`,
+      );
+    }
+
+    this.logger.log(`Start sync TokenRoyaltyChanged events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.registerContractWS.events
+      .TokenRoyaltyChanged({
+        fromBlock: syncStartBlock + 1,
+      })
+      .on('error', (error) => {
+        this.logger.error(error);
+      })
+      .on('data', async (event) => {
+        await this.handleTokenRoyaltyChangedEventData(event);
+      });
+  }
+
+  private async handleTokenRoyaltyChangedEventData(event: any) {
+    const eventInfo = {
+      blockNumber: event.blockNumber,
+      transactionHash: event.transactionHash,
+      token: event.returnValues._token,
+      royaltyOwners: event.returnValues._royaltyOwners,
+      royaltyFees: event.returnValues._royaltyRates,
+    };
+
+    this.logger.log(`Received TokenRoyaltyChanged Event: ${JSON.stringify(eventInfo)}`);
+
+    const [blockInfo] = await this.web3Service.web3BatchRequest(
+      [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
+
+    const TokenRegisteredEventModel = getTokenRegisteredEventModel(this.connection);
+    const tokenRegisteredEvent = new TokenRegisteredEventModel({
+      ...eventInfo,
+      chain: this.chain,
+      eventType: CollectionEventType.TokenRoyaltyChanged,
+      gasFee: blockInfo.gasUsed,
+      timestamp: blockInfo.timestamp,
+    });
+
+    await tokenRegisteredEvent.save();
+    await this.subTasksService.updateCollection(eventInfo.token, {
+      royaltyOwners: eventInfo.royaltyOwners,
+      royaltyFees: eventInfo.royaltyFees,
+    });
+  }
+
+  @Timeout('tokenInfoUpdated', 60 * 1000)
+  async handleTokenInfoUpdatedEvent() {
+    const nowHeight = await this.rpc.eth.getBlockNumber();
+    const lastHeight = await this.dbService.getCollectionEventLastHeight(
+      this.chain,
+      CollectionEventType.TokenInfoUpdated,
+    );
+
+    let syncStartBlock = lastHeight;
+
+    if (nowHeight - lastHeight > this.step + 1) {
+      syncStartBlock = nowHeight;
+
+      let fromBlock = lastHeight + 1;
+      let toBlock = fromBlock + this.step;
+
+      while (fromBlock <= nowHeight) {
+        this.logger.log(`Sync past TokenInfoUpdated events from [${fromBlock}] to [${toBlock}]`);
+
+        this.registerContractWS
+          .getPastEvents('TokenInfoUpdated', {
+            fromBlock,
+            toBlock,
+          })
+          .then((events) => {
+            events.forEach(async (event) => {
+              await this.handleTokenInfoUpdatedEventData(event);
+            });
+          });
+        fromBlock = toBlock + 1;
+        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
+        await Sleep(this.stepInterval);
+      }
+
+      this.logger.log(
+        `Sync past TokenInfoUpdated events from [${
+          lastHeight + 1
+        }] to [${nowHeight}] finished ✅☕🚾️️`,
+      );
+    }
+
+    this.logger.log(`Start sync TokenInfoUpdated events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.registerContractWS.events
+      .TokenInfoUpdated({
+        fromBlock: syncStartBlock + 1,
+      })
+      .on('error', (error) => {
+        this.logger.error(error);
+      })
+      .on('data', async (event) => {
+        await this.handleTokenInfoUpdatedEventData(event);
+      });
+  }
+
+  private async handleTokenInfoUpdatedEventData(event: any) {
+    const eventInfo = {
+      blockNumber: event.blockNumber,
+      transactionHash: event.transactionHash,
+      token: event.returnValues._token,
+      name: event.returnValues._name,
+      uri: event.returnValues._uri,
+    };
+
+    this.logger.log(`Received TokenInfoUpdatedEventData Event: ${JSON.stringify(eventInfo)}`);
+
+    const [blockInfo] = await this.web3Service.web3BatchRequest(
+      [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
+      this.chain,
+    );
+
+    const TokenRegisteredEventModel = getTokenRegisteredEventModel(this.connection);
+    const tokenRegisteredEvent = new TokenRegisteredEventModel({
+      ...eventInfo,
+      chain: this.chain,
+      eventType: CollectionEventType.TokenInfoUpdated,
+      gasFee: blockInfo.gasUsed,
+      timestamp: blockInfo.timestamp,
+    });
+
+    await tokenRegisteredEvent.save();
+    await this.subTasksService.updateCollection(eventInfo.token, {
+      uri: eventInfo.uri,
+      name: eventInfo.name,
+    });
   }
 }

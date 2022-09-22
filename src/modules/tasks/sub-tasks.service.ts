@@ -5,6 +5,7 @@ import {
   ContractUserInfo,
   IPFSCollectionInfo,
   IPFSTokenInfo,
+  UpdateCollectionParams,
 } from './interfaces';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
@@ -30,6 +31,7 @@ export class SubTasksService {
     @InjectConnection() private readonly connection: Connection,
     @InjectQueue('order-data-queue-local') private orderDataQueueLocal: Queue,
     @InjectQueue('token-data-queue-local') private tokenDataQueueLocal: Queue,
+    @InjectQueue('collection-data-queue-local') private collectionDataQueueLocal: Queue,
   ) {}
 
   private async getInfoByIpfsUri(
@@ -117,19 +119,22 @@ export class SubTasksService {
     }
   }
 
-  async dealTokenRegistered(token: string, owner: string, uri: string, name: string, chain: Chain) {
-    const ipfsCollectionInfo = (await this.getInfoByIpfsUri(uri)) as IPFSCollectionInfo;
+  async updateCollection(token: string, params: UpdateCollectionParams) {
+    let collection = { token, ...params };
+    if (params.uri) {
+      const ipfsCollectionInfo = (await this.getInfoByIpfsUri(params.uri)) as IPFSCollectionInfo;
+      collection = { ...collection, ...ipfsCollectionInfo };
+    }
 
-    const CollectionInfoModel = getCollectionInfoModel(this.connection);
-    const collectionInfoDoc = new CollectionInfoModel({
-      token,
-      owner,
-      uri,
-      name,
-      chain,
-      ...ipfsCollectionInfo,
-    });
-
-    await collectionInfoDoc.save();
+    const result = await this.dbService.updateCollection(token, collection);
+    if (result.upsertedCount === 0 && result.matchedCount === 0) {
+      this.logger.warn(`Collection ${token} is not exist yet, put the operation into the queue`);
+      await Sleep(1000);
+      await this.collectionDataQueueLocal.add(
+        'update-collection',
+        { token, params },
+        { removeOnComplete: true },
+      );
+    }
   }
 }
