@@ -121,7 +121,7 @@ export class SubTasksService {
 
   async updateCollection(token: string, chain: Chain, params: UpdateCollectionParams) {
     const collection = { token, ...params };
-    if (params.uri) {
+    if (params.uri && params.uri.split(':')[0] === 'pasar') {
       const ipfsCollectionInfo = (await this.getInfoByIpfsUri(params.uri)) as IPFSCollectionInfo;
       Object.assign(collection, ipfsCollectionInfo);
     }
@@ -136,5 +136,9 @@ export class SubTasksService {
         { removeOnComplete: true },
       );
     }
+  }
+
+  async startupSyncCollection(token: string, chain: Chain) {
+    console.log(token, chain);
   }
 }

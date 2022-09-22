@@ -111,6 +111,8 @@ export interface UpdateCollectionParams {
   uri?: string;
   royaltyOwners?: string[];
   royaltyFees?: number[];
+  is721?: boolean;
+  symbol?: string;
 }
 
 export enum OrderEventType {

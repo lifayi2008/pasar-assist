@@ -15,6 +15,7 @@ import Web3 from 'web3';
 import { AppConfig } from '../../app-config';
 import { Timeout } from '@nestjs/schedule';
 import { getCollectionEventModel } from '../common/models/CollectionEventModel';
+import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
 @Injectable()
 export class TasksService {
@@ -792,8 +793,17 @@ export class TasksService {
 
     this.logger.log(`Received TokenRegistered Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
-      [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
+    const tokenContract = new this.web3Service.web3RPC[this.chain].eth.Contract(
+      TOKEN721_ABI,
+      eventInfo.token,
+    );
+
+    const [blockInfo, is721, symbol] = await this.web3Service.web3BatchRequest(
+      [
+        ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
+        { method: tokenContract.methods.supportsInterface('0x80ac58cd').call, params: {} },
+        { method: tokenContract.methods.symbol().call, params: {} },
+      ],
       this.chain,
     );
 
@@ -812,7 +822,11 @@ export class TasksService {
       uri: eventInfo.uri,
       name: eventInfo.name,
       chain: this.chain,
+      is721,
+      symbol,
     });
+
+    await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain);
   }
 
   @Timeout('tokenRoyaltyChanged', 60 * 1000)

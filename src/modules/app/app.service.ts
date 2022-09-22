@@ -294,5 +294,12 @@ export class AppService {
     //     toBlock: 'latest',
     //   })
     //   .then(console.log);
+    // const tokenContract = new this.web3Service.web3RPC['ela'].eth.Contract(
+    //   TOKEN721_ABI,
+    //   '0xF63f820F4a0bC6E966D61A4b20d24916713Ebb95',
+    // );
+    // await tokenContract.methods.symbol().call().then(console.log);
+    // await tokenContract.methods.supportsInterface('0x80ac58cd').call().then(console.log);
+    // await tokenContract.methods.supportsInterface('0xd9b67a26').call().then(console.log);
   }
 }
