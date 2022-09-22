@@ -36,7 +36,6 @@ export class TasksService {
   private readonly pasarContractWS = this.web3Service.pasarContractWS[this.chain];
   private readonly pasarContractRPC = this.web3Service.pasarContractRPC[this.chain];
   private readonly registerContractWS = this.web3Service.registerContractWS[this.chain];
-  private readonly registerContractRPC = this.web3Service.registerContractRPC[this.chain];
 
   constructor(
     private subTasksService: SubTasksService,
@@ -826,7 +825,7 @@ export class TasksService {
       symbol,
     });
 
-    await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain);
+    await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain, is721);
   }
 
   @Timeout('tokenRoyaltyChanged', 60 * 1000)

@@ -20,6 +20,9 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Chain } from '../utils/enums';
 import { getCollectionInfoModel } from '../common/models/CollectionInfoModel';
+import { Web3Service } from '../utils/web3.service';
+import { TOKEN721_ABI } from '../../contracts/Token721ABI';
+import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
 
 @Injectable()
 export class SubTasksService {
@@ -28,6 +31,7 @@ export class SubTasksService {
   constructor(
     private configService: ConfigService,
     private dbService: DbService,
+    private web3Service: Web3Service,
     @InjectConnection() private readonly connection: Connection,
     @InjectQueue('order-data-queue-local') private orderDataQueueLocal: Queue,
     @InjectQueue('token-data-queue-local') private tokenDataQueueLocal: Queue,
@@ -138,7 +142,16 @@ export class SubTasksService {
     }
   }
 
-  async startupSyncCollection(token: string, chain: Chain) {
-    console.log(token, chain);
+  async startupSyncCollection(token: string, chain: Chain, is721: boolean) {
+    const ABI = is721 ? TOKEN721_ABI : TOKEN1155_ABI;
+    const event = is721 ? 'Transfer' : 'TransferSingle';
+    const contractWs = new this.web3Service.web3WS[chain].eth.Contract(ABI, token);
+    contractWs.events[event]()
+      .on('error', (error) => {
+        this.logger.error(error);
+      })
+      .on('data', async (event) => {
+        this.logger.log(`=============Collection ${token} event ${event.event} received`);
+      });
   }
 }
