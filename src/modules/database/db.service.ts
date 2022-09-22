@@ -49,10 +49,10 @@ export class DbService {
     return await this.connection.collection('orders').updateOne({ orderId }, { $set: params });
   }
 
-  async updateCollection(token: string, collection: UpdateCollectionParams) {
+  async updateCollection(token: string, chain: Chain, collection: UpdateCollectionParams) {
     return await this.connection
       .collection('collections')
-      .updateOne({ token }, { $set: collection }, { upsert: true });
+      .updateOne({ token, chain }, { $set: collection }, { upsert: true });
   }
 
   async orderCount() {

@@ -119,20 +119,20 @@ export class SubTasksService {
     }
   }
 
-  async updateCollection(token: string, params: UpdateCollectionParams) {
-    let collection = { token, ...params };
+  async updateCollection(token: string, chain: Chain, params: UpdateCollectionParams) {
+    const collection = { token, ...params };
     if (params.uri) {
       const ipfsCollectionInfo = (await this.getInfoByIpfsUri(params.uri)) as IPFSCollectionInfo;
-      collection = { ...collection, ...ipfsCollectionInfo };
+      Object.assign(collection, ipfsCollectionInfo);
     }
 
-    const result = await this.dbService.updateCollection(token, collection);
+    const result = await this.dbService.updateCollection(token, chain, collection);
     if (result.upsertedCount === 0 && result.matchedCount === 0) {
       this.logger.warn(`Collection ${token} is not exist yet, put the operation into the queue`);
       await Sleep(1000);
       await this.collectionDataQueueLocal.add(
         'update-collection',
-        { token, params },
+        { token, chain, params },
         { removeOnComplete: true },
       );
     }

@@ -807,7 +807,7 @@ export class TasksService {
     });
 
     await tokenRegisteredEvent.save();
-    await this.subTasksService.updateCollection(eventInfo.token, {
+    await this.subTasksService.updateCollection(eventInfo.token, this.chain, {
       owner: eventInfo.owner,
       uri: eventInfo.uri,
       name: eventInfo.name,
@@ -895,7 +895,7 @@ export class TasksService {
     });
 
     await tokenRegisteredEvent.save();
-    await this.subTasksService.updateCollection(eventInfo.token, {
+    await this.subTasksService.updateCollection(eventInfo.token, this.chain, {
       royaltyOwners: eventInfo.royaltyOwners,
       royaltyFees: eventInfo.royaltyFees,
     });
@@ -981,7 +981,7 @@ export class TasksService {
     });
 
     await tokenRegisteredEvent.save();
-    await this.subTasksService.updateCollection(eventInfo.token, {
+    await this.subTasksService.updateCollection(eventInfo.token, this.chain, {
       uri: eventInfo.uri,
       name: eventInfo.name,
     });

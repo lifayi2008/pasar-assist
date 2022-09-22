@@ -13,7 +13,7 @@ export const TokenRegisteredEventSchema = new mongoose.Schema(
     gasFee: Number,
     timestamp: Number,
     royaltyOwners: [String],
-    royaltyRates: [Number],
+    royaltyFees: [Number],
   },
   { versionKey: false },
 );
