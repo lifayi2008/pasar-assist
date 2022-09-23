@@ -23,6 +23,7 @@ import { getCollectionInfoModel } from '../common/models/CollectionInfoModel';
 import { Web3Service } from '../utils/web3.service';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
+import { AppConfig } from '../../app-config';
 
 @Injectable()
 export class SubTasksService {
@@ -151,7 +152,11 @@ export class SubTasksService {
         this.logger.error(error);
       })
       .on('data', async (event) => {
-        this.logger.log(`=============Collection ${token} event ${event.event} received`);
+        this.logger.log(`=============Collection ${token} event ${event} received`);
       });
+  }
+
+  checkIsBaseCollection(token: string, chain: Chain) {
+    return AppConfig[this.configService.get('NETWORK')][chain].stickerContract === token;
   }
 }

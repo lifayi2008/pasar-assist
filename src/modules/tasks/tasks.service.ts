@@ -825,7 +825,9 @@ export class TasksService {
       symbol,
     });
 
-    await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain, is721);
+    if (!this.subTasksService.checkIsBaseCollection(eventInfo.token, this.chain)) {
+      await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain, is721);
+    }
   }
 
   @Timeout('tokenRoyaltyChanged', 60 * 1000)
