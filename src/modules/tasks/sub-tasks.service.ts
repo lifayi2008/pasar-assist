@@ -88,22 +88,15 @@ export class SubTasksService {
   }
 
   async updateTokenOwner(tokenId: string, to: string, blockNumber: number) {
-    const token = await this.connection.collection('tokens').findOne({ tokenId });
-    if (!token) {
-      this.logger.warn(`Token ${tokenId} is not in database`);
+    const result = await this.dbService.updateTokenOwner(tokenId, to, blockNumber);
+    if (result.matchedCount === 0) {
+      this.logger.warn(`Token ${tokenId} is not exist yet, put the operation into the queue`);
       await Sleep(1000);
       await this.tokenDataQueueLocal.add(
         'update-token-owner',
         { tokenId, to, blockNumber },
         { removeOnComplete: true },
       );
-    } else {
-      await this.connection
-        .collection('tokens')
-        .updateOne(
-          { tokenId: tokenId, blockNumber: { $lt: blockNumber } },
-          { $set: { tokenOwner: to, blockNumber } },
-        );
     }
   }
 
@@ -159,6 +152,9 @@ export class SubTasksService {
   }
 
   checkIsBaseCollection(token: string, chain: Chain) {
-    return AppConfig[this.configService.get('NETWORK')][chain].stickerContract === token;
+    return (
+      AppConfig[this.configService.get('NETWORK')][chain].stickerContract === token ||
+      AppConfig[this.configService.get('NETWORK')][Chain.V1].stickerContract === token
+    );
   }
 }

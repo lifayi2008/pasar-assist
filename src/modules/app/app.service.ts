@@ -10,6 +10,7 @@ import { OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Chain } from '../utils/enums';
 import { AppConfig } from '../../app-config';
+import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
 @Injectable()
 export class AppService {
@@ -294,10 +295,17 @@ export class AppService {
     //     toBlock: 'latest',
     //   })
     //   .then(console.log);
-    // const tokenContract = new this.web3Service.web3RPC['ela'].eth.Contract(
+    // this.web3Service.registerContractRPC[Chain.ELA].methods
+    //   .tokenInfo('0xE27934fB3683872e35b8d9E57c30978e1260c614')
+    //   .call()
+    //   .then(console.log);
+
+    // const tokenContract = new this.web3Service.web3RPC[Chain.ELA].eth.Contract(
     //   TOKEN721_ABI,
-    //   '0xF63f820F4a0bC6E966D61A4b20d24916713Ebb95',
+    //   '0x0954133d1a6E12d420602336643fbd6d61cdE91d',
     // );
+    // tokenContract.methods.tokenURI('7').call().then(console.log);
+
     // await tokenContract.methods.symbol().call().then(console.log);
     // await tokenContract.methods.supportsInterface('0x80ac58cd').call().then(console.log);
     // await tokenContract.methods.supportsInterface('0xd9b67a26').call().then(console.log);
