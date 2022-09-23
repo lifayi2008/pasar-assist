@@ -154,7 +154,7 @@ export class SubTasksService {
         this.logger.error(error);
       })
       .on('data', async (event) => {
-        this.logger.log(`=============Collection ${token} event ${event} received`);
+        this.logger.log(`=============Collection ${token} event ${JSON.stringify(event)} received`);
       });
   }
 
