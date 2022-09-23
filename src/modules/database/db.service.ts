@@ -49,13 +49,10 @@ export class DbService {
     return await this.connection.collection('orders').updateOne({ orderId }, { $set: params });
   }
 
-  async updateTokenOwner(tokenId: string, to: string, blockNumber: number) {
+  async updateTokenOwner(tokenId: string, to: string) {
     return await this.connection
       .collection('tokens')
-      .updateOne(
-        { tokenId: tokenId, blockNumber: { $lt: blockNumber } },
-        { $set: { owner: to, blockNumber } },
-      );
+      .updateOne({ tokenId: tokenId }, { $set: { owner: to } });
   }
 
   async updateCollection(token: string, chain: Chain, collection: UpdateCollectionParams) {

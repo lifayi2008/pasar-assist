@@ -87,14 +87,14 @@ export class SubTasksService {
     await orderInfoDoc.save();
   }
 
-  async updateTokenOwner(tokenId: string, to: string, blockNumber: number) {
-    const result = await this.dbService.updateTokenOwner(tokenId, to, blockNumber);
+  async updateTokenOwner(tokenId: string, to: string) {
+    const result = await this.dbService.updateTokenOwner(tokenId, to);
     if (result.matchedCount === 0) {
       this.logger.warn(`Token ${tokenId} is not exist yet, put the operation into the queue`);
       await Sleep(1000);
       await this.tokenDataQueueLocal.add(
         'update-token-owner',
-        { tokenId, to, blockNumber },
+        { tokenId, to },
         { removeOnComplete: true },
       );
     }
