@@ -826,7 +826,12 @@ export class TasksService {
     });
 
     if (!this.subTasksService.checkIsBaseCollection(eventInfo.token, this.chain)) {
-      await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain, is721);
+      await this.subTasksService.startupSyncCollection(
+        eventInfo.token,
+        this.chain,
+        event.blockNumber,
+        is721,
+      );
     }
   }
 

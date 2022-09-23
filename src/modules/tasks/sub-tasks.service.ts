@@ -143,11 +143,13 @@ export class SubTasksService {
     }
   }
 
-  async startupSyncCollection(token: string, chain: Chain, is721: boolean) {
+  async startupSyncCollection(token: string, chain: Chain, blockNumber: number, is721: boolean) {
     const ABI = is721 ? TOKEN721_ABI : TOKEN1155_ABI;
     const event = is721 ? 'Transfer' : 'TransferSingle';
     const contractWs = new this.web3Service.web3WS[chain].eth.Contract(ABI, token);
-    contractWs.events[event]()
+    contractWs.events[event]({
+      fromBlock: blockNumber,
+    })
       .on('error', (error) => {
         this.logger.error(error);
       })
