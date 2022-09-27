@@ -161,9 +161,13 @@ export class SubTasksService {
 
   private async dealWithUserCollectionToken(event, contract: string, chain: Chain, is721: boolean) {
     const tokenId = is721 ? event.returnValues._tokenId : event.returnValues._id;
+    const contractRPC = this.web3Service.web3RPC[chain].eth.Contract(
+      is721 ? TOKEN721_ABI : TOKEN1155_ABI,
+      contract,
+    );
     const method = is721
-      ? this.web3Service.stickerContractRPC[chain].methods.tokenURI(tokenId).call
-      : this.web3Service.stickerContractRPC[chain].methods.uri(tokenId).call;
+      ? contractRPC.methods.tokenURI(tokenId).call
+      : contractRPC.methods.uri(tokenId).call;
 
     const [blockInfo, tokenUri] = await this.web3Service.web3BatchRequest(
       [
