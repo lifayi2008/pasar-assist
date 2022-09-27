@@ -161,7 +161,7 @@ export class SubTasksService {
 
   private async dealWithUserCollectionToken(event, contract: string, chain: Chain, is721: boolean) {
     const tokenId = is721 ? event.returnValues._tokenId : event.returnValues._id;
-    const contractRPC = this.web3Service.web3RPC[chain].eth.Contract(
+    const contractRPC = new this.web3Service.web3RPC[chain].eth.Contract(
       is721 ? TOKEN721_ABI : TOKEN1155_ABI,
       contract,
     );
