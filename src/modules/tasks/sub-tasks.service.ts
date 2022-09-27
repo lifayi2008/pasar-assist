@@ -136,6 +136,13 @@ export class SubTasksService {
     }
   }
 
+  checkIsBaseCollection(token: string, chain: Chain) {
+    return (
+      AppConfig[this.configService.get('NETWORK')][chain].stickerContract === token ||
+      AppConfig[this.configService.get('NETWORK')][Chain.V1].stickerContract === token
+    );
+  }
+
   async startupSyncCollection(token: string, chain: Chain, blockNumber: number, is721: boolean) {
     const ABI = is721 ? TOKEN721_ABI : TOKEN1155_ABI;
     const event = is721 ? 'Transfer' : 'TransferSingle';
@@ -150,13 +157,6 @@ export class SubTasksService {
         this.logger.log(`=============Collection ${token} event ${JSON.stringify(event)} received`);
         await this.dealWithUserCollectionToken(event, token, chain, is721);
       });
-  }
-
-  checkIsBaseCollection(token: string, chain: Chain) {
-    return (
-      AppConfig[this.configService.get('NETWORK')][chain].stickerContract === token ||
-      AppConfig[this.configService.get('NETWORK')][Chain.V1].stickerContract === token
-    );
   }
 
   private async dealWithUserCollectionToken(event, contract: string, chain: Chain, is721: boolean) {
@@ -204,6 +204,7 @@ export class SubTasksService {
       blockNumber: event.blockNumber,
       createTime: blockInfo.timestamp,
       updateTime: blockInfo.timestamp,
+      notGetDetail: true,
     };
 
     await this.dbService.insertToken(tokenInfo);

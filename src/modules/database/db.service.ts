@@ -97,6 +97,7 @@ export class DbService {
     contract: string;
     blockNumber: number;
     updateTime: number;
+    notGetDetail: boolean;
   }) {
     return await this.connection.collection('tokens').insertOne(tokenInfo);
   }
