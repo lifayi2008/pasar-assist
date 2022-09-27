@@ -86,4 +86,18 @@ export class DbService {
       return parseInt(AppConfig[this.configService.get('NETWORK')][chain].registerContractDeploy);
     }
   }
+
+  async insertToken(tokenInfo: {
+    chain: Chain;
+    tokenId: string;
+    createTime: number;
+    tokenUri: string;
+    tokenOwner: string;
+    tokenIdHex: string;
+    contract: string;
+    blockNumber: number;
+    updateTime: number;
+  }) {
+    return await this.connection.collection('tokens').insertOne(tokenInfo);
+  }
 }

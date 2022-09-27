@@ -302,9 +302,15 @@ export class AppService {
 
     // const tokenContract = new this.web3Service.web3RPC[Chain.ELA].eth.Contract(
     //   TOKEN721_ABI,
-    //   '0x0954133d1a6E12d420602336643fbd6d61cdE91d',
+    //   '0xE27934fB3683872e35b8d9E57c30978e1260c614',
     // );
-    // tokenContract.methods.tokenURI('7').call().then(console.log);
+    // tokenContract.methods.tokenURI('14').call().then(console.log);
+
+    // axios('https://gateway.pinata.cloud/ipfs/QmS9obSyBypporHKvvJTrcymGD21dmz8ofPz73AwyYc1vU').then(
+    //   (result) => {
+    //     console.log(result.data);
+    //   },
+    // );
 
     // await tokenContract.methods.symbol().call().then(console.log);
     // await tokenContract.methods.supportsInterface('0x80ac58cd').call().then(console.log);

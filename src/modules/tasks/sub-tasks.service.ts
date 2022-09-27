@@ -19,11 +19,11 @@ import { Sleep } from '../utils/utils.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Chain } from '../utils/enums';
-import { getCollectionInfoModel } from '../common/models/CollectionInfoModel';
 import { Web3Service } from '../utils/web3.service';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
 import { AppConfig } from '../../app-config';
+import { getTokenEventModel } from '../common/models/TokenEventModel';
 
 @Injectable()
 export class SubTasksService {
@@ -148,6 +148,7 @@ export class SubTasksService {
       })
       .on('data', async (event) => {
         this.logger.log(`=============Collection ${token} event ${JSON.stringify(event)} received`);
+        await this.dealWithUserCollectionToken(event, token, chain, is721);
       });
   }
 
@@ -156,5 +157,71 @@ export class SubTasksService {
       AppConfig[this.configService.get('NETWORK')][chain].stickerContract === token ||
       AppConfig[this.configService.get('NETWORK')][Chain.V1].stickerContract === token
     );
+  }
+
+  private async dealWithUserCollectionToken(event, contract: string, chain: Chain, is721: boolean) {
+    const tokenId = is721 ? event.returnValues._tokenId : event.returnValues._id;
+    const method = is721
+      ? this.web3Service.stickerContractRPC[chain].methods.tokenURI(tokenId).call
+      : this.web3Service.stickerContractRPC[chain].methods.uri(tokenId).call;
+
+    const [blockInfo, tokenUri] = await this.web3Service.web3BatchRequest(
+      [
+        ...this.web3Service.getBaseBatchRequestParam(event, chain),
+        {
+          method: method,
+          params: {},
+        },
+      ],
+      chain,
+    );
+
+    const eventInfo = {
+      blockNumber: event.blockNumber,
+      transactionHash: event.transactionHash,
+      from: event.returnValues._from,
+      to: event.returnValues._to,
+      tokenId: event.returnValues._id,
+      operator: event.returnValues._operator,
+      value: is721 ? 1 : parseInt(event.returnValues._value),
+      chain,
+      contract,
+      gasFee: blockInfo.gasUsed,
+      timestamp: blockInfo.timestamp,
+    };
+
+    const TokenEventModel = getTokenEventModel(this.connection);
+    const tokenEvent = new TokenEventModel(eventInfo);
+    await tokenEvent.save();
+
+    const tokenInfo = {
+      tokenId,
+      tokenUri,
+      tokenOwner: event.returnValues._to,
+      tokenIdHex: '0x' + BigInt(tokenId).toString(16),
+      chain,
+      contract,
+      blockNumber: event.blockNumber,
+      createTime: blockInfo.timestamp,
+      updateTime: blockInfo.timestamp,
+    };
+
+    await this.dbService.insertToken(tokenInfo);
+  }
+
+  private async getTokenInfoByUri(uri: string) {
+    if (uri.startsWith('pasar:json') || uri.startsWith('feeds:json')) {
+      return await this.getInfoByIpfsUri(uri);
+    }
+
+    if (uri.startsWith('https://')) {
+      return (await axios(uri)).data;
+    }
+
+    if (uri.startsWith('ipfs://')) {
+      const ipfsHash = uri.split('ipfs://')[1];
+      const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
+      return (await axios(ipfsUri)).data;
+    }
   }
 }

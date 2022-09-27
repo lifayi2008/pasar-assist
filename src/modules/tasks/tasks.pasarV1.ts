@@ -141,11 +141,7 @@ export class PasarV1Service {
       );
     } else {
       if (eventInfo.to !== this.pasarContract) {
-        await this.subTasksService.updateTokenOwner(
-          eventInfo.tokenId,
-          eventInfo.to,
-          eventInfo.blockNumber,
-        );
+        await this.subTasksService.updateTokenOwner(eventInfo.tokenId, eventInfo.to);
       }
     }
   }
