@@ -148,7 +148,7 @@ export class SubTasksService {
     const event = is721 ? 'Transfer' : 'TransferSingle';
     const contractWs = new this.web3Service.web3WS[chain].eth.Contract(ABI, token);
     contractWs.events[event]({
-      fromBlock: blockNumber,
+      fromBlock: 0,
     })
       .on('error', (error) => {
         this.logger.error(error);
@@ -185,7 +185,7 @@ export class SubTasksService {
       transactionHash: event.transactionHash,
       from: event.returnValues._from,
       to: event.returnValues._to,
-      tokenId: event.returnValues._id,
+      tokenId,
       operator: event.returnValues._operator,
       value: is721 ? 1 : parseInt(event.returnValues._value),
       chain,

@@ -819,6 +819,7 @@ export class TasksService {
       chain: this.chain,
       is721,
       symbol,
+      blockNumber: eventInfo.blockNumber,
     });
 
     if (!this.subTasksService.checkIsBaseCollection(eventInfo.token, this.chain)) {

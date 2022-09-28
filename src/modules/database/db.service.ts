@@ -101,4 +101,13 @@ export class DbService {
   }) {
     return await this.connection.collection('tokens').insertOne(tokenInfo);
   }
+
+  async getLatestNoDetailTokens() {
+    return await this.connection
+      .collection('tokens')
+      .find({ notGetDetail: true })
+      .sort({ createTime: 1 })
+      .limit(5)
+      .toArray();
+  }
 }

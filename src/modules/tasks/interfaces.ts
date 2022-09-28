@@ -113,6 +113,7 @@ export interface UpdateCollectionParams {
   royaltyFees?: number[];
   is721?: boolean;
   symbol?: string;
+  blockNumber?: number;
 }
 
 export enum OrderEventType {

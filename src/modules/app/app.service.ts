@@ -302,9 +302,9 @@ export class AppService {
 
     // const tokenContract = new this.web3Service.web3RPC[Chain.ELA].eth.Contract(
     //   TOKEN721_ABI,
-    //   '0xE27934fB3683872e35b8d9E57c30978e1260c614',
+    //   '0xcB262A92e2E3c8C3590b72A1fDe3c6768EE08B7e',
     // );
-    // tokenContract.methods.tokenURI('14').call().then(console.log);
+    // tokenContract.methods.tokenURI(1).call().then(console.log);
 
     // axios('https://gateway.pinata.cloud/ipfs/QmS9obSyBypporHKvvJTrcymGD21dmz8ofPz73AwyYc1vU').then(
     //   (result) => {
@@ -315,5 +315,17 @@ export class AppService {
     // await tokenContract.methods.symbol().call().then(console.log);
     // await tokenContract.methods.supportsInterface('0x80ac58cd').call().then(console.log);
     // await tokenContract.methods.supportsInterface('0xd9b67a26').call().then(console.log);
+
+    // const tokenContract = new this.web3Service.web3WS[Chain.ELA].eth.Contract(
+    //   TOKEN721_ABI,
+    //   '0xcB262A92e2E3c8C3590b72A1fDe3c6768EE08B7e',
+    // );
+    //
+    // tokenContract
+    //   .getPastEvents('Transfer', {
+    //     fromBlock: 0,
+    //     toBlock: 'latest',
+    //   })
+    //   .then(console.log);
   }
 }

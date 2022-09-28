@@ -9,6 +9,7 @@ import { BullModule } from '@nestjs/bull';
 import { TokenDataConsumer } from './token-data.consumer';
 import { OrderDataConsumer } from './order-data.consumer';
 import { PasarV1Service } from './tasks.pasarV1';
+import { TasksCommonService } from './tasks.common';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PasarV1Service } from './tasks.pasarV1';
   providers: [
     TasksService,
     PasarV1Service,
+    TasksCommonService,
     SubTasksService,
     DataCheckService,
     TokenDataConsumer,
