@@ -24,6 +24,7 @@ import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
 import { AppConfig } from '../../app-config';
 import { getTokenEventModel } from '../common/models/TokenEventModel';
+import { Constants } from '../../constants';
 
 @Injectable()
 export class SubTasksService {
@@ -154,7 +155,7 @@ export class SubTasksService {
         this.logger.error(error);
       })
       .on('data', async (event) => {
-        this.logger.log(`=============Collection ${token} event ${JSON.stringify(event)} received`);
+        this.logger.log(`${token} ${event} event ${JSON.stringify(event)} received`);
         await this.dealWithUserCollectionToken(event, token, chain, is721);
       });
   }
@@ -198,20 +199,24 @@ export class SubTasksService {
     const tokenEvent = new TokenEventModel(eventInfo);
     await tokenEvent.save();
 
-    const tokenInfo = {
-      tokenId,
-      tokenUri,
-      tokenOwner: event.returnValues._to,
-      tokenIdHex: '0x' + BigInt(tokenId).toString(16),
-      chain,
-      contract,
-      blockNumber: event.blockNumber,
-      createTime: blockInfo.timestamp,
-      updateTime: blockInfo.timestamp,
-      notGetDetail: true,
-    };
+    if (eventInfo.from === Constants.BURN_ADDRESS) {
+      const tokenInfo = {
+        tokenId,
+        tokenUri,
+        tokenOwner: event.returnValues._to,
+        tokenIdHex: '0x' + BigInt(tokenId).toString(16),
+        chain,
+        contract,
+        blockNumber: event.blockNumber,
+        createTime: blockInfo.timestamp,
+        updateTime: blockInfo.timestamp,
+        notGetDetail: true,
+      };
 
-    await this.dbService.insertToken(tokenInfo);
+      await this.dbService.insertToken(tokenInfo);
+    } else {
+      await this.dbService.updateTokenOwner(tokenId, event.returnValues._to);
+    }
   }
 
   public async getTokenInfoByUri(uri: string) {

@@ -295,6 +295,10 @@ export class AppService {
     //     toBlock: 'latest',
     //   })
     //   .then(console.log);
+    // this.web3Service.stickerContractRPC[Chain.ELA].methods
+    //   .tokenInfo('81208071140106897041126415054316348139610899416969546386452189101997683463193')
+    //   .call()
+    //   .then(console.log);
     // this.web3Service.registerContractRPC[Chain.ELA].methods
     //   .tokenInfo('0xE27934fB3683872e35b8d9E57c30978e1260c614')
     //   .call()

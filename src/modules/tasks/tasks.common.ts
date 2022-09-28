@@ -9,7 +9,7 @@ export class TasksCommonService {
 
   private readonly logger = new Logger('TasksCommonService');
 
-  @Cron('0 */1 * * * *')
+  @Cron('*/10 * * * * *')
   async getUserTokenInfo() {
     const tokens = await this.dbService.getLatestNoDetailTokens();
     if (tokens.length > 0) {
