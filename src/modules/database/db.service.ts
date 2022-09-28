@@ -110,4 +110,26 @@ export class DbService {
       .limit(5)
       .toArray();
   }
+
+  async updateTokenDetail(
+    tokenId: string,
+    chain: string,
+    contract: string,
+    tokenDetail: {
+      image: string;
+      creator: string;
+      data: any;
+      name: string;
+      description: string;
+      type: string;
+      adult: boolean;
+      version: number;
+      notGetDetail: boolean;
+      properties: any;
+    },
+  ) {
+    return await this.connection
+      .collection('tokens')
+      .updateOne({ tokenId, chain, contract }, { $set: tokenDetail });
+  }
 }

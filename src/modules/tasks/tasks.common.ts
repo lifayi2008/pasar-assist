@@ -1,25 +1,49 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { SubTasksService } from './sub-tasks.service';
-import { ConfigService } from '@nestjs/config';
 import { DbService } from '../database/db.service';
-import { Web3Service } from '../utils/web3.service';
-import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
 
 @Injectable()
 export class TasksCommonService {
-  constructor(private dbService: DbService) {}
+  constructor(private dbService: DbService, private subTasksService: SubTasksService) {}
 
   private readonly logger = new Logger('TasksCommonService');
 
-  @Cron('0 */1 0 * * *')
+  @Cron('0 */1 * * * *')
   async getUserTokenInfo() {
     const tokens = await this.dbService.getLatestNoDetailTokens();
     if (tokens.length > 0) {
-      tokens.forEach(async (token) => {
-        this.logger.log(JSON.stringify(token));
-      });
+      for (const token of tokens) {
+        const tokenUri = token.tokenUri;
+        try {
+          const tokenInfo = await this.subTasksService.getTokenInfoByUri(tokenUri);
+          this.logger.log(JSON.stringify(tokenInfo));
+
+          if (tokenInfo) {
+            const tokenDetail = {
+              name: tokenInfo.name,
+              description: tokenInfo.description,
+              image: tokenInfo.image ? tokenInfo.image : '',
+              type: tokenInfo.type ? tokenInfo.type : 'image',
+              adult: tokenInfo.adult ? tokenInfo.adult : false,
+              version: tokenInfo.version ? tokenInfo.version : 2,
+              properties: tokenInfo.properties ? tokenInfo.properties : {},
+              creator: tokenInfo.creator ? tokenInfo.creator : {},
+              data: tokenInfo.data ? tokenInfo.data : {},
+              notGetDetail: false,
+            };
+
+            await this.dbService.updateTokenDetail(
+              token.tokenId,
+              token.chain,
+              token.contract,
+              tokenDetail,
+            );
+          }
+        } catch (e) {
+          this.logger.error(`Error in getting token info for ${tokenUri}`);
+        }
+      }
     }
   }
 }

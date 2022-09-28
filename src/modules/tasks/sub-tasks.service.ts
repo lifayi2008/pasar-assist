@@ -214,7 +214,7 @@ export class SubTasksService {
     await this.dbService.insertToken(tokenInfo);
   }
 
-  private async getTokenInfoByUri(uri: string) {
+  public async getTokenInfoByUri(uri: string) {
     if (uri.startsWith('pasar:json') || uri.startsWith('feeds:json')) {
       return await this.getInfoByIpfsUri(uri);
     }
@@ -228,5 +228,7 @@ export class SubTasksService {
       const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
       return (await axios(ipfsUri)).data;
     }
+
+    return null;
   }
 }
