@@ -105,7 +105,7 @@ export class DbService {
   async getLatestNoDetailTokens() {
     return await this.connection
       .collection('tokens')
-      .find({ notGetDetail: true })
+      .find({ notGetDetail: true, $lt: { retryTimes: 5 } })
       .sort({ createTime: 1 })
       .limit(5)
       .toArray();
@@ -131,5 +131,11 @@ export class DbService {
     return await this.connection
       .collection('tokens')
       .updateOne({ tokenId, chain, contract }, { $set: tokenDetail });
+  }
+
+  async increaseTokenRetryTimes(tokenId: string, chain: string, contract: string) {
+    return await this.connection
+      .collection('tokens')
+      .updateOne({ tokenId, chain, contract }, { $inc: { retryTimes: 1 } });
   }
 }

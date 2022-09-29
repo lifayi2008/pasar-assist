@@ -155,7 +155,7 @@ export class SubTasksService {
         this.logger.error(error);
       })
       .on('data', async (event) => {
-        this.logger.log(`${token} ${event} event ${JSON.stringify(event)} received`);
+        this.logger.log(`${token} event ${JSON.stringify(event)} received`);
         await this.dealWithUserCollectionToken(event, token, chain, is721);
       });
   }
@@ -211,6 +211,7 @@ export class SubTasksService {
         createTime: blockInfo.timestamp,
         updateTime: blockInfo.timestamp,
         notGetDetail: true,
+        retryTimes: 0,
       };
 
       await this.dbService.insertToken(tokenInfo);
