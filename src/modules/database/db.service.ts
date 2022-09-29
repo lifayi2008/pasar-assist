@@ -98,6 +98,7 @@ export class DbService {
     blockNumber: number;
     updateTime: number;
     notGetDetail: boolean;
+    retryTimes: number;
   }) {
     return await this.connection.collection('tokens').insertOne(tokenInfo);
   }
@@ -105,7 +106,7 @@ export class DbService {
   async getLatestNoDetailTokens() {
     return await this.connection
       .collection('tokens')
-      .find({ notGetDetail: true, retrayTimes: { $lt: 5 } })
+      .find({ notGetDetail: true, retryTimes: { $lt: 5 } })
       .sort({ createTime: 1 })
       .limit(5)
       .toArray();
