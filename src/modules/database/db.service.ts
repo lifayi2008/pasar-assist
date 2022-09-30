@@ -31,6 +31,20 @@ export class DbService {
     }
   }
 
+  async getUserTokenEventLastHeight(chain: Chain, contract: string): Promise<number> {
+    const results = await this.connection
+      .collection('token_events')
+      .find({ chain, contract })
+      .sort({ blockNumber: -1 })
+      .limit(1)
+      .toArray();
+    if (results.length > 0) {
+      return results[0].blockNumber;
+    } else {
+      return 0;
+    }
+  }
+
   async getOrderEventLastHeight(chain: Chain, orderEventType: OrderEventType): Promise<number> {
     const results = await this.connection
       .collection('order_events')
@@ -138,5 +152,9 @@ export class DbService {
     return await this.connection
       .collection('tokens')
       .updateOne({ tokenId, chain, contract }, { $inc: { retryTimes: 1 } });
+  }
+
+  async getRegisteredCollections() {
+    return await this.connection.collection('collections').find().toArray();
   }
 }

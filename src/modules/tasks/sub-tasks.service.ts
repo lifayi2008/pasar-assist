@@ -144,7 +144,7 @@ export class SubTasksService {
     );
   }
 
-  async startupSyncCollection(token: string, chain: Chain, blockNumber: number, is721: boolean) {
+  async startupSyncCollection(token: string, chain: Chain, is721: boolean) {
     const ABI = is721 ? TOKEN721_ABI : TOKEN1155_ABI;
     const event = is721 ? 'Transfer' : 'TransferSingle';
     const contractWs = new this.web3Service.web3WS[chain].eth.Contract(ABI, token);
@@ -160,7 +160,7 @@ export class SubTasksService {
       });
   }
 
-  private async dealWithUserCollectionToken(event, contract: string, chain: Chain, is721: boolean) {
+  async dealWithUserCollectionToken(event, contract: string, chain: Chain, is721: boolean) {
     const tokenId = is721 ? event.returnValues._tokenId : event.returnValues._id;
     const contractRPC = new this.web3Service.web3RPC[chain].eth.Contract(
       is721 ? TOKEN721_ABI : TOKEN1155_ABI,
