@@ -24,7 +24,7 @@ export class TasksService {
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
   private readonly chain = Chain.ELA;
-  private readonly rpc: Web3;
+  private readonly rpc = this.web3Service.web3RPC[this.chain];
   private readonly stickerContract =
     AppConfig[this.configService.get('NETWORK')][this.chain].stickerContract;
   private readonly pasarContract =
@@ -43,9 +43,7 @@ export class TasksService {
     private dbService: DbService,
     private web3Service: Web3Service,
     @InjectConnection() private readonly connection: Connection,
-  ) {
-    this.rpc = this.web3Service.web3RPC[this.chain];
-  }
+  ) {}
 
   @Timeout('transfer', 1000)
   async handleTransferEvent() {

@@ -58,15 +58,15 @@ export class TasksCommonService {
     }
   }
 
-  @Timeout(0)
+  @Timeout('userCollection', 0)
   async startupListenUserCollectionEvent() {
     const registeredCollections = await this.dbService.getRegisteredCollections();
-    for (const collection of registeredCollections) {
+    registeredCollections.forEach(async (collection) => {
       if (!this.subTasksService.checkIsBaseCollection(collection.token, collection.chain)) {
         const nowHeight = await this.web3Service.web3RPC[collection.chain].eth.getBlockNumber();
         const lastHeight = await this.dbService.getUserTokenEventLastHeight(
-          collection.token,
           collection.chain,
+          collection.token,
         );
 
         const ABI = collection.is721 ? TOKEN721_ABI : TOKEN1155_ABI;
@@ -134,6 +134,6 @@ export class TasksCommonService {
             );
           });
       }
-    }
+    });
   }
 }
