@@ -43,7 +43,7 @@ export class PasarV1Service {
     this.rpc = this.web3Service.web3RPC[this.chain];
   }
 
-  //@Timeout('transferV1', 1000)
+  @Timeout('transferV1', 1000)
   async handleTransferEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getTokenEventLastHeight(
@@ -146,7 +146,7 @@ export class PasarV1Service {
     }
   }
 
-  //@Timeout('orderForSaleV1', 30 * 1000)
+  @Timeout('orderForSaleV1', 30 * 1000)
   async handleOrderForSaleEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -239,7 +239,7 @@ export class PasarV1Service {
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  //@Timeout('orderPriceChangedV1', 60 * 1000)
+  @Timeout('orderPriceChangedV1', 60 * 1000)
   async handleOrderPriceChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -328,7 +328,7 @@ export class PasarV1Service {
     });
   }
 
-  //@Timeout('orderFilledV1', 60 * 1000)
+  @Timeout('orderFilledV1', 60 * 1000)
   async handleOrderFilledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -426,7 +426,7 @@ export class PasarV1Service {
     });
   }
 
-  //@Timeout('orderCancelledV1', 60 * 1000)
+  @Timeout('orderCancelledV1', 60 * 1000)
   async handleOrderCancelledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(

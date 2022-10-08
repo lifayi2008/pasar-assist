@@ -720,7 +720,7 @@ export class TasksService {
     });
   }
 
-  //@Timeout('tokenRegistered', 60 * 1000)
+  @Timeout('tokenRegistered', 60 * 1000)
   async handleTokenRegisteredEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
@@ -825,7 +825,7 @@ export class TasksService {
     }
   }
 
-  //@Timeout('tokenRoyaltyChanged', 60 * 1000)
+  @Timeout('tokenRoyaltyChanged', 60 * 1000)
   async handleRoyaltyChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
@@ -911,7 +911,7 @@ export class TasksService {
     });
   }
 
-  //@Timeout('tokenInfoUpdated', 60 * 1000)
+  @Timeout('tokenInfoUpdated', 60 * 1000)
   async handleTokenInfoUpdatedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
