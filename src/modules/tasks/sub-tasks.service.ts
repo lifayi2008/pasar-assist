@@ -56,6 +56,10 @@ export class SubTasksService {
   async dealWithNewToken(tokenInfo: ContractTokenInfo, blockNumber: number) {
     const ipfsTokenInfo = (await this.getInfoByIpfsUri(tokenInfo.tokenUri)) as IPFSTokenInfo;
 
+    if (ipfsTokenInfo.creator && ipfsTokenInfo.creator.did) {
+      await this.dbService.updateUser(tokenInfo.royaltyOwner, ipfsTokenInfo.creator);
+    }
+
     const TokenInfoModel = getTokenInfoModel(this.connection);
     await TokenInfoModel.findOneAndUpdate(
       { tokenId: tokenInfo.tokenId },

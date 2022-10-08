@@ -2,7 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { CollectionEventType, OrderEventType, UpdateCollectionParams } from '../tasks/interfaces';
+import {
+  CollectionEventType,
+  ContractUserInfo,
+  OrderEventType,
+  UpdateCollectionParams,
+} from '../tasks/interfaces';
 import { UpdateOrderParams } from './interfaces';
 import { Chain } from '../utils/enums';
 import { AppConfig } from '../../app-config';
@@ -156,5 +161,11 @@ export class DbService {
 
   async getRegisteredCollections() {
     return await this.connection.collection('collections').find().toArray();
+  }
+
+  async updateUser(address: string, creator: ContractUserInfo) {
+    return await this.connection
+      .collection('address_did')
+      .updateOne({ address }, { $set: creator }, { upsert: true });
   }
 }
