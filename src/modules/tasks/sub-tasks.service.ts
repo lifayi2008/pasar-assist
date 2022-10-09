@@ -81,11 +81,6 @@ export class SubTasksService {
     if (orderInfo.chain !== Chain.V1) {
       ipfsUserInfo = await this.getInfoByIpfsUri(orderInfo.sellerUri);
     }
-    // else {
-    //   this.logger.warn(`==========${orderInfo.baseToken}`);
-    //   orderInfo.baseToken =
-    //     AppConfig[this.configService.get('NETWORK')][orderInfo.chain].stickerContract;
-    // }
 
     const OrderInfoModel = getOrderInfoModel(this.connection);
     const orderInfoDoc = new OrderInfoModel({
