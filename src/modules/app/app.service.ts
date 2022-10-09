@@ -332,4 +332,21 @@ export class AppService {
     //   })
     //   .then(console.log);
   }
+
+  async getDidByAddress(address: string) {
+    const data = await this.connection.collection('users').findOne({ address });
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async listStickers(pageNum: number, pageSize: number, timeOrder: number) {
+    const total = await this.connection
+      .collection('tokens')
+      .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
+    const result = await this.connection
+      .collection('tokens')
+      .aggregate([{ $match: { tokenOwner: { $ne: Constants.BURN_ADDRESS } } }])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { result, total } };
+  }
 }

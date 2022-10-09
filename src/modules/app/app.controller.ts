@@ -51,4 +51,18 @@ export class AppController {
   async getTokenPriceHistory(@Query('tokenId') tokenId: string): Promise<CommonResponse> {
     return await this.appService.getTokenPriceHistory(tokenId);
   }
+
+  @Get('/getDidByAddress/:address')
+  async getDidByAddress(@Query('address') address: string): Promise<CommonResponse> {
+    return await this.appService.getDidByAddress(address);
+  }
+
+  @Get('/listStickers')
+  async listStickers(
+    @Query('pageNum') pageNum: number,
+    @Query('pageSize') pageSize: number,
+    @Query('timeOrder') timeOrder: number = -1,
+  ): Promise<CommonResponse> {
+    return await this.appService.listStickers(pageNum, pageSize, timeOrder);
+  }
 }
