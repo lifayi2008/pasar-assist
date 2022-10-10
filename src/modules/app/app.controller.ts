@@ -65,4 +65,9 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.listStickers(pageNum, pageSize, timeOrder);
   }
+
+  @Get('/search/:key')
+  async search(@Query('key') key: string): Promise<CommonResponse> {
+    return await this.appService.search(key);
+  }
 }

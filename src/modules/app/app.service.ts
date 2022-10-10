@@ -344,9 +344,81 @@ export class AppService {
       .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
     const result = await this.connection
       .collection('tokens')
-      .aggregate([{ $match: { tokenOwner: { $ne: Constants.BURN_ADDRESS } } }])
+      .aggregate([
+        { $match: { tokenOwner: { $ne: Constants.BURN_ADDRESS } } },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$tokenId', '$$tokenId'] },
+                      { $eq: ['$chain', '$$chain'] },
+                      { $eq: ['$contract', '$$contract'] },
+                    ],
+                  },
+                },
+              },
+              { $sort: { blockNumber: -1 } },
+              { $group: { _id: '$tokenId', doc: { $first: '$$ROOT' } } },
+              { $replaceRoot: { newRoot: '$doc' } },
+            ],
+            as: 'orders',
+          },
+        },
+        { $sort: { createTime: timeOrder } },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
+      ])
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { result, total } };
+  }
+
+  async search(keyword: string) {
+    const result = await this.connection
+      .collection('tokens')
+      .aggregate([
+        {
+          $match: {
+            $or: [
+              { tokenId: keyword },
+              { tokenIdHex: keyword },
+              { royaltyOwner: keyword },
+              { name: { $regex: keyword } },
+              { description: { $regex: keyword } },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$tokenId', '$$tokenId'] },
+                      { $eq: ['$chain', '$$chain'] },
+                      { $eq: ['$contract', '$$contract'] },
+                    ],
+                  },
+                },
+              },
+              { $sort: { blockNumber: -1 } },
+              { $group: { _id: '$tokenId', doc: { $first: '$$ROOT' } } },
+              { $replaceRoot: { newRoot: '$doc' } },
+            ],
+            as: 'orders',
+          },
+        },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
   }
 }
