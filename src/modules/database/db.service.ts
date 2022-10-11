@@ -10,7 +10,7 @@ import {
 } from '../tasks/interfaces';
 import { UpdateOrderParams } from './interfaces';
 import { Chain } from '../utils/enums';
-import { AppConfig } from '../../app-config';
+import { ConfigContract } from '../../config/config.contract';
 
 @Injectable()
 export class DbService {
@@ -32,7 +32,9 @@ export class DbService {
       return results[0].blockNumber;
     } else {
       //TODO: change to more universal method to get contract deploy block
-      return parseInt(AppConfig[this.configService.get('NETWORK')][chain].stickerContractDeploy);
+      return parseInt(
+        ConfigContract[this.configService.get('NETWORK')][chain].stickerContractDeploy,
+      );
     }
   }
 
@@ -60,7 +62,7 @@ export class DbService {
     if (results.length > 0) {
       return results[0].blockNumber;
     } else {
-      return parseInt(AppConfig[this.configService.get('NETWORK')][chain].pasarContractDeploy);
+      return parseInt(ConfigContract[this.configService.get('NETWORK')][chain].pasarContractDeploy);
     }
   }
 
@@ -102,7 +104,9 @@ export class DbService {
       return results[0].blockNumber;
     } else {
       //TODO: change to more universal method to get contract deploy block
-      return parseInt(AppConfig[this.configService.get('NETWORK')][chain].registerContractDeploy);
+      return parseInt(
+        ConfigContract[this.configService.get('NETWORK')][chain].registerContractDeploy,
+      );
     }
   }
 
@@ -167,5 +171,9 @@ export class DbService {
     return await this.connection
       .collection('address_did')
       .updateOne({ address }, { $set: creator }, { upsert: true });
+  }
+
+  async insertTokenRates(data: any[]) {
+    return await this.connection.collection('token_rates').insertMany(data);
   }
 }

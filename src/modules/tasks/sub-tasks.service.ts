@@ -22,7 +22,7 @@ import { Chain } from '../utils/enums';
 import { Web3Service } from '../utils/web3.service';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
-import { AppConfig } from '../../app-config';
+import { ConfigContract } from '../../config/config.contract';
 import { getTokenEventModel } from '../common/models/TokenEventModel';
 import { Constants } from '../../constants';
 
@@ -143,8 +143,8 @@ export class SubTasksService {
 
   checkIsBaseCollection(token: string, chain: Chain) {
     return (
-      AppConfig[this.configService.get('NETWORK')][chain].stickerContract === token ||
-      AppConfig[this.configService.get('NETWORK')][Chain.V1].stickerContract === token
+      ConfigContract[this.configService.get('NETWORK')][chain].stickerContract === token ||
+      ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract === token
     );
   }
 
@@ -240,5 +240,24 @@ export class SubTasksService {
     }
 
     return null;
+  }
+
+  async getTokenRate(token: string) {
+    const blockNumber = await this.web3Service.web3RPC[Chain.ELA].eth.getBlockNumber();
+    const graphQLParams = {
+      query: `query tokenPriceData { token(id: "${token}", block: {number: ${blockNumber}}) { derivedELA } bundle(id: "1", block: {number: ${blockNumber}}) { elaPrice } }`,
+      variables: null,
+      operationName: 'tokenPriceData',
+    };
+
+    return axios({
+      method: 'POST',
+      url: 'https://api.glidefinance.io/subgraphs/name/glide/exchange',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+      data: graphQLParams,
+    });
   }
 }

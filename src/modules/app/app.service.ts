@@ -9,7 +9,7 @@ import { Cache } from 'cache-manager';
 import { OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Chain } from '../utils/enums';
-import { AppConfig } from '../../app-config';
+import { ConfigContract } from '../../config/config.contract';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
 @Injectable()
@@ -279,7 +279,7 @@ export class AppService {
     //   .then(console.log);
 
     const fromBlock =
-      AppConfig[this.configService.get('NETWORK')][Chain.ELA].registerContractDeploy;
+      ConfigContract[this.configService.get('NETWORK')][Chain.ELA].registerContractDeploy;
     //
     // this.web3Service.stickerContractWS['V1']
     //   .getPastEvents('TransferSingle', {
@@ -417,6 +417,74 @@ export class AppService {
           },
         },
       ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
+  }
+
+  async listTrans(pageNum: number, pageSize: number, timeOrder: number) {
+    const total = await this.connection.collection('token_events').countDocuments();
+    const result = await this.connection
+      .collection('token_events')
+      .aggregate([
+        {
+          $lookup: {
+            from: 'tokens',
+            let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$tokenId', '$$tokenId'] },
+                      { $eq: ['$chain', '$$chain'] },
+                      { $eq: ['$contract', '$$contract'] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'token',
+          },
+        },
+        { $sort: { blockNumber: timeOrder } },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { result, total } };
+  }
+
+  async nftNumber() {
+    const data = await this.connection
+      .collection('tokens')
+      .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async relatedNftNumber() {
+    const countTokens = await this.connection.collection('token_events').countDocuments();
+    const countOrders = await this.connection.collection('order_events').countDocuments();
+    const data = countTokens + countOrders;
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async ownerAddressNumber() {
+    const data = await this.connection
+      .collection('tokens')
+      .distinct('tokenOwner')
+      .then((res) => res.length);
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getTotalVolume() {
+    const result = await this.connection
+      .collection('orders')
+      .find({ orderState: OrderState.Filled })
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };

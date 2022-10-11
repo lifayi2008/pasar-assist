@@ -70,4 +70,33 @@ export class AppController {
   async search(@Query('key') key: string): Promise<CommonResponse> {
     return await this.appService.search(key);
   }
+
+  @Get('/listTrans')
+  async listTrans(
+    @Query('pageNum') pageNum: number,
+    @Query('pageSize') pageSize: number,
+    @Query('timeOrder') timeOrder: number = -1,
+  ): Promise<CommonResponse> {
+    return await this.appService.listTrans(pageNum, pageSize, timeOrder);
+  }
+
+  @Get('/nftnumber')
+  async nftNumber(): Promise<CommonResponse> {
+    return await this.appService.nftNumber();
+  }
+
+  @Get('/relatednftnum')
+  async relatedNftNumber(): Promise<CommonResponse> {
+    return await this.appService.relatedNftNumber();
+  }
+
+  @Get('/owneraddressnum')
+  async ownerAddressNumber(): Promise<CommonResponse> {
+    return await this.appService.ownerAddressNumber();
+  }
+
+  @Get('/gettv')
+  async getTotalVolume(): Promise<CommonResponse> {
+    return await this.appService.getTotalVolume();
+  }
 }

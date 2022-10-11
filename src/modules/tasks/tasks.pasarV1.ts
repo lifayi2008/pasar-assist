@@ -12,7 +12,7 @@ import { getOrderEventModel } from '../common/models/OrderEventModel';
 import { Sleep } from '../utils/utils.service';
 import { Chain } from '../utils/enums';
 import Web3 from 'web3';
-import { AppConfig } from '../../app-config';
+import { ConfigContract } from '../../config/config.contract';
 import { Timeout } from '@nestjs/schedule';
 
 @Injectable()
@@ -24,9 +24,9 @@ export class PasarV1Service {
   private readonly chain = Chain.V1;
   private readonly rpc: Web3;
   private readonly stickerContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].stickerContract;
+    ConfigContract[this.configService.get('NETWORK')][this.chain].stickerContract;
   private readonly pasarContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].pasarContract;
+    ConfigContract[this.configService.get('NETWORK')][this.chain].pasarContract;
 
   private readonly stickerContractWS = this.web3Service.stickerContractWS[this.chain];
   private readonly stickerContractRPC = this.web3Service.stickerContractRPC[this.chain];

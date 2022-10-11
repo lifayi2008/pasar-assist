@@ -6,11 +6,15 @@ import { Web3Service } from '../utils/web3.service';
 import { Sleep } from '../utils/utils.service';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
+import { ConfigTokens } from '../../config/config.tokens';
+import { ConfigService } from '@nestjs/config';
+import { Chain } from '../utils/enums';
 
 @Injectable()
 export class TasksCommonService {
   constructor(
     private dbService: DbService,
+    private configService: ConfigService,
     private subTasksService: SubTasksService,
     private web3Service: Web3Service,
   ) {}
@@ -56,6 +60,31 @@ export class TasksCommonService {
         }
       }
     }
+  }
+
+  @Cron('0 * * * * *')
+  async getELATokenRates() {
+    const tokenList = ConfigTokens[this.configService.get('NETWORK')][Chain.ELA];
+    const tokens = [];
+    const promises = [];
+    const data = [];
+    for (const x in tokenList) {
+      const token = tokenList[x].toLowerCase();
+      tokens.push(token);
+      promises.push(this.subTasksService.getTokenRate(token));
+    }
+
+    const rates = await Promise.all(promises);
+    for (let i = 0; i < rates.length; i++) {
+      data[i] = {
+        timestamp: Date.now(),
+        chain: Chain.ELA,
+        token: tokens[i],
+        rate: parseFloat(rates[i].data.data.token.derivedELA),
+      };
+    }
+
+    await this.dbService.insertTokenRates(data);
   }
 
   @Timeout('userCollection', 0)

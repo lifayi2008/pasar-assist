@@ -1,6 +1,6 @@
-import { Chain } from './modules/utils/enums';
+import { Chain } from '../modules/utils/enums';
 
-export const AppConfig = {
+export const ConfigContract = {
   mainnet: {
     [Chain.ELA]: {
       wsUrl: 'ws://localhost:20635',

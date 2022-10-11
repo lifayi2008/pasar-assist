@@ -12,7 +12,7 @@ import { getOrderEventModel } from '../common/models/OrderEventModel';
 import { Sleep } from '../utils/utils.service';
 import { Chain } from '../utils/enums';
 import Web3 from 'web3';
-import { AppConfig } from '../../app-config';
+import { ConfigContract } from '../../config/config.contract';
 import { Timeout } from '@nestjs/schedule';
 import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
@@ -26,11 +26,11 @@ export class TasksService {
   private readonly chain = Chain.ELA;
   private readonly rpc = this.web3Service.web3RPC[this.chain];
   private readonly stickerContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].stickerContract;
+    ConfigContract[this.configService.get('NETWORK')][this.chain].stickerContract;
   private readonly pasarContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].pasarContract;
+    ConfigContract[this.configService.get('NETWORK')][this.chain].pasarContract;
   private readonly registerContract =
-    AppConfig[this.configService.get('NETWORK')][this.chain].registerContract;
+    ConfigContract[this.configService.get('NETWORK')][this.chain].registerContract;
   private readonly stickerContractWS = this.web3Service.stickerContractWS[this.chain];
   private readonly stickerContractRPC = this.web3Service.stickerContractRPC[this.chain];
   private readonly pasarContractWS = this.web3Service.pasarContractWS[this.chain];

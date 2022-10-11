@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Web3 from 'web3';
 import { CallOfBatch } from './interfaces';
-import { AppConfig } from '../../app-config';
+import { ConfigContract } from '../../config/config.contract';
 import { Chain } from './enums';
 import { PASAR_ABI } from '../../contracts/PasarABI';
 import { STICKER_ABI } from '../../contracts/StickerABI';
@@ -46,132 +46,132 @@ export class Web3Service {
     };
 
     this.web3WS[Chain.ELA] = new Web3(
-      new Web3.providers.WebsocketProvider(AppConfig[env][Chain.ELA].wsUrl, options),
+      new Web3.providers.WebsocketProvider(ConfigContract[env][Chain.ELA].wsUrl, options),
     );
     this.web3RPC[Chain.ELA] = new Web3(
-      new Web3.providers.HttpProvider(AppConfig[env][Chain.ELA].rpcUrl),
+      new Web3.providers.HttpProvider(ConfigContract[env][Chain.ELA].rpcUrl),
     );
     this.web3WS[Chain.V1] = new Web3(
-      new Web3.providers.WebsocketProvider(AppConfig[env][Chain.V1].wsUrl, options),
+      new Web3.providers.WebsocketProvider(ConfigContract[env][Chain.V1].wsUrl, options),
     );
     this.web3RPC[Chain.V1] = new Web3(
-      new Web3.providers.HttpProvider(AppConfig[env][Chain.V1].rpcUrl),
+      new Web3.providers.HttpProvider(ConfigContract[env][Chain.V1].rpcUrl),
     );
 
     this.web3WS[Chain.ETH] = new Web3(
-      new Web3.providers.WebsocketProvider(AppConfig[env][Chain.ETH].wsUrl, options),
+      new Web3.providers.WebsocketProvider(ConfigContract[env][Chain.ETH].wsUrl, options),
     );
     this.web3RPC[Chain.ETH] = new Web3(
-      new Web3.providers.HttpProvider(AppConfig[env][Chain.ETH].rpcUrl),
+      new Web3.providers.HttpProvider(ConfigContract[env][Chain.ETH].rpcUrl),
     );
 
     this.web3WS[Chain.FSN] = new Web3(
-      new Web3.providers.WebsocketProvider(AppConfig[env][Chain.FSN].wsUrl, options),
+      new Web3.providers.WebsocketProvider(ConfigContract[env][Chain.FSN].wsUrl, options),
     );
     this.web3RPC[Chain.FSN] = new Web3(
-      new Web3.providers.HttpProvider(AppConfig[env][Chain.FSN].rpcUrl),
+      new Web3.providers.HttpProvider(ConfigContract[env][Chain.FSN].rpcUrl),
     );
 
     //Contract WS
     this.pasarContractWS[Chain.ELA] = new this.web3WS[Chain.ELA].eth.Contract(
       PASAR_ABI,
-      AppConfig[env][Chain.ELA].pasarContract,
+      ConfigContract[env][Chain.ELA].pasarContract,
     );
 
     this.stickerContractWS[Chain.ELA] = new this.web3WS[Chain.ELA].eth.Contract(
       STICKER_ABI,
-      AppConfig[env][Chain.ELA].stickerContract,
+      ConfigContract[env][Chain.ELA].stickerContract,
     );
 
     this.registerContractWS[Chain.ELA] = new this.web3WS[Chain.ELA].eth.Contract(
       REGISTER_ABI,
-      AppConfig[env][Chain.ELA].registerContract,
+      ConfigContract[env][Chain.ELA].registerContract,
     );
 
     this.pasarContractWS[Chain.ETH] = new this.web3WS[Chain.ETH].eth.Contract(
       PASAR_ABI,
-      AppConfig[env][Chain.ETH].pasarContract,
+      ConfigContract[env][Chain.ETH].pasarContract,
     );
 
     this.stickerContractWS[Chain.ETH] = new this.web3WS[Chain.ETH].eth.Contract(
       STICKER_ABI,
-      AppConfig[env][Chain.ETH].stickerContract,
+      ConfigContract[env][Chain.ETH].stickerContract,
     );
 
     this.registerContractWS[Chain.ETH] = new this.web3WS[Chain.ETH].eth.Contract(
       REGISTER_ABI,
-      AppConfig[env][Chain.ETH].registerContract,
+      ConfigContract[env][Chain.ETH].registerContract,
     );
 
     this.pasarContractWS[Chain.FSN] = new this.web3WS[Chain.FSN].eth.Contract(
       PASAR_ABI,
-      AppConfig[env][Chain.FSN].pasarContract,
+      ConfigContract[env][Chain.FSN].pasarContract,
     );
 
     this.registerContractWS[Chain.FSN] = new this.web3WS[Chain.FSN].eth.Contract(
       REGISTER_ABI,
-      AppConfig[env][Chain.FSN].registerContract,
+      ConfigContract[env][Chain.FSN].registerContract,
     );
 
     this.pasarContractWS[Chain.V1] = new this.web3WS[Chain.V1].eth.Contract(
       PASAR_V1_ABI,
-      AppConfig[env][Chain.V1].pasarContract,
+      ConfigContract[env][Chain.V1].pasarContract,
     );
 
     this.stickerContractWS[Chain.V1] = new this.web3WS[Chain.V1].eth.Contract(
       STICKER_V1_ABI,
-      AppConfig[env][Chain.V1].stickerContract,
+      ConfigContract[env][Chain.V1].stickerContract,
     );
 
     //Contract RPC
     this.pasarContractRPC[Chain.ELA] = new this.web3RPC[Chain.ELA].eth.Contract(
       PASAR_ABI,
-      AppConfig[env][Chain.ELA].pasarContract,
+      ConfigContract[env][Chain.ELA].pasarContract,
     );
 
     this.stickerContractRPC[Chain.ELA] = new this.web3RPC[Chain.ELA].eth.Contract(
       STICKER_ABI,
-      AppConfig[env][Chain.ELA].stickerContract,
+      ConfigContract[env][Chain.ELA].stickerContract,
     );
 
     this.registerContractRPC[Chain.ELA] = new this.web3RPC[Chain.ELA].eth.Contract(
       REGISTER_ABI,
-      AppConfig[env][Chain.ELA].registerContract,
+      ConfigContract[env][Chain.ELA].registerContract,
     );
 
     this.pasarContractRPC[Chain.ETH] = new this.web3RPC[Chain.ETH].eth.Contract(
       PASAR_ABI,
-      AppConfig[env][Chain.ETH].pasarContract,
+      ConfigContract[env][Chain.ETH].pasarContract,
     );
 
     this.stickerContractRPC[Chain.ETH] = new this.web3RPC[Chain.ETH].eth.Contract(
       STICKER_ABI,
-      AppConfig[env][Chain.ETH].stickerContract,
+      ConfigContract[env][Chain.ETH].stickerContract,
     );
 
     this.registerContractRPC[Chain.ETH] = new this.web3RPC[Chain.ETH].eth.Contract(
       REGISTER_ABI,
-      AppConfig[env][Chain.ETH].registerContract,
+      ConfigContract[env][Chain.ETH].registerContract,
     );
 
     this.pasarContractRPC[Chain.FSN] = new this.web3RPC[Chain.FSN].eth.Contract(
       PASAR_ABI,
-      AppConfig[env][Chain.FSN].pasarContract,
+      ConfigContract[env][Chain.FSN].pasarContract,
     );
 
     this.registerContractRPC[Chain.FSN] = new this.web3RPC[Chain.FSN].eth.Contract(
       REGISTER_ABI,
-      AppConfig[env][Chain.FSN].registerContract,
+      ConfigContract[env][Chain.FSN].registerContract,
     );
 
     this.pasarContractRPC[Chain.V1] = new this.web3RPC[Chain.V1].eth.Contract(
       PASAR_V1_ABI,
-      AppConfig[env][Chain.V1].pasarContract,
+      ConfigContract[env][Chain.V1].pasarContract,
     );
 
     this.stickerContractRPC[Chain.V1] = new this.web3RPC[Chain.V1].eth.Contract(
       STICKER_V1_ABI,
-      AppConfig[env][Chain.V1].stickerContract,
+      ConfigContract[env][Chain.V1].stickerContract,
     );
   }
 
