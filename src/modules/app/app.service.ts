@@ -509,9 +509,9 @@ export class AppService {
 
   async getNftPriceByTokenId(tokenId: string, baseToken: string) {
     const data = await this.connection
-      .collection('order_event')
-      .find({ tokenId, baseToken, eventType: OrderEventType.OrderFilled })
-      .sort({ blockNumber: 1 })
+      .collection('tokens')
+      .find({ tokenId, baseToken, orderState: OrderState.Filled })
+      .sort({ createTime: 1 })
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
