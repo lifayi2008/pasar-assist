@@ -174,6 +174,7 @@ export class DbService {
   }
 
   async insertTokenRates(data: any[]) {
+    await this.connection.collection('token_rates').deleteMany({});
     return await this.connection.collection('token_rates').insertMany(data);
   }
 }

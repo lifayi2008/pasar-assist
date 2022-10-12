@@ -481,12 +481,29 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
+  //TODO: need to change logic here, find all filled orders then calculate the total amount is not a good idea; this value should be calculated when order is filled
   async getTotalVolume() {
     const result = await this.connection
       .collection('orders')
       .find({ orderState: OrderState.Filled })
       .toArray();
 
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
+    const tokenRates = await this.connection.collection('token_rates').find().toArray();
+    const rates = {};
+    tokenRates.forEach((item) => {
+      rates[item.chain][item.token] = item.rate;
+    });
+
+    let total = 0;
+    result.forEach((item) => {
+      let rate = 1;
+      if (item.quoteToken && item.quoteToken !== Constants.BURN_ADDRESS) {
+        rate = rates[item.chain][item.quoteToken];
+      }
+      const amount = item.amount ? item.amount : 1;
+      total += (amount * item.price * rate) / Constants.ELA_ESC_PRECISION;
+    });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: total };
   }
 }

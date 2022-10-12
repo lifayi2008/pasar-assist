@@ -77,7 +77,6 @@ export class TasksCommonService {
     const rates = await Promise.all(promises);
     for (let i = 0; i < rates.length; i++) {
       data[i] = {
-        timestamp: Date.now(),
         chain: Chain.ELA,
         token: tokens[i],
         rate: parseFloat(rates[i].data.data.token.derivedELA),
