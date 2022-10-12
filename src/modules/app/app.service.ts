@@ -506,4 +506,14 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: total };
   }
+
+  async getNftPriceByTokenId(tokenId: string, baseToken: string) {
+    const data = await this.connection
+      .collection('order_event')
+      .find({ tokenId, baseToken, eventType: OrderEventType.OrderFilled })
+      .sort({ blockNumber: 1 })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
 }

@@ -99,4 +99,12 @@ export class AppController {
   async getTotalVolume(): Promise<CommonResponse> {
     return await this.appService.getTotalVolume();
   }
+
+  @Get('/getNftPriceByTokenId/:tokenId/:baseToken')
+  async getNftPriceByTokenId(
+    @Query('tokenId') tokenId: string,
+    @Query('baseToken') baseToken: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getNftPriceByTokenId(tokenId, baseToken);
+  }
 }
