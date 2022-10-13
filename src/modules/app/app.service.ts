@@ -26,23 +26,23 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS };
   }
 
-  async getCollectibleByTokenId(tokenId: string) {
-    const data = await this.connection.collection('tokens').findOne({ tokenId });
-
-    if (data) {
-      const authorData = await this.cacheManager.get(data.royaltyOwner.toLowerCase());
-      if (authorData) {
-        data.authorAvatar = JSON.parse(authorData as string).avatar;
-      }
-
-      const ownerData = await this.cacheManager.get(data.tokenOwner.toLowerCase());
-      if (ownerData) {
-        data.holderName = JSON.parse(ownerData as string).name;
-      }
-    }
-
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
-  }
+  // async getCollectibleByTokenId(tokenId: string) {
+  //   const data = await this.connection.collection('tokens').findOne({ tokenId });
+  //
+  //   if (data) {
+  //     const authorData = await this.cacheManager.get(data.royaltyOwner.toLowerCase());
+  //     if (authorData) {
+  //       data.authorAvatar = JSON.parse(authorData as string).avatar;
+  //     }
+  //
+  //     const ownerData = await this.cacheManager.get(data.tokenOwner.toLowerCase());
+  //     if (ownerData) {
+  //       data.holderName = JSON.parse(ownerData as string).name;
+  //     }
+  //   }
+  //
+  //   return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  // }
 
   async getTokenOrderByTokenId(tokenId: string) {
     const result = await this.connection
@@ -515,5 +515,99 @@ export class AppService {
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getTranDetailsByTokenId(tokenId: string, baseToken: string, timeOrder: number) {
+    const data = await this.connection
+      .collection('orders')
+      .aggregate([
+        { $match: { tokenId, baseToken } },
+        {
+          $lookup: {
+            from: 'tokens',
+            let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$tokenId', '$$tokenId'] },
+                      { $eq: ['$chain', '$$chain'] },
+                      { $eq: ['$contract', '$$contract'] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'token',
+          },
+        },
+        {
+          $lookup: {
+            from: 'order_events',
+            let: { orderId: '$orderId', chain: '$chain' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [{ $eq: ['$orderId', '$$orderId'] }, { $eq: ['$chain', '$$chain'] }],
+                  },
+                },
+              },
+            ],
+            as: 'events',
+          },
+        },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getCollectibleByTokenId(tokenId: string, baseToken: string) {
+    const data = await this.connection
+      .collection('tokens')
+      .findOne({ tokenId, contract: baseToken });
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getTotalRoyaltyAndTotalSaleByWalletAddr(walletAddr: string) {
+    const result = await this.connection
+      .collection('orders')
+      .find({
+        orderState: OrderState.Filled,
+        $or: [
+          { sellAddr: walletAddr },
+          { royaltyOwner: walletAddr },
+          { royaltyOwners: { $elemMatch: { $eq: walletAddr } } },
+        ],
+      })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
+  }
+
+  async getStatisticDataByWalletAddr(walletAddr: string) {
+    const assets = await this.connection
+      .collection('tokens')
+      .countDocuments({ tokenOwner: walletAddr });
+
+    const sold = await this.connection
+      .collection('orders')
+      .countDocuments({ sellAddr: walletAddr, orderState: OrderState.Filled });
+
+    const purchased = await this.connection
+      .collection('orders')
+      .countDocuments({ buyerAddr: walletAddr, orderState: OrderState.Filled });
+
+    const transactions = await this.connection
+      .collection('token_events')
+      .countDocuments({ $or: [{ from: walletAddr }, { to: walletAddr }] });
+
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: { assets, sold, purchased, transactions },
+    };
   }
 }
