@@ -134,4 +134,25 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.getStatisticDataByWalletAddr(walletAddr);
   }
+
+  @Get('/getTranDetailsByWalletAddr/:walletAddr')
+  async getTranDetailsByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+    @Query('pageNum') pageNum: number = 1,
+    @Query('pageSize') pageSize: number = 10,
+    @Query('method') method: number = -1,
+    @Query('keyword') keyword: string = '',
+    @Query('performer') performer: number = -1,
+    @Query('timeOrder') timeOrder: number = -1,
+  ): Promise<CommonResponse> {
+    return await this.appService.getTranDetailsByWalletAddr(
+      walletAddr,
+      pageNum,
+      pageSize,
+      timeOrder,
+      method,
+      keyword,
+      performer,
+    );
+  }
 }

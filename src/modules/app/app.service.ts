@@ -610,4 +610,16 @@ export class AppService {
       data: { assets, sold, purchased, transactions },
     };
   }
+
+  async getTranDetailsByWalletAddr(
+    walletAddr: string,
+    pageNum: number,
+    pageSize: number,
+    timeOrder: number,
+    method: number,
+    keyword: string,
+    performer: number,
+  ) {
+    return undefined;
+  }
 }

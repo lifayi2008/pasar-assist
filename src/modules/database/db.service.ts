@@ -73,7 +73,7 @@ export class DbService {
   async updateTokenOwner(tokenId: string, to: string) {
     return await this.connection
       .collection('tokens')
-      .updateOne({ tokenId: tokenId }, { $set: { owner: to } });
+      .updateOne({ tokenId: tokenId }, { $set: { tokenOwner: to } });
   }
 
   async updateCollection(token: string, chain: Chain, collection: UpdateCollectionParams) {
