@@ -611,15 +611,77 @@ export class AppService {
     };
   }
 
-  async getTranDetailsByWalletAddr(
-    walletAddr: string,
-    pageNum: number,
-    pageSize: number,
-    timeOrder: number,
-    method: number,
-    keyword: string,
-    performer: number,
-  ) {
-    return undefined;
+  async listCollectibles(pageNum: number, pageSize: number, type: string, after: number) {
+    const match = {};
+    if (type !== '') {
+      match['$or'] = [];
+      const types = type.split(',');
+      if ('minted' in types) {
+        match['$or'].push({ order: { $exists: false } });
+      }
+      if ('listed' in types) {
+        match['$or'].push({ 'order.orderState': OrderState.Created });
+      }
+      if ('sale' in types) {
+        match['$or'].push({ 'order.orderState': OrderState.Filled });
+      }
+    }
+
+    if (after > 0) {
+      match['createTime'] = { $gt: after };
+    }
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'orders',
+          let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$tokenId', '$$tokenId'] },
+                    { $eq: ['$chain', '$$chain'] },
+                    { $eq: ['$contract', '$$contract'] },
+                  ],
+                },
+              },
+            },
+            { $sort: { createTime: -1 } },
+            { $group: { _id: '$tokenId', doc: { $first: '$$ROOT' } } },
+            { $replaceRoot: { newRoot: '$doc' } },
+          ],
+          as: 'order',
+        },
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+    ] as any;
+
+    if (Object.keys(match).length > 0) {
+      pipeline.push({ $match: match });
+    }
+
+    const result = await this.connection
+      .collection('orders')
+      .aggregate([...pipeline, { $count: 'total' }])
+      .toArray();
+
+    const total = result.length > 0 ? result[0].total : 0;
+    let data = [];
+
+    if (total > 0) {
+      data = await this.connection
+        .collection('tokens')
+        .aggregate([
+          ...pipeline,
+          { $sort: { createTime: -1 } },
+          { $skip: (pageNum - 1) * pageSize },
+          { $limit: pageSize },
+        ])
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 }
