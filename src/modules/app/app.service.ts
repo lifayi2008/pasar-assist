@@ -1,4 +1,11 @@
-import { BadRequestException, CACHE_MANAGER, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  CACHE_MANAGER,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Web3Service } from '../utils/web3.service';
 import { ConfigService } from '@nestjs/config';
 import { DbService } from '../database/db.service';
@@ -14,6 +21,8 @@ import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
 @Injectable()
 export class AppService {
+  private logger = new Logger('AppService');
+
   constructor(
     private web3Service: Web3Service,
     private configService: ConfigService,
@@ -525,7 +534,7 @@ export class AppService {
         {
           $lookup: {
             from: 'tokens',
-            let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+            let: { tokenId: '$tokenId', chain: '$chain', baseToken: '$contract' },
             pipeline: [
               {
                 $match: {
@@ -533,7 +542,7 @@ export class AppService {
                     $and: [
                       { $eq: ['$tokenId', '$$tokenId'] },
                       { $eq: ['$chain', '$$chain'] },
-                      { $eq: ['$contract', '$$contract'] },
+                      { $eq: ['$contract', '$$baseToken'] },
                     ],
                   },
                 },
@@ -616,14 +625,18 @@ export class AppService {
     if (type !== '') {
       match['$or'] = [];
       const types = type.split(',');
-      if ('minted' in types) {
+
+      if (types.includes('minted')) {
         match['$or'].push({ order: { $exists: false } });
       }
-      if ('listed' in types) {
+      if (types.includes('listed')) {
         match['$or'].push({ 'order.orderState': OrderState.Created });
       }
-      if ('sale' in types) {
+      if (types.includes('sale')) {
         match['$or'].push({ 'order.orderState': OrderState.Filled });
+      }
+      if (match['$or'].length === 0 || match['$or'].length === 3) {
+        delete match['$or'];
       }
     }
 
@@ -675,7 +688,7 @@ export class AppService {
         .collection('tokens')
         .aggregate([
           ...pipeline,
-          { $sort: { createTime: -1 } },
+          { $sort: { 'order.createTime': -1, createTime: -1 } },
           { $skip: (pageNum - 1) * pageSize },
           { $limit: pageSize },
         ])

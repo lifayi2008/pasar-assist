@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { CommonResponse } from '../utils/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
@@ -137,10 +137,10 @@ export class AppController {
 
   @Get('/listCollectibles')
   async listCollectibles(
-    @Query('pageNum') pageNum: number = 1,
-    @Query('pageSize') pageSize: number = 10,
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('type') type: string = '',
-    @Query('after') after: number = 0,
+    @Query('after', ParseIntPipe) after: number = 0,
   ): Promise<CommonResponse> {
     return await this.appService.listCollectibles(pageNum, pageSize, type, after);
   }

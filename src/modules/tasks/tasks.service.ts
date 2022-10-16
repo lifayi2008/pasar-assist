@@ -235,7 +235,6 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.contract = this.stickerContract;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
@@ -421,7 +420,6 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.contract = this.stickerContract;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
