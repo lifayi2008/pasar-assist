@@ -162,4 +162,23 @@ export class AppController {
   async getMarketplace(@Body() dto: QueryMarketplaceDTO): Promise<CommonResponse> {
     return await this.appService.getMarketplace(dto);
   }
+
+  @Get('/listNfts')
+  async listNfts(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('sort') sort: 1 | -1 = -1,
+  ): Promise<CommonResponse> {
+    return await this.appService.listNfts(pageNum, pageSize, sort);
+  }
+
+  @Get('/listTransactions')
+  async listTransactions(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('eventType', ParseIntPipe) eventType: number = 0,
+    @Query('sort') sort: 1 | -1 = -1,
+  ): Promise<CommonResponse> {
+    return await this.appService.listTransactions(pageNum, pageSize, eventType, sort);
+  }
 }

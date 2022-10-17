@@ -206,7 +206,7 @@ export class PasarV1Service {
       transactionHash: event.transactionHash,
       seller: event.returnValues._seller,
       orderId: event.returnValues._orderId,
-      tokenId: event.returnValues._id,
+      tokenId: event.returnValues._tokenId,
       amount: event.returnValues._amount,
       price: event.returnValues._price,
     };

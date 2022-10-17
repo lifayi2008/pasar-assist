@@ -782,20 +782,8 @@ export class AppService {
         {
           $lookup: {
             from: 'tokens',
-            let: { tokenId: '$tokenId', chain: '$chain', contract: '$baseToken' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ['$tokenId', '$$tokenId'] },
-                      { $eq: ['$chain', '$$chain'] },
-                      { $eq: ['$contract', '$$contract'] },
-                    ],
-                  },
-                },
-              },
-            ],
+            localField: 'uniqueKey',
+            foreignField: 'uniqueKey',
             as: 'token',
           },
         },
@@ -835,5 +823,22 @@ export class AppService {
     }
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
+  }
+
+  async listNfts(pageNum: number, pageSize: number, sort: 1 | -1) {
+    const total = await this.connection
+      .collection('tokens')
+      .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
+    const data = await this.connection
+      .collection('tokens')
+      .find({ tokenOwner: { $ne: Constants.BURN_ADDRESS } })
+      .sort({ createTime: sort })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
+  }
+
+  async listTransactions(pageNum: number, pageSize: number, eventType: number, sort: 1 | -1) {
+    return undefined;
   }
 }
