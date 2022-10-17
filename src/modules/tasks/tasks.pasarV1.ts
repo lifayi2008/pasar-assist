@@ -228,6 +228,7 @@ export class PasarV1Service {
     contractOrderInfo.chain = this.chain;
     contractOrderInfo.baseToken = this.stickerContract;
     contractOrderInfo.quoteToken = Constants.BURN_ADDRESS;
+    contractOrderInfo.uniqueKey = `${this.chain}-${this.stickerContract}-${eventInfo.tokenId}`;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
