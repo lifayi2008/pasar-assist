@@ -33,6 +33,7 @@ export const OrderInfoSchema = new mongoose.Schema(
     updateTime: Number,
     chain: String,
     contract: String,
+    uniqueKey: String,
   },
   { versionKey: false },
 );
