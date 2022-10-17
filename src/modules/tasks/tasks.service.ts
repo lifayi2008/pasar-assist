@@ -399,7 +399,7 @@ export class TasksService {
       transactionHash: event.transactionHash,
       seller: event.returnValues._seller,
       orderId: event.returnValues._orderId,
-      tokenId: event.returnValues._id,
+      tokenId: event.returnValues._tokenId,
       baseToken: event.returnValues._baseToken,
       amount: event.returnValues._amount,
       quoteToken: event.returnValues._quoteToken,
