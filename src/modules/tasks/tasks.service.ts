@@ -236,7 +236,7 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.uniqueKey = `${this.chain}-${event.baseToken}-${eventInfo.tokenId}`;
+    contractOrderInfo.uniqueKey = `${this.chain}-${eventInfo.baseToken}-${eventInfo.tokenId}`;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
@@ -422,7 +422,7 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.uniqueKey = `${this.chain}-${event.baseToken}-${eventInfo.tokenId}`;
+    contractOrderInfo.uniqueKey = `${this.chain}-${eventInfo.baseToken}-${eventInfo.tokenId}`;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
