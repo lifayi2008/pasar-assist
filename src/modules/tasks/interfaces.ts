@@ -126,7 +126,6 @@ export enum OrderEventType {
   OrderFilled,
   OrderCancelled,
   OrderPriceChanged,
-  OrderTakenDown,
 }
 
 export enum CollectionEventType {

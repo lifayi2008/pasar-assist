@@ -209,6 +209,7 @@ export class PasarV1Service {
       tokenId: event.returnValues._tokenId,
       amount: event.returnValues._amount,
       price: event.returnValues._price,
+      baseToken: this.stickerContract,
     };
 
     this.logger.log(`Received OrderForSale Event: ${JSON.stringify(eventInfo)}`);

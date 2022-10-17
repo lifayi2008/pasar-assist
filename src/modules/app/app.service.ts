@@ -650,20 +650,16 @@ export class AppService {
           from: 'orders',
           let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
           pipeline: [
+            { $sort: { createTime: -1 } },
+            { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+            { $replaceRoot: { newRoot: '$doc' } },
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$tokenId', '$$tokenId'] },
-                    { $eq: ['$chain', '$$chain'] },
-                    { $eq: ['$baseToken', '$$contract'] },
-                  ],
+                  $eq: ['$uniqueKey', '$$uniqueKey'],
                 },
               },
             },
-            { $sort: { createTime: -1 } },
-            { $group: { _id: '$tokenId', doc: { $first: '$$ROOT' } } },
-            { $replaceRoot: { newRoot: '$doc' } },
           ],
           as: 'order',
         },
@@ -825,7 +821,7 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
-  async listNfts(pageNum: number, pageSize: number, sort: 1 | -1) {
+  async listNFTs(pageNum: number, pageSize: number, sort: 1 | -1) {
     const total = await this.connection
       .collection('tokens')
       .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
@@ -838,7 +834,137 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
-  async listTransactions(pageNum: number, pageSize: number, eventType: number, sort: 1 | -1) {
-    return undefined;
+  async listTransactions(pageNum: number, pageSize: number, eventType: string, sort: 1 | -1) {
+    const matchOrder = {};
+    const matchToken = {};
+
+    if (eventType !== '') {
+      const eventTypes = eventType.split(',');
+      if (eventTypes.length !== 11) {
+        if (eventTypes.includes('BuyOrder')) {
+          matchOrder['eventType'] = OrderEventType.OrderFilled;
+        }
+        if (eventTypes.includes('CancelOrder')) {
+          matchOrder['eventType'] = OrderEventType.OrderCancelled;
+        }
+        if (eventTypes.includes('ChangeOrderPrice')) {
+          matchOrder['eventType'] = OrderEventType.OrderPriceChanged;
+        }
+        if (eventTypes.includes('CreateOrderForSale')) {
+          matchOrder['eventType'] = OrderEventType.OrderForSale;
+        }
+        if (eventTypes.includes('CreateOrderForAuction')) {
+          matchOrder['eventType'] = OrderEventType.OrderForAuction;
+        }
+        if (eventTypes.includes('BidForOrder')) {
+          matchOrder['eventType'] = OrderEventType.OrderBid;
+        }
+
+        if (eventTypes.includes('Mint')) {
+          matchToken['from'] = Constants.BURN_ADDRESS;
+        }
+        if (eventTypes.includes('Burn')) {
+          matchToken['to'] = Constants.BURN_ADDRESS;
+        }
+      }
+    }
+
+    const pipeline = [];
+    const pipeline1 = [
+      {
+        $lookup: {
+          from: 'orders',
+          let: { chain: '$chain', orderId: '$orderId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$chain', '$$chain'] }, { $eq: ['$orderId', '$$orderId'] }],
+                },
+              },
+            },
+          ],
+          as: 'order',
+        },
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'tokens',
+          localField: 'token.uniqueKey',
+          foreignField: 'uniqueKey',
+          as: 'token',
+        },
+      },
+      { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+    ];
+    const pipeline2 = [
+      {
+        $lookup: {
+          from: 'tokens',
+          let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$tokenId', '$$tokenId'] },
+                    { $eq: ['$chain', '$$chain'] },
+                    { $eq: ['$contract', '$$contract'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'token',
+        },
+      },
+      { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+    ];
+
+    let collection = '';
+    const total = 0;
+    if (Object.keys(matchOrder).length === 0 && Object.keys(matchToken).length === 0) {
+      collection = 'order_events';
+      pipeline.push(...pipeline1);
+      pipeline.push({
+        $unionWith: {
+          coll: 'token_events',
+          pipeline: pipeline2,
+        },
+      });
+    } else if (Object.keys(matchOrder).length > 0 && Object.keys(matchToken).length > 0) {
+      collection = 'order_events';
+      pipeline.push({ $match: matchOrder });
+      pipeline.push(...pipeline1);
+      pipeline.push({
+        $unionWith: {
+          coll: 'token_events',
+          pipeline: [{ $match: matchToken }, ...pipeline2],
+        },
+      });
+    } else {
+      if (Object.keys(matchOrder).length > 0) {
+        collection = 'order_events';
+        pipeline.push({ $match: matchOrder });
+        pipeline.push(...pipeline1);
+      } else {
+        collection = 'token_events';
+        pipeline.push({ $match: matchToken });
+        pipeline.push(...pipeline2);
+      }
+    }
+
+    const data = await this.connection
+      .collection(collection)
+      .aggregate([
+        ...pipeline,
+        { $sort: { timestamp: sort } },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 }
