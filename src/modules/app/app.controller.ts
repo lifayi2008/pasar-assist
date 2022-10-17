@@ -2,6 +2,7 @@ import { Body, Controller, Get, ParseIntPipe, Post, Query } from '@nestjs/common
 import { AppService } from './app.service';
 import { CommonResponse } from '../utils/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
+import { Category, Chain } from '../utils/enums';
 
 @Controller()
 export class AppController {
@@ -143,5 +144,16 @@ export class AppController {
     @Query('after', ParseIntPipe) after: number = 0,
   ): Promise<CommonResponse> {
     return await this.appService.listCollectibles(pageNum, pageSize, type, after);
+  }
+
+  @Get('/listCollections')
+  async listCollections(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('chain') type: Chain | 'all' = 'all',
+    @Query('category') category: Category | 'all' = 'all',
+    @Query('sort') sort: string = '',
+  ): Promise<CommonResponse> {
+    return await this.appService.listCollections(pageNum, pageSize, type, category, sort);
   }
 }

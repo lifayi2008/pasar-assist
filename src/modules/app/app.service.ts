@@ -15,7 +15,7 @@ import { Connection } from 'mongoose';
 import { Cache } from 'cache-manager';
 import { OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
-import { Chain } from '../utils/enums';
+import { Category, Chain } from '../utils/enums';
 import { ConfigContract } from '../../config/config.contract';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
@@ -358,7 +358,7 @@ export class AppService {
         {
           $lookup: {
             from: 'orders',
-            let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+            let: { tokenId: '$tokenId', chain: '$chain', contract: '$baseToken' },
             pipeline: [
               {
                 $match: {
@@ -656,7 +656,7 @@ export class AppService {
                   $and: [
                     { $eq: ['$tokenId', '$$tokenId'] },
                     { $eq: ['$chain', '$$chain'] },
-                    { $eq: ['$contract', '$$contract'] },
+                    { $eq: ['$baseToken', '$$contract'] },
                   ],
                 },
               },
@@ -692,6 +692,38 @@ export class AppService {
           { $skip: (pageNum - 1) * pageSize },
           { $limit: pageSize },
         ])
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
+  }
+
+  async listCollections(
+    pageNum: number,
+    pageSize: number,
+    type: Chain | 'all',
+    category: Category | 'all',
+    sort: string,
+  ) {
+    const filter = {};
+    if (type !== 'all') {
+      filter['chain'] = type;
+    }
+    if (category !== 'all') {
+      filter['data.category'] = category;
+    }
+
+    const total = await this.connection.collection('collections').countDocuments(filter);
+
+    let data = [];
+
+    if (total > 0) {
+      data = await this.connection
+        .collection('collections')
+        .find(filter)
+        .sort({ statics: -1 })
+        .skip((pageNum - 1) * pageSize)
+        .limit(pageSize)
         .toArray();
     }
 
