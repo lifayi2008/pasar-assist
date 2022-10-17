@@ -15,9 +15,9 @@ import { Connection } from 'mongoose';
 import { Cache } from 'cache-manager';
 import { OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
-import { Category, Chain } from '../utils/enums';
+import { Category, Chain, OrderTag } from '../utils/enums';
 import { ConfigContract } from '../../config/config.contract';
-import { TOKEN721_ABI } from '../../contracts/Token721ABI';
+import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
 
 @Injectable()
 export class AppService {
@@ -724,6 +724,113 @@ export class AppService {
         .sort({ statics: -1 })
         .skip((pageNum - 1) * pageSize)
         .limit(pageSize)
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
+  }
+
+  async getMarketplace(dto: QueryMarketplaceDTO) {
+    const now = Date.now();
+    const match = {};
+    if (dto.status && dto.status.length > 0 && dto.status.length < 5) {
+      match['$or'] = [];
+      if (dto.status.includes(OrderTag.BuyNow)) {
+        match['$or'].push({ orderType: OrderType.Sale });
+      }
+      if (dto.status.includes(OrderTag.OnAuction)) {
+        match['$or'].push({ endTime: { $gt: now } });
+      }
+      if (dto.status.includes(OrderTag.HasEnded)) {
+        match['$or'].push({ endTime: { $lt: now, $ne: 0 } });
+      }
+      if (dto.status.includes(OrderTag.HasBids)) {
+        match['$or'].push({ lastBid: { $gt: 0 } });
+      }
+    }
+
+    if (dto.collection && dto.type.length > 0) {
+      match['baseToken'] = { $in: dto.collection };
+    }
+
+    if (dto.token && dto.token.length > 0) {
+      match['quoteToken'] = { $in: dto.token };
+    }
+
+    if (dto.chain !== 'all') {
+      match['chain'] = dto.chain;
+    }
+
+    const priceMatch = {};
+    if (dto.minPrice) {
+      priceMatch['$gte'] = dto.minPrice * 1e18;
+    }
+    if (dto.maxPrice) {
+      priceMatch['$lte'] = dto.maxPrice * 1e18;
+    }
+    if (Object.keys(priceMatch).length > 0) {
+      match['price'] = priceMatch;
+    }
+
+    const pipeline = [];
+    if (Object.keys(match).length > 0) {
+      pipeline.push({ $match: match });
+    }
+
+    pipeline.push(
+      ...[
+        {
+          $lookup: {
+            from: 'tokens',
+            let: { tokenId: '$tokenId', chain: '$chain', contract: '$baseToken' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$tokenId', '$$tokenId'] },
+                      { $eq: ['$chain', '$$chain'] },
+                      { $eq: ['$contract', '$$contract'] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'token',
+          },
+        },
+        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+      ],
+    );
+
+    const match2 = { 'order.adult': dto.adult };
+    if (dto.type !== 'all') {
+      if (dto.type === 'avatar') {
+        match2['order.type'] = 'avatar';
+      } else {
+        match2['order.type'] = { $ne: 'avatar' };
+      }
+    }
+
+    pipeline.push({ $match: match2 });
+
+    const result = await this.connection
+      .collection('orders')
+      .aggregate([...pipeline, { $count: 'total' }])
+      .toArray();
+
+    const total = result.length > 0 ? result[0].total : 0;
+    let data = [];
+
+    if (total > 0) {
+      data = await this.connection
+        .collection('tokens')
+        .aggregate([
+          ...pipeline,
+          { $sort: { createTime: -1 } },
+          { $skip: (dto.pageNum - 1) * dto.pageSize },
+          { $limit: dto.pageSize },
+        ])
         .toArray();
     }
 

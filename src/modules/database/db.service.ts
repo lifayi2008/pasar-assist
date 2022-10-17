@@ -113,6 +113,7 @@ export class DbService {
   async insertToken(tokenInfo: {
     chain: Chain;
     tokenId: string;
+    uniqueKey: string;
     createTime: number;
     tokenUri: string;
     tokenOwner: string;

@@ -13,6 +13,7 @@ export interface ContractTokenInfo {
   updateTime: number;
   chain: string;
   contract: string;
+  uniqueKey: string;
 }
 
 export interface ContractOrderInfo {
@@ -48,6 +49,7 @@ export interface ContractOrderInfo {
   updateTime: number;
   chain: string;
   contract: string;
+  uniqueKey: string;
 }
 
 export interface ContractUserInfo {

@@ -211,6 +211,7 @@ export class SubTasksService {
         tokenIdHex: '0x' + BigInt(tokenId).toString(16),
         chain,
         contract,
+        uniqueKey: `${chain}-${contract}-${tokenId}`,
         blockNumber: event.blockNumber,
         createTime: blockInfo.timestamp,
         updateTime: blockInfo.timestamp,

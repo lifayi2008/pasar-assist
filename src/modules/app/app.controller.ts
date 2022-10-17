@@ -2,7 +2,8 @@ import { Body, Controller, Get, ParseIntPipe, Post, Query } from '@nestjs/common
 import { AppService } from './app.service';
 import { CommonResponse } from '../utils/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
-import { Category, Chain } from '../utils/enums';
+import { Category, Chain, OrderTag } from '../utils/enums';
+import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
 
 @Controller()
 export class AppController {
@@ -155,5 +156,10 @@ export class AppController {
     @Query('sort') sort: string = '',
   ): Promise<CommonResponse> {
     return await this.appService.listCollections(pageNum, pageSize, type, category, sort);
+  }
+
+  @Post('/marketplace')
+  async getMarketplace(@Body() dto: QueryMarketplaceDTO): Promise<CommonResponse> {
+    return await this.appService.getMarketplace(dto);
   }
 }
