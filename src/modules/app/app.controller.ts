@@ -201,4 +201,22 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.getPriceHistoryOfToken(chain, tokenId, baseToken);
   }
+
+  @Get('/getCollectiblesOfCollection')
+  async getCollectiblesOfCollection(
+    @Query('chain') chain: Chain,
+    @Query('collection') collection: string,
+    @Query('exceptToken') exceptToken: string,
+    @Query('num', ParseIntPipe) num: number = 4,
+  ): Promise<CommonResponse> {
+    return await this.appService.getCollectiblesOfCollection(chain, collection, exceptToken, num);
+  }
+
+  @Get('/getCollectionInfo')
+  async getCollectionInfo(
+    @Query('chain') chain: Chain,
+    @Query('collection') collection: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getCollectionInfo(chain, collection);
+  }
 }

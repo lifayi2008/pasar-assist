@@ -1150,4 +1150,49 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
+
+  async getCollectiblesOfCollection(
+    chain: Chain,
+    collection: string,
+    exceptToken: string,
+    num: number,
+  ) {
+    const data = await this.connection
+      .collection('tokens')
+      .aggregate([
+        { $match: { chain, contract: collection, tokenId: { $ne: exceptToken } } },
+        { $sort: { createTime: -1 } },
+        { $limit: num },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { uniqueKey: '$uniqueKey' },
+            pipeline: [
+              { $sort: { createTime: -1 } },
+              { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+              { $replaceRoot: { newRoot: '$doc' } },
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$uniqueKey', '$$uniqueKey'],
+                  },
+                },
+              },
+            ],
+            as: 'order',
+          },
+        },
+        { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getCollectionInfo(chain: Chain, collection: string) {
+    const data = await this.connection
+      .collection('collections')
+      .findOne({ chain, token: collection });
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
 }
