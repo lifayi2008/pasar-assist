@@ -648,7 +648,7 @@ export class AppService {
       {
         $lookup: {
           from: 'orders',
-          let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+          let: { uniqueKey: '$uniqueKey' },
           pipeline: [
             { $sort: { createTime: -1 } },
             { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
@@ -846,8 +846,8 @@ export class AppService {
 
   async listTransactions(pageNum: number, pageSize: number, eventType: string, sort: 1 | -1) {
     const matchOrder = {};
-    const matchToken = {};
-    let userSpecifyTokenFilter = false;
+    const matchToken = { $or: [] };
+    let userSpecifiedTokenFilter = false;
 
     if (eventType !== '') {
       const eventTypes = eventType.split(',');
@@ -876,37 +876,37 @@ export class AppService {
           matchOrder['eventType'] = { $in: orderTypes };
         }
 
-        matchToken['$or'] = [];
         if (eventTypes.includes('Mint')) {
-          userSpecifyTokenFilter = true;
+          userSpecifiedTokenFilter = true;
           matchToken['$or'].push({ from: Constants.BURN_ADDRESS });
         }
         if (eventTypes.includes('Burn')) {
-          userSpecifyTokenFilter = true;
+          userSpecifiedTokenFilter = true;
           matchToken['$or'].push({ to: Constants.BURN_ADDRESS });
         }
         if (
           eventTypes.includes('SafeTransferFrom') ||
           eventTypes.includes('SafeTransferFromWithMemo')
         ) {
-          userSpecifyTokenFilter = true;
+          userSpecifiedTokenFilter = true;
           const addresses = this.getAllPasarAddress().push(Constants.BURN_ADDRESS);
-          matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
-        }
-
-        //when user not specify any token event type, we will return 3 event types above
-        //so token event type always has a filter condition
-        if (matchToken['$or'].length === 0) {
-          matchToken['$or'].push({ from: Constants.BURN_ADDRESS });
-          matchToken['$or'].push({ to: Constants.BURN_ADDRESS });
-          const addresses = this.getAllPasarAddress();
           matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
         }
       }
     }
 
-    const pipeline = [];
+    //when user not specify any token event type, we will return 3 event types above
+    //so token event type always has a filter
+    if (!userSpecifiedTokenFilter) {
+      matchToken['$or'].push({ from: Constants.BURN_ADDRESS });
+      matchToken['$or'].push({ to: Constants.BURN_ADDRESS });
+      const addresses = this.getAllPasarAddress();
+      matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
+    }
+
     const pipeline1 = [
+      { $sort: { timestamp: sort } },
+      { $limit: pageSize * pageNum },
       {
         $lookup: {
           from: 'orders',
@@ -934,7 +934,10 @@ export class AppService {
       },
       { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
     ];
+
     const pipeline2 = [
+      { $sort: { timestamp: sort } },
+      { $limit: pageSize * pageNum },
       {
         $lookup: {
           from: 'tokens',
@@ -958,56 +961,60 @@ export class AppService {
       { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
     ];
 
-    let collection = '';
-    const total = 0;
-    if (Object.keys(matchOrder).length === 0 && !userSpecifyTokenFilter) {
-      collection = 'order_events';
-      pipeline.push(...pipeline1);
-      pipeline.push({
-        $unionWith: {
-          coll: 'token_events',
-          pipeline: pipeline2,
-        },
-      });
-    } else if (Object.keys(matchOrder).length > 0 && userSpecifyTokenFilter) {
-      collection = 'order_events';
-      pipeline.push({ $match: matchOrder });
-      pipeline.push(...pipeline1);
-      pipeline.push({
-        $unionWith: {
-          coll: 'token_events',
-          pipeline: [{ $match: matchToken }, ...pipeline2],
-        },
-      });
+    let totalOrder = 0;
+    let totalToken = 0;
+    let orderEvents = [];
+    let tokenEvents = [];
+
+    if (Object.keys(matchOrder).length === 0 && !userSpecifiedTokenFilter) {
+      totalOrder = await this.connection.collection('order_events').countDocuments();
+      orderEvents = await this.connection.collection('order_events').aggregate(pipeline1).toArray();
+
+      totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+      tokenEvents = await this.connection
+        .collection('token_events')
+        .aggregate([{ $match: matchToken }, ...pipeline2])
+        .toArray();
+    } else if (Object.keys(matchOrder).length > 0 && userSpecifiedTokenFilter) {
+      totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+      orderEvents = await this.connection
+        .collection('order_events')
+        .aggregate([{ $match: matchOrder }, ...pipeline1])
+        .toArray();
+
+      totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+      tokenEvents = await this.connection
+        .collection('token_events')
+        .aggregate([{ $match: matchToken }, ...pipeline2])
+        .toArray();
     } else {
-      if (Object.keys(matchOrder).length > 0) {
-        collection = 'order_events';
-        pipeline.push({ $match: matchOrder });
-        pipeline.push(...pipeline1);
-        pipeline.push({
-          $unionWith: {
-            coll: 'token_events',
-            pipeline: [{ $match: matchToken }, ...pipeline2],
-          },
-        });
+      if (userSpecifiedTokenFilter) {
+        totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+        tokenEvents = await this.connection
+          .collection('token_events')
+          .aggregate([{ $match: matchToken }, ...pipeline2])
+          .toArray();
       } else {
-        collection = 'token_events';
-        pipeline.push({ $match: matchToken });
-        pipeline.push(...pipeline2);
+        totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+        orderEvents = await this.connection
+          .collection('order_events')
+          .aggregate([{ $match: matchOrder }, ...pipeline1])
+          .toArray();
       }
     }
 
-    const data = await this.connection
-      .collection(collection)
-      .aggregate([
-        ...pipeline,
-        { $sort: { timestamp: sort } },
-        { $skip: (pageNum - 1) * pageSize },
-        { $limit: pageSize },
-      ])
-      .toArray();
+    const events = [...orderEvents, ...tokenEvents];
+    const data = events
+      .sort((a, b) => {
+        return sort === 1 ? a.timestamp - b.timestamp : b.timestamp - a.timestamp;
+      })
+      .splice(pageSize * (pageNum - 1), pageSize);
 
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: { data, total: totalToken + totalOrder },
+    };
   }
 
   async getTransactionsByToken(
@@ -1024,6 +1031,123 @@ export class AppService {
 
     const orderIds = orders.map((order) => order.orderId);
 
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data: [], total: 0 } };
+    const matchOrder = { orderId: { $in: orderIds } };
+    const matchToken = { chain, tokenId, contract: baseToken, $or: [] };
+    let userSpecifiedOrderFilter = false;
+    let userSpecifiedTokenFilter = false;
+
+    if (eventType !== '') {
+      const eventTypes = eventType.split(',');
+      if (eventTypes.length !== 11) {
+        const orderTypes = [];
+        if (eventTypes.includes('BuyOrder')) {
+          userSpecifiedOrderFilter = true;
+          orderTypes.push(OrderEventType.OrderFilled);
+        }
+        if (eventTypes.includes('CancelOrder')) {
+          userSpecifiedOrderFilter = true;
+          orderTypes.push(OrderEventType.OrderCancelled);
+        }
+        if (eventTypes.includes('ChangeOrderPrice')) {
+          userSpecifiedOrderFilter = true;
+          orderTypes.push(OrderEventType.OrderPriceChanged);
+        }
+        if (eventTypes.includes('CreateOrderForSale')) {
+          userSpecifiedOrderFilter = true;
+          orderTypes.push(OrderEventType.OrderForSale);
+        }
+        if (eventTypes.includes('CreateOrderForAuction')) {
+          userSpecifiedOrderFilter = true;
+          orderTypes.push(OrderEventType.OrderForAuction);
+        }
+        if (eventTypes.includes('BidForOrder')) {
+          userSpecifiedOrderFilter = true;
+          orderTypes.push(OrderEventType.OrderBid);
+        }
+
+        if (orderTypes.length > 0) {
+          matchOrder['eventType'] = { $in: orderTypes };
+        }
+
+        if (eventTypes.includes('Mint')) {
+          userSpecifiedTokenFilter = true;
+          matchToken['$or'].push({ from: Constants.BURN_ADDRESS });
+        }
+        if (eventTypes.includes('Burn')) {
+          userSpecifiedTokenFilter = true;
+          matchToken['$or'].push({ to: Constants.BURN_ADDRESS });
+        }
+        if (
+          eventTypes.includes('SafeTransferFrom') ||
+          eventTypes.includes('SafeTransferFromWithMemo')
+        ) {
+          userSpecifiedTokenFilter = true;
+          const addresses = this.getAllPasarAddress().push(Constants.BURN_ADDRESS);
+          matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
+        }
+      }
+    }
+
+    //when user not specify any token event type, we will return 3 event types above
+    //so token event type always has a filter
+    if (!userSpecifiedTokenFilter) {
+      matchToken['$or'].push({ from: Constants.BURN_ADDRESS });
+      matchToken['$or'].push({ to: Constants.BURN_ADDRESS });
+      const addresses = this.getAllPasarAddress();
+      matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
+    }
+
+    const pipeline1 = [{ $match: matchOrder }, { $sort: { timestamp: sort } }];
+    const pipeline2 = [{ $match: matchToken }, { $sort: { timestamp: sort } }];
+
+    let totalOrder = 0;
+    let totalToken = 0;
+    let orderEvents = [];
+    let tokenEvents = [];
+
+    if (
+      (!userSpecifiedOrderFilter && !userSpecifiedTokenFilter) ||
+      (userSpecifiedOrderFilter && userSpecifiedTokenFilter)
+    ) {
+      totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+      orderEvents = await this.connection.collection('order_events').aggregate(pipeline1).toArray();
+
+      totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+      tokenEvents = await this.connection.collection('token_events').aggregate(pipeline2).toArray();
+    } else {
+      if (userSpecifiedTokenFilter) {
+        totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+        tokenEvents = await this.connection
+          .collection('token_events')
+          .aggregate(pipeline2)
+          .toArray();
+      } else {
+        totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+        orderEvents = await this.connection
+          .collection('order_events')
+          .aggregate(pipeline1)
+          .toArray();
+      }
+    }
+
+    const events = [...orderEvents, ...tokenEvents];
+    const data = events.sort((a, b) => {
+      return sort === 1 ? a.timestamp - b.timestamp : b.timestamp - a.timestamp;
+    });
+
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: { data, total: totalToken + totalOrder },
+    };
+  }
+
+  async getPriceHistoryOfToken(chain: Chain, tokenId: string, baseToken: string) {
+    const data = await this.connection
+      .collection('orders')
+      .find({ chain, tokenId, baseToken, orderState: OrderState.Filled })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 }

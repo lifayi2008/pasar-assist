@@ -182,7 +182,7 @@ export class AppController {
     return await this.appService.listTransactions(pageNum, pageSize, eventType, sort);
   }
 
-  @Get('/getTransactionsByToken')
+  @Get('/getTransactionsOfToken')
   async getTransactionsByToken(
     @Query('chain') chain: Chain,
     @Query('tokenId') tokenId: string,
@@ -191,5 +191,14 @@ export class AppController {
     @Query('sort') sort: 1 | -1 = -1,
   ): Promise<CommonResponse> {
     return await this.appService.getTransactionsByToken(chain, tokenId, baseToken, eventType, sort);
+  }
+
+  @Get('/getPriceHistoryOfToken')
+  async getPriceHistoryOfToken(
+    @Query('chain') chain: Chain,
+    @Query('tokenId') tokenId: string,
+    @Query('baseToken') baseToken: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getPriceHistoryOfToken(chain, tokenId, baseToken);
   }
 }
