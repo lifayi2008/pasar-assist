@@ -829,6 +829,8 @@ export class AppService {
       .collection('tokens')
       .find({ tokenOwner: { $ne: Constants.BURN_ADDRESS } })
       .sort({ createTime: sort })
+      .skip((pageNum - 1) * pageSize)
+      .limit(pageSize)
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
