@@ -181,4 +181,15 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.listTransactions(pageNum, pageSize, eventType, sort);
   }
+
+  @Get('/getTransactionsByToken')
+  async getTransactionsByToken(
+    @Query('chain') chain: Chain,
+    @Query('tokenId') tokenId: string,
+    @Query('baseToken') baseToken: string,
+    @Query('eventType') eventType: string = '',
+    @Query('sort') sort: 1 | -1 = -1,
+  ): Promise<CommonResponse> {
+    return await this.appService.getTransactionsByToken(chain, tokenId, baseToken, eventType, sort);
+  }
 }

@@ -834,37 +834,71 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
+  getAllPasarAddress(): string[] {
+    const addresses = [];
+    for (const chain of Object.keys(ConfigContract[this.configService.get('NETWORK')])) {
+      addresses.push(ConfigContract[this.configService.get('NETWORK')][chain].pasarContract);
+    }
+    return addresses;
+  }
+
   async listTransactions(pageNum: number, pageSize: number, eventType: string, sort: 1 | -1) {
     const matchOrder = {};
     const matchToken = {};
+    let userSpecifyTokenFilter = false;
 
     if (eventType !== '') {
       const eventTypes = eventType.split(',');
       if (eventTypes.length !== 11) {
+        const orderTypes = [];
         if (eventTypes.includes('BuyOrder')) {
-          matchOrder['eventType'] = OrderEventType.OrderFilled;
+          orderTypes.push(OrderEventType.OrderFilled);
         }
         if (eventTypes.includes('CancelOrder')) {
-          matchOrder['eventType'] = OrderEventType.OrderCancelled;
+          orderTypes.push(OrderEventType.OrderCancelled);
         }
         if (eventTypes.includes('ChangeOrderPrice')) {
-          matchOrder['eventType'] = OrderEventType.OrderPriceChanged;
+          orderTypes.push(OrderEventType.OrderPriceChanged);
         }
         if (eventTypes.includes('CreateOrderForSale')) {
-          matchOrder['eventType'] = OrderEventType.OrderForSale;
+          orderTypes.push(OrderEventType.OrderForSale);
         }
         if (eventTypes.includes('CreateOrderForAuction')) {
-          matchOrder['eventType'] = OrderEventType.OrderForAuction;
+          orderTypes.push(OrderEventType.OrderForAuction);
         }
         if (eventTypes.includes('BidForOrder')) {
-          matchOrder['eventType'] = OrderEventType.OrderBid;
+          orderTypes.push(OrderEventType.OrderBid);
         }
 
+        if (orderTypes.length > 0) {
+          matchOrder['eventType'] = { $in: orderTypes };
+        }
+
+        matchToken['$or'] = [];
         if (eventTypes.includes('Mint')) {
-          matchToken['from'] = Constants.BURN_ADDRESS;
+          userSpecifyTokenFilter = true;
+          matchToken['$or'].push({ from: Constants.BURN_ADDRESS });
         }
         if (eventTypes.includes('Burn')) {
-          matchToken['to'] = Constants.BURN_ADDRESS;
+          userSpecifyTokenFilter = true;
+          matchToken['$or'].push({ to: Constants.BURN_ADDRESS });
+        }
+        if (
+          eventTypes.includes('SafeTransferFrom') ||
+          eventTypes.includes('SafeTransferFromWithMemo')
+        ) {
+          userSpecifyTokenFilter = true;
+          const addresses = this.getAllPasarAddress().push(Constants.BURN_ADDRESS);
+          matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
+        }
+
+        //when user not specify any token event type, we will return 3 event types above
+        //so token event type always has a filter condition
+        if (matchToken['$or'].length === 0) {
+          matchToken['$or'].push({ from: Constants.BURN_ADDRESS });
+          matchToken['$or'].push({ to: Constants.BURN_ADDRESS });
+          const addresses = this.getAllPasarAddress();
+          matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
         }
       }
     }
@@ -924,7 +958,7 @@ export class AppService {
 
     let collection = '';
     const total = 0;
-    if (Object.keys(matchOrder).length === 0 && Object.keys(matchToken).length === 0) {
+    if (Object.keys(matchOrder).length === 0 && !userSpecifyTokenFilter) {
       collection = 'order_events';
       pipeline.push(...pipeline1);
       pipeline.push({
@@ -933,7 +967,7 @@ export class AppService {
           pipeline: pipeline2,
         },
       });
-    } else if (Object.keys(matchOrder).length > 0 && Object.keys(matchToken).length > 0) {
+    } else if (Object.keys(matchOrder).length > 0 && userSpecifyTokenFilter) {
       collection = 'order_events';
       pipeline.push({ $match: matchOrder });
       pipeline.push(...pipeline1);
@@ -948,6 +982,12 @@ export class AppService {
         collection = 'order_events';
         pipeline.push({ $match: matchOrder });
         pipeline.push(...pipeline1);
+        pipeline.push({
+          $unionWith: {
+            coll: 'token_events',
+            pipeline: [{ $match: matchToken }, ...pipeline2],
+          },
+        });
       } else {
         collection = 'token_events';
         pipeline.push({ $match: matchToken });
@@ -966,5 +1006,22 @@ export class AppService {
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
+  }
+
+  async getTransactionsByToken(
+    chain: Chain,
+    tokenId: string,
+    baseToken: string,
+    eventType: string,
+    sort: 1 | -1,
+  ) {
+    const orders = await this.connection
+      .collection('orders')
+      .find({ chain, tokenId, baseToken })
+      .toArray();
+
+    const orderIds = orders.map((order) => order.orderId);
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data: [], total: 0 } };
   }
 }
