@@ -80,6 +80,9 @@ export class SubTasksService {
     let ipfsUserInfo;
     if (orderInfo.chain !== Chain.V1) {
       ipfsUserInfo = await this.getInfoByIpfsUri(orderInfo.sellerUri);
+      if (ipfsUserInfo && ipfsUserInfo.did) {
+        await this.dbService.updateUser(orderInfo.sellerAddr, ipfsUserInfo as ContractUserInfo);
+      }
     }
 
     const OrderInfoModel = getOrderInfoModel(this.connection);
@@ -108,6 +111,9 @@ export class SubTasksService {
   async updateOrder(orderId: number, params: UpdateOrderParams) {
     if (params.buyerUri) {
       params.buyerInfo = (await this.getInfoByIpfsUri(params.buyerUri)) as ContractUserInfo;
+      if (params.buyerInfo && params.buyerInfo.did) {
+        await this.dbService.updateUser(params.buyerAddr, params.buyerInfo);
+      }
     }
 
     const result = await this.dbService.updateOrder(orderId, params);

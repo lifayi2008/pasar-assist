@@ -1195,4 +1195,49 @@ export class AppService {
       .findOne({ chain, token: collection });
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
+
+  async quickSearch(keyword: string) {
+    const filter = [
+      { name: { $regex: keyword, $options: 'i' } },
+      { description: { $regex: keyword, $options: 'i' } },
+    ];
+
+    const filter2 = [
+      { 'creator.name': { $regex: keyword, $options: 'i' } },
+      { 'creator.description': { $regex: keyword, $options: 'i' } },
+    ];
+
+    const accounts = await this.connection
+      .collection('address_did')
+      .find({ $or: [{ address: keyword }, ...filter] })
+      .limit(3)
+      .toArray();
+
+    const items = await this.connection
+      .collection('tokens')
+      .find({
+        $or: [
+          { royaltyOwner: keyword },
+          { tokenId: keyword },
+          { tokenIdHex: keyword },
+          { tokenOwner: keyword },
+          ...filter,
+          ...filter2,
+        ],
+      })
+      .limit(3)
+      .toArray();
+
+    const collections = await this.connection
+      .collection('collections')
+      .find({ $or: [{ owner: keyword }, { token: keyword }, ...filter, ...filter2] })
+      .limit(3)
+      .toArray();
+
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: { accounts, items, collections },
+    };
+  }
 }

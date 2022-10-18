@@ -219,4 +219,9 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.getCollectionInfo(chain, collection);
   }
+
+  @Get('/quickSearch')
+  async quickSearch(@Query('keyword') keyword: string): Promise<CommonResponse> {
+    return await this.appService.quickSearch(keyword);
+  }
 }
