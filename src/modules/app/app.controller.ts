@@ -202,6 +202,15 @@ export class AppController {
     return await this.appService.getPriceHistoryOfToken(chain, tokenId, baseToken);
   }
 
+  @Get('/getCollectibleInfo')
+  async getCollectibleInfo(
+    @Query('chain') chain: Chain,
+    @Query('tokenId') tokenId: string,
+    @Query('baseToken') baseToken: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getCollectibleInfo(chain, tokenId, baseToken);
+  }
+
   @Get('/getCollectiblesOfCollection')
   async getCollectiblesOfCollection(
     @Query('chain') chain: Chain,
@@ -223,5 +232,15 @@ export class AppController {
   @Get('/quickSearch')
   async quickSearch(@Query('keyword') keyword: string): Promise<CommonResponse> {
     return await this.appService.quickSearch(keyword);
+  }
+
+  @Get('/searchTokens')
+  async searchTokens(@Query('keyword') keyword: string): Promise<CommonResponse> {
+    return await this.appService.searchTokens(keyword);
+  }
+
+  @Get('/searchMarketplace')
+  async searchMarketplace(@Query('keyword') keyword: string): Promise<CommonResponse> {
+    return await this.appService.searchMarketplace(keyword);
   }
 }

@@ -808,7 +808,7 @@ export class AppService {
 
     if (total > 0) {
       data = await this.connection
-        .collection('tokens')
+        .collection('orders')
         .aggregate([
           ...pipeline,
           { $sort: { createTime: -1 } },
@@ -1239,5 +1239,106 @@ export class AppService {
       message: Constants.MSG_SUCCESS,
       data: { accounts, items, collections },
     };
+  }
+
+  async getCollectibleInfo(chain: Chain, tokenId: string, contract: string) {
+    const data = await this.connection.collection('tokens').findOne({ chain, tokenId, contract });
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async searchTokens(keyword: string) {
+    const data = await this.connection
+      .collection('tokens')
+      .find({
+        $or: [
+          { royaltyOwner: keyword },
+          { tokenId: keyword },
+          { tokenIdHex: keyword },
+          { tokenOwner: keyword },
+          { name: { $regex: keyword, $options: 'i' } },
+          { description: { $regex: keyword, $options: 'i' } },
+          { 'creator.name': { $regex: keyword, $options: 'i' } },
+          { 'creator.description': { $regex: keyword, $options: 'i' } },
+        ],
+      })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async searchMarketplace(keyword: string) {
+    const data = await this.connection
+      .collection('tokens')
+      .aggregate([
+        {
+          $match: {
+            $or: [
+              { royaltyOwner: keyword },
+              { tokenId: keyword },
+              { tokenIdHex: keyword },
+              { tokenOwner: keyword },
+              { name: { $regex: keyword, $options: 'i' } },
+              { description: { $regex: keyword, $options: 'i' } },
+              { 'creator.name': { $regex: keyword, $options: 'i' } },
+              { 'creator.description': { $regex: keyword, $options: 'i' } },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { uniqueKey: '$uniqueKey' },
+            pipeline: [
+              { $sort: { createTime: -1 } },
+              { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+              { $replaceRoot: { newRoot: '$doc' } },
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$uniqueKey', '$$uniqueKey'],
+                  },
+                },
+              },
+            ],
+            as: 'order',
+          },
+        },
+        { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+        { $match: { 'order.orderState': OrderState.Created } },
+      ])
+      .toArray();
+
+    const data2 = await this.connection
+      .collection('orders')
+      .aggregate([
+        {
+          $match: {
+            orderState: OrderState.Created,
+            $or: [
+              { sellerAddr: keyword },
+              { 'sellerInfo.name': { $regex: keyword, $options: 'i' } },
+              { 'sellerInfo.description': { $regex: keyword, $options: 'i' } },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: 'tokens',
+            localField: 'uniqueKey',
+            foreignField: 'uniqueKey',
+            as: 'token',
+          },
+        },
+        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+      ])
+      .toArray();
+
+    const data1 = data.map((item) => {
+      const order = item.order;
+      delete item.order;
+      return { ...order, token: item };
+    });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: [...data1, ...data2] };
   }
 }
