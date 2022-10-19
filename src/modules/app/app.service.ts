@@ -18,6 +18,7 @@ import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Category, Chain, OrderTag } from '../utils/enums';
 import { ConfigContract } from '../../config/config.contract';
 import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
+import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
 
 @Injectable()
 export class AppService {
@@ -821,6 +822,26 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
+  async getCollectibleOfMarketplace(chain: string, orderId: number) {
+    const data = await this.connection
+      .collection('orders')
+      .aggregate([
+        { $match: { chain, orderId } },
+        {
+          $lookup: {
+            from: 'tokens',
+            localField: 'uniqueKey',
+            foreignField: 'uniqueKey',
+            as: 'token',
+          },
+        },
+        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: data[0] };
+  }
+
   async listNFTs(pageNum: number, pageSize: number, sort: 1 | -1) {
     const total = await this.connection
       .collection('tokens')
@@ -1340,5 +1361,148 @@ export class AppService {
     });
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: [...data1, ...data2] };
+  }
+
+  async getStaticsOfCollection(chain: Chain, collection: string) {
+    const items = await this.connection
+      .collection('tokens')
+      .aggregate([
+        { $match: { chain, contract: collection } },
+        { $group: { _id: '$chain', items: { $sum: 1 } } },
+      ])
+      .toArray();
+
+    const owners = await this.connection
+      .collection('tokens')
+      .distinct('tokenOwner', { chain, contract: collection })
+      .then((res) => res.length);
+
+    const tv = await this.connection
+      .collection('orders')
+      .aggregate([
+        { $match: { chain, baseToken: collection, orderState: OrderState.Filled } },
+        { $group: { _id: '$chain', tv: { $sum: '$filled' } } },
+      ])
+      .toArray();
+
+    const lowestPrice = await this.connection
+      .collection('orders')
+      .find({ chain, baseToken: collection, orderState: { $ne: OrderState.Cancelled } })
+      .sort({ price: 1 })
+      .limit(1)
+      .toArray();
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: {
+        items: items[0].items,
+        owners,
+        lowestPrice: lowestPrice[0].price / Constants.ELA_ESC_PRECISION,
+        tradingVolume: tv[0].tv / Constants.ELA_ESC_PRECISION,
+      },
+    };
+  }
+
+  async listCollectibleOfCollection(dto: QueryCollectibleOfCollectionDTO) {
+    const now = Date.now();
+    const match = {};
+    if (dto.status && dto.status.length > 0 && dto.status.length < 5) {
+      match['$or'] = [];
+      if (dto.status.includes(OrderTag.BuyNow)) {
+        match['$or'].push({ orderType: OrderType.Sale });
+      }
+      if (dto.status.includes(OrderTag.OnAuction)) {
+        match['$or'].push({ endTime: { $gt: now } });
+      }
+      if (dto.status.includes(OrderTag.HasEnded)) {
+        match['$or'].push({ endTime: { $lt: now, $ne: 0 } });
+      }
+      if (dto.status.includes(OrderTag.HasBids)) {
+        match['$or'].push({ lastBid: { $gt: 0 } });
+      }
+    }
+
+    if (dto.token && dto.token.length > 0) {
+      match['quoteToken'] = { $in: dto.token };
+    }
+
+    const priceMatch = {};
+    if (dto.minPrice) {
+      priceMatch['$gte'] = dto.minPrice * 1e18;
+    }
+    if (dto.maxPrice) {
+      priceMatch['$lte'] = dto.maxPrice * 1e18;
+    }
+    if (Object.keys(priceMatch).length > 0) {
+      match['price'] = priceMatch;
+    }
+
+    const total = 0;
+    let data = [];
+    if (Object.keys(match).length === 0) {
+      data = await this.connection
+        .collection('tokens')
+        .aggregate([
+          {
+            $match: {
+              chain: dto.chain,
+              contract: dto.collection,
+              tokenOwner: { $ne: Constants.BURN_ADDRESS },
+            },
+          },
+          {
+            $lookup: {
+              from: 'orders',
+              let: { uniqueKey: '$uniqueKey' },
+              pipeline: [
+                { $sort: { createTime: -1 } },
+                { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+                { $replaceRoot: { newRoot: '$doc' } },
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$uniqueKey', '$$uniqueKey'],
+                    },
+                  },
+                },
+              ],
+              as: 'order',
+            },
+          },
+          { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+          { $sort: { createTime: -1 } },
+          { $skip: (dto.pageNum - 1) * dto.pageSize },
+          { $limit: dto.pageSize },
+        ])
+        .toArray();
+    } else {
+      const dataOrigin = await this.connection
+        .collection('orders')
+        .aggregate([
+          { $match: { chain: dto.chain, baseToken: dto.collection, ...match } },
+          {
+            $lookup: {
+              from: 'tokens',
+              localField: 'uniqueKey',
+              foreignField: 'uniqueKey',
+              as: 'token',
+            },
+          },
+          { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+          { $match: { 'token.tokenOwner': { $ne: Constants.BURN_ADDRESS } } },
+          { $sort: { createTime: -1 } },
+          { $skip: (dto.pageNum - 1) * dto.pageSize },
+          { $limit: dto.pageSize },
+        ])
+        .toArray();
+
+      data = dataOrigin.map((item) => {
+        const token = item.token;
+        delete item.token;
+        return { ...token, order: item };
+      });
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 }

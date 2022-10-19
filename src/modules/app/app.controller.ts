@@ -4,6 +4,7 @@ import { CommonResponse } from '../utils/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Category, Chain, OrderTag } from '../utils/enums';
 import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
+import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
 
 @Controller()
 export class AppController {
@@ -147,20 +148,17 @@ export class AppController {
     return await this.appService.listCollectibles(pageNum, pageSize, type, after);
   }
 
-  @Get('/listCollections')
-  async listCollections(
-    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
-    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
-    @Query('chain') type: Chain | 'all' = 'all',
-    @Query('category') category: Category | 'all' = 'all',
-    @Query('sort') sort: string = '',
-  ): Promise<CommonResponse> {
-    return await this.appService.listCollections(pageNum, pageSize, type, category, sort);
-  }
-
   @Post('/marketplace')
   async getMarketplace(@Body() dto: QueryMarketplaceDTO): Promise<CommonResponse> {
     return await this.appService.getMarketplace(dto);
+  }
+
+  @Get('/getCollectibleOfMarketplace')
+  async getCollectibleOfMarketplace(
+    @Query('chain') chain: string,
+    @Query('orderId', ParseIntPipe) orderId: number,
+  ): Promise<CommonResponse> {
+    return await this.appService.getCollectibleOfMarketplace(chain, orderId);
   }
 
   @Get('/listNFTs')
@@ -221,12 +219,38 @@ export class AppController {
     return await this.appService.getCollectiblesOfCollection(chain, collection, exceptToken, num);
   }
 
+  @Get('/listCollections')
+  async listCollections(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('chain') type: Chain | 'all' = 'all',
+    @Query('category') category: Category | 'all' = 'all',
+    @Query('sort') sort: string = '',
+  ): Promise<CommonResponse> {
+    return await this.appService.listCollections(pageNum, pageSize, type, category, sort);
+  }
+
   @Get('/getCollectionInfo')
   async getCollectionInfo(
     @Query('chain') chain: Chain,
     @Query('collection') collection: string,
   ): Promise<CommonResponse> {
     return await this.appService.getCollectionInfo(chain, collection);
+  }
+
+  @Get('/getStaticsOfCollection')
+  async getStaticsOfCollection(
+    @Query('chain') chain: Chain,
+    @Query('collection') collection: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getStaticsOfCollection(chain, collection);
+  }
+
+  @Post('/listCollectibleOfCollection')
+  async listCollectibleOfCollection(
+    @Body() dto: QueryCollectibleOfCollectionDTO,
+  ): Promise<CommonResponse> {
+    return await this.appService.listCollectibleOfCollection(dto);
   }
 
   @Get('/quickSearch')
