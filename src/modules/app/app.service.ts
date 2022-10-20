@@ -1363,7 +1363,7 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: [...data1, ...data2] };
   }
 
-  async getStaticsOfCollection(chain: Chain, collection: string) {
+  async getStatisticsOfCollection(chain: Chain, collection: string) {
     const items = await this.connection
       .collection('tokens')
       .aggregate([
@@ -1437,72 +1437,257 @@ export class AppService {
       match['price'] = priceMatch;
     }
 
-    const total = 0;
+    const pipeline = [
+      {
+        $match: {
+          chain: dto.chain,
+          contract: dto.collection,
+          tokenOwner: { $ne: Constants.BURN_ADDRESS },
+        },
+      },
+      {
+        $lookup: {
+          from: 'orders',
+          let: { uniqueKey: '$uniqueKey' },
+          pipeline: [
+            { $sort: { createTime: -1 } },
+            { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+            { $replaceRoot: { newRoot: '$doc' } },
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$uniqueKey', '$$uniqueKey'],
+                },
+              },
+            },
+          ],
+          as: 'order',
+        },
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+    ] as any;
+
+    if (Object.keys(match).length > 0) {
+      pipeline.push({ $match: match });
+    }
+
+    const result = await this.connection
+      .collection('tokens')
+      .aggregate([...pipeline, { $count: 'total' }])
+      .toArray();
+
+    const total = result.length > 0 ? result[0].total : 0;
     let data = [];
-    if (Object.keys(match).length === 0) {
+
+    if (total > 0) {
       data = await this.connection
         .collection('tokens')
         .aggregate([
-          {
-            $match: {
-              chain: dto.chain,
-              contract: dto.collection,
-              tokenOwner: { $ne: Constants.BURN_ADDRESS },
-            },
-          },
-          {
-            $lookup: {
-              from: 'orders',
-              let: { uniqueKey: '$uniqueKey' },
-              pipeline: [
-                { $sort: { createTime: -1 } },
-                { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
-                { $replaceRoot: { newRoot: '$doc' } },
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ['$uniqueKey', '$$uniqueKey'],
-                    },
-                  },
-                },
-              ],
-              as: 'order',
-            },
-          },
-          { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+          ...pipeline,
           { $sort: { createTime: -1 } },
           { $skip: (dto.pageNum - 1) * dto.pageSize },
           { $limit: dto.pageSize },
         ])
         .toArray();
-    } else {
-      const dataOrigin = await this.connection
-        .collection('orders')
-        .aggregate([
-          { $match: { chain: dto.chain, baseToken: dto.collection, ...match } },
-          {
-            $lookup: {
-              from: 'tokens',
-              localField: 'uniqueKey',
-              foreignField: 'uniqueKey',
-              as: 'token',
-            },
-          },
-          { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-          { $match: { 'token.tokenOwner': { $ne: Constants.BURN_ADDRESS } } },
-          { $sort: { createTime: -1 } },
-          { $skip: (dto.pageNum - 1) * dto.pageSize },
-          { $limit: dto.pageSize },
-        ])
-        .toArray();
-
-      data = dataOrigin.map((item) => {
-        const token = item.token;
-        delete item.token;
-        return { ...token, order: item };
-      });
     }
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
+  }
+
+  async getCollectionsByWalletAddr(walletAddr: string, chain: Chain) {
+    const data = await this.connection
+      .collection('collections')
+      .find({ chain, owner: walletAddr })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getStatisticsByWalletAddr(address: string) {
+    const listed = await this.connection
+      .collection('orders')
+      .countDocuments({ seller: address, orderState: OrderState.Created });
+    const owned = await this.connection
+      .collection('tokens')
+      .countDocuments({ tokenOwner: address });
+    const sold = await this.connection
+      .collection('orders')
+      .countDocuments({ seller: address, OrderState: OrderState.Filled });
+    const minted = await this.connection
+      .collection('tokens')
+      .countDocuments({ royaltyOwner: address });
+    const bids = await this.connection
+      .collection('order_events')
+      .countDocuments({ eventType: OrderEventType.OrderBid, buyer: address });
+    const collections = await this.connection
+      .collection('collections')
+      .countDocuments({ owner: address });
+
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: { listed, owned, sold, minted, bids, collections },
+    };
+  }
+
+  async getListedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+    const match = { sellerAddr: walletAddr, orderState: OrderState.Created };
+    if (chain !== 'all') {
+      match['chain'] = chain;
+    }
+    const data = await this.connection
+      .collection('orders')
+      .aggregate([
+        { $match: match },
+        {
+          $lookup: {
+            from: 'tokens',
+            localField: 'uniqueKey',
+            foreignField: 'uniqueKey',
+            as: 'token',
+          },
+        },
+        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getOwnedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+    const match = { tokenOwner: walletAddr };
+    if (chain !== 'all') {
+      match['chain'] = chain;
+    }
+    const data = await this.connection
+      .collection('tokens')
+      .aggregate([
+        { $match: match },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { uniqueKey: '$uniqueKey' },
+            pipeline: [
+              { $sort: { createTime: -1 } },
+              { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+              { $replaceRoot: { newRoot: '$doc' } },
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$uniqueKey', '$$uniqueKey'],
+                  },
+                },
+              },
+            ],
+            as: 'order',
+          },
+        },
+        { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+      ])
+      .toArray();
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getBidsCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+    const match = { buyer: walletAddr, eventType: OrderEventType.OrderBid };
+    if (chain !== 'all') {
+      match['chain'] = chain;
+    }
+    const data = await this.connection
+      .collection('order_events')
+      .aggregate([
+        { $match: match },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { orderId: '$orderId', chain: '$chain' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [{ $eq: ['$orderId', '$$orderId'] }, { $eq: ['$chain', '$$chain'] }],
+                  },
+                },
+              },
+            ],
+            as: 'order',
+          },
+        },
+        { $unwind: { path: '$events', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'tokens',
+            localField: 'order.uniqueKey',
+            foreignField: 'uniqueKey',
+            as: 'token',
+          },
+        },
+        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+        { $sort: { timestamp: sort === 'asc' ? 1 : -1 } },
+      ])
+      .toArray();
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getMintedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+    const match = { royaltyOwner: walletAddr, tokenOwner: { $ne: Constants.BURN_ADDRESS } };
+    if (chain !== 'all') {
+      match['chain'] = chain;
+    }
+    const data = await this.connection
+      .collection('tokens')
+      .aggregate([
+        { $match: match },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { uniqueKey: '$uniqueKey' },
+            pipeline: [
+              { $sort: { createTime: -1 } },
+              { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+              { $replaceRoot: { newRoot: '$doc' } },
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$uniqueKey', '$$uniqueKey'],
+                  },
+                },
+              },
+            ],
+            as: 'order',
+          },
+        },
+        { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getSoldCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+    const match = { seller: walletAddr, orderState: OrderState.Filled };
+    if (chain !== 'all') {
+      match['chain'] = chain;
+    }
+    const data = await this.connection
+      .collection('orders')
+      .aggregate([
+        { $match: match },
+        {
+          $lookup: {
+            from: 'tokens',
+            localField: 'uniqueKey',
+            foreignField: 'uniqueKey',
+            as: 'token',
+          },
+        },
+        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+      ])
+      .toArray();
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 }

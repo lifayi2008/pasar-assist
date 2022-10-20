@@ -238,12 +238,12 @@ export class AppController {
     return await this.appService.getCollectionInfo(chain, collection);
   }
 
-  @Get('/getStaticsOfCollection')
-  async getStaticsOfCollection(
+  @Get('/getStatisticsOfCollection')
+  async getStatisticsOfCollection(
     @Query('chain') chain: Chain,
     @Query('collection') collection: string,
   ): Promise<CommonResponse> {
-    return await this.appService.getStaticsOfCollection(chain, collection);
+    return await this.appService.getStatisticsOfCollection(chain, collection);
   }
 
   @Post('/listCollectibleOfCollection')
@@ -266,5 +266,65 @@ export class AppController {
   @Get('/searchMarketplace')
   async searchMarketplace(@Query('keyword') keyword: string): Promise<CommonResponse> {
     return await this.appService.searchMarketplace(keyword);
+  }
+
+  @Get('/getCollectionsByWalletAddr')
+  async getCollectionsByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+    @Query('chain') chain: Chain,
+  ): Promise<CommonResponse> {
+    return await this.appService.getCollectionsByWalletAddr(walletAddr, chain);
+  }
+
+  @Get('/getStatisticsByWalletAddr')
+  async getStatisticsByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getStatisticsByWalletAddr(walletAddr);
+  }
+
+  @Get('/getListedCollectiblesByWalletAddr')
+  async getListedCollectiblesByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+    @Query('chain') chain: Chain | 'all' = 'all',
+    @Query('sort') sort: string = '',
+  ): Promise<CommonResponse> {
+    return await this.appService.getListedCollectiblesByWalletAddr(walletAddr, chain, sort);
+  }
+
+  @Get('/getOwnedCollectiblesByWalletAddr')
+  async getOwnedCollectiblesByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+    @Query('chain') chain: Chain | 'all' = 'all',
+    @Query('sort') sort: string = '',
+  ): Promise<CommonResponse> {
+    return await this.appService.getOwnedCollectiblesByWalletAddr(walletAddr, chain, sort);
+  }
+
+  @Get('/getBidsCollectiblesByWalletAddr')
+  async getBidsCollectiblesByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+    @Query('chain') chain: Chain | 'all' = 'all',
+    @Query('sort') sort: string = '',
+  ): Promise<CommonResponse> {
+    return await this.appService.getBidsCollectiblesByWalletAddr(walletAddr, chain, sort);
+  }
+
+  @Get('/getMintedCollectiblesByWalletAddr')
+  async getMintedCollectiblesByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+    @Query('chain') chain: Chain | 'all' = 'all',
+    @Query('sort') sort: string = '',
+  ): Promise<CommonResponse> {
+    return await this.appService.getMintedCollectiblesByWalletAddr(walletAddr, chain, sort);
+  }
+
+  @Get('/getSoldCollectiblesByWalletAddr')
+  async getSoldCollectiblesByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+    @Query('chain') chain: Chain | 'all' = 'all',
+    @Query('sort') sort: string = '',
+  ): Promise<CommonResponse> {
+    return await this.appService.getSoldCollectiblesByWalletAddr(walletAddr, chain, sort);
   }
 }
