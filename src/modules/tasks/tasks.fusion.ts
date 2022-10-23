@@ -379,7 +379,7 @@ export class TasksFusion {
       }
 
       this.logger.log(
-        `Sync past OrderPriceChanged events from [${
+        `Sync [${this.chain}] OrderPriceChanged events from [${
           lastHeight + 1
         }] to [${nowHeight}] finished ✅☕🚾️`,
       );

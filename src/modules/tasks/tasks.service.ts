@@ -495,7 +495,7 @@ export class TasksService {
       }
 
       this.logger.log(
-        `Sync past OrderPriceChanged events from [${
+        `Sync [${this.chain}] OrderPriceChanged events from [${
           lastHeight + 1
         }] to [${nowHeight}] finished ✅☕🚾️`,
       );
@@ -634,7 +634,7 @@ export class TasksService {
       platformFee: event.returnValues._platformFee,
     };
 
-    this.logger.log(`Received OrderFilled Event: ${JSON.stringify(eventInfo)}`);
+    this.logger.log(`Received [${this.chain}] OrderFilled Event: ${JSON.stringify(eventInfo)}`);
 
     const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [

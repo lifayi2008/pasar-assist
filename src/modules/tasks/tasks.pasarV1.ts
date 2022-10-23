@@ -59,7 +59,7 @@ export class PasarV1Service {
       let fromBlock = lastHeight + 1;
       let toBlock = fromBlock + this.step;
       while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past Transfer events from [${fromBlock}] to [${toBlock}]`);
+        this.logger.log(`Sync [${this.chain}] Transfer events from [${fromBlock}] to [${toBlock}]`);
 
         this.stickerContractWS
           .getPastEvents('TransferSingle', {
@@ -77,11 +77,15 @@ export class PasarV1Service {
       }
 
       this.logger.log(
-        `Sync past Transfer events from [${lastHeight + 1}] to [${nowHeight}] finished ✅☕🚾️`,
+        `Sync [${this.chain}] Transfer events from [${
+          lastHeight + 1
+        }] to [${nowHeight}] finished ✅☕🚾️`,
       );
     }
 
-    this.logger.log(`Start sync Transfer events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.logger.log(
+      `Start sync [${this.chain}] Transfer events from [${syncStartBlock + 1}] 💪💪💪 `,
+    );
 
     this.stickerContractWS.events
       .TransferSingle({
@@ -106,7 +110,7 @@ export class PasarV1Service {
       value: event.returnValues._value,
     };
 
-    this.logger.log(`Received Transfer Event: ${JSON.stringify(eventInfo)}`);
+    this.logger.log(`Received [${this.chain}] Transfer Event: ${JSON.stringify(eventInfo)}`);
 
     const [blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
       [
@@ -169,7 +173,9 @@ export class PasarV1Service {
       let toBlock = fromBlock + this.step;
 
       while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past OrderForSale events from [${fromBlock}] to [${toBlock}]`);
+        this.logger.log(
+          `Sync [${this.chain}] OrderForSale events from [${fromBlock}] to [${toBlock}]`,
+        );
         this.pasarContractWS
           .getPastEvents('OrderForSale', {
             fromBlock,
@@ -186,13 +192,15 @@ export class PasarV1Service {
       }
 
       this.logger.log(
-        `Sync past OrderForSale events from [${
+        `Sync [${this.chain}] OrderForSale events from [${
           lastHeight + 1
         }] to [${nowHeight}] finished ✅☕🚾️️`,
       );
     }
 
-    this.logger.log(`Start sync OrderForSale events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.logger.log(
+      `Start [${this.chain}] OrderForSale events from [${syncStartBlock + 1}] 💪💪💪 `,
+    );
     this.web3Service.pasarContractWS[this.chain].events
       .OrderForSale({
         fromBlock: syncStartBlock + 1,
@@ -217,7 +225,7 @@ export class PasarV1Service {
       baseToken: this.stickerContract,
     };
 
-    this.logger.log(`Received OrderForSale Event: ${JSON.stringify(eventInfo)}`);
+    this.logger.log(`Received [${this.chain}] OrderForSale Event: ${JSON.stringify(eventInfo)}`);
 
     const [blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
       [
@@ -266,7 +274,9 @@ export class PasarV1Service {
       let toBlock = fromBlock + this.step;
 
       while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past OrderPriceChanged events from [${fromBlock}] to [${toBlock}]`);
+        this.logger.log(
+          `Sync [${this.chain}] OrderPriceChanged events from [${fromBlock}] to [${toBlock}]`,
+        );
 
         this.pasarContractWS
           .getPastEvents('OrderPriceChanged', {
@@ -284,13 +294,15 @@ export class PasarV1Service {
       }
 
       this.logger.log(
-        `Sync past OrderPriceChanged events from [${
+        `Sync [${this.chain}] OrderPriceChanged events from [${
           lastHeight + 1
         }] to [${nowHeight}] finished ✅☕🚾️`,
       );
     }
 
-    this.logger.log(`Start sync OrderPriceChanged events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.logger.log(
+      `Start sync [${this.chain}] OrderPriceChanged events from [${syncStartBlock + 1}] 💪💪💪 `,
+    );
 
     this.pasarContractWS.events
       .OrderPriceChanged({
@@ -314,7 +326,9 @@ export class PasarV1Service {
       newPrice: event.returnValues._newPrice,
     };
 
-    this.logger.log(`Received OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`);
+    this.logger.log(
+      `Received [${this.chain}] OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`,
+    );
 
     const [blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
@@ -355,7 +369,9 @@ export class PasarV1Service {
       let toBlock = fromBlock + this.step;
 
       while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past OrderFilled events from [${fromBlock}] to [${toBlock}]`);
+        this.logger.log(
+          `Sync [${this.chain}] OrderFilled events from [${fromBlock}] to [${toBlock}]`,
+        );
 
         this.pasarContractWS
           .getPastEvents('OrderFilled', {
@@ -373,11 +389,15 @@ export class PasarV1Service {
       }
 
       this.logger.log(
-        `Sync past OrderFilled events from [${lastHeight + 1}] to [${nowHeight}] finished ✅☕🚾️️`,
+        `Sync [${this.chain}] OrderFilled events from [${
+          lastHeight + 1
+        }] to [${nowHeight}] finished ✅☕🚾️️`,
       );
     }
 
-    this.logger.log(`Start sync OrderFilled events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.logger.log(
+      `Start sync [${this.chain}] OrderFilled events from [${syncStartBlock + 1}] 💪💪💪 `,
+    );
     this.pasarContractWS.events
       .OrderFilled({
         fromBlock: syncStartBlock + 1,
@@ -402,7 +422,7 @@ export class PasarV1Service {
       royaltyOwner: event.returnValues._royaltyOwner,
     };
 
-    this.logger.log(`Received OrderFilled Event: ${JSON.stringify(eventInfo)}`);
+    this.logger.log(`Received [${this.chain}] OrderFilled Event: ${JSON.stringify(eventInfo)}`);
 
     const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
@@ -453,7 +473,9 @@ export class PasarV1Service {
       let toBlock = fromBlock + this.step;
 
       while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync past OrderCancelled events from [${fromBlock}] to [${toBlock}]`);
+        this.logger.log(
+          `Sync [${this.chain}] OrderCancelled events from [${fromBlock}] to [${toBlock}]`,
+        );
 
         this.pasarContractWS
           .getPastEvents('OrderCanceled', {
@@ -471,13 +493,15 @@ export class PasarV1Service {
       }
 
       this.logger.log(
-        `Sync past OrderCancelled events from [${
+        `Sync [${this.chain}] OrderCancelled events from [${
           lastHeight + 1
         }] to [${nowHeight}] finished ✅☕🚾️️`,
       );
     }
 
-    this.logger.log(`Start sync OrderCancelled events from [${syncStartBlock + 1}] 💪💪💪 `);
+    this.logger.log(
+      `Start sync [${this.chain}] OrderCancelled events from [${syncStartBlock + 1}] 💪💪💪 `,
+    );
     this.pasarContractWS.events
       .OrderCanceled({
         fromBlock: syncStartBlock + 1,
@@ -498,7 +522,7 @@ export class PasarV1Service {
       orderId: event.returnValues._orderId,
     };
 
-    this.logger.log(`Received OrderCancelled Event: ${JSON.stringify(eventInfo)}`);
+    this.logger.log(`Received [${this.chain}] OrderCancelled Event: ${JSON.stringify(eventInfo)}`);
 
     const [blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
