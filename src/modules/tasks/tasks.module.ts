@@ -10,6 +10,8 @@ import { TokenDataConsumer } from './token-data.consumer';
 import { OrderDataConsumer } from './order-data.consumer';
 import { PasarV1Service } from './tasks.pasarV1';
 import { TasksCommonService } from './tasks.common';
+import { TasksEthereum } from './tasks.ethereum';
+import { TasksFusion } from './tasks.fusion';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { TasksCommonService } from './tasks.common';
   ],
   providers: [
     TasksService,
+    TasksEthereum,
+    TasksFusion,
     PasarV1Service,
     TasksCommonService,
     SubTasksService,

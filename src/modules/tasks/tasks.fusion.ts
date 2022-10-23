@@ -16,8 +16,8 @@ import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
 @Injectable()
-export class TasksEthereum {
-  private readonly logger = new Logger('TasksEthereum');
+export class TasksFusion {
+  private readonly logger = new Logger('TasksFusion');
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
