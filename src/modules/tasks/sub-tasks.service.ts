@@ -95,20 +95,20 @@ export class SubTasksService {
     await orderInfoDoc.save();
   }
 
-  async updateTokenOwner(tokenId: string, to: string) {
-    const result = await this.dbService.updateTokenOwner(tokenId, to);
+  async updateTokenOwner(chain: Chain, contract: string, tokenId: string, to: string) {
+    const result = await this.dbService.updateTokenOwner(chain, contract, tokenId, to);
     if (result.matchedCount === 0) {
       this.logger.warn(`Token ${tokenId} is not exist yet, put the operation into the queue`);
       await Sleep(1000);
       await this.tokenDataQueueLocal.add(
         'update-token-owner',
-        { tokenId, to },
+        { chain, contract, tokenId, to },
         { removeOnComplete: true },
       );
     }
   }
 
-  async updateOrder(orderId: number, params: UpdateOrderParams) {
+  async updateOrder(chain: Chain, orderId: number, params: UpdateOrderParams) {
     if (params.buyerUri) {
       params.buyerInfo = (await this.getInfoByIpfsUri(params.buyerUri)) as ContractUserInfo;
       if (params.buyerInfo && params.buyerInfo.did) {
@@ -116,13 +116,13 @@ export class SubTasksService {
       }
     }
 
-    const result = await this.dbService.updateOrder(orderId, params);
+    const result = await this.dbService.updateOrder(chain, orderId, params);
     if (result.matchedCount === 0) {
       this.logger.warn(`Order ${orderId} is not exist yet, put the operation into the queue`);
       await Sleep(1000);
       await this.orderDataQueueLocal.add(
         'update-order',
-        { orderId, params },
+        { chain, orderId, params },
         { removeOnComplete: true },
       );
     }
@@ -227,7 +227,7 @@ export class SubTasksService {
 
       await this.dbService.insertToken(tokenInfo);
     } else {
-      await this.dbService.updateTokenOwner(tokenId, event.returnValues._to);
+      await this.dbService.updateTokenOwner(chain, contract, tokenId, event.returnValues._to);
     }
   }
 

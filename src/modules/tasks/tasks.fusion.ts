@@ -3,7 +3,6 @@ import { DbService } from '../database/db.service';
 import { Web3Service } from '../utils/web3.service';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import { getTokenEventModel } from '../common/models/TokenEventModel';
 import { Constants } from '../../constants';
 import { SubTasksService } from './sub-tasks.service';
 import { CollectionEventType, ContractTokenInfo, OrderEventType, OrderState } from './interfaces';
@@ -17,15 +16,13 @@ import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
 @Injectable()
-export class TasksService {
-  private readonly logger = new Logger('TasksService');
+export class TasksEthereum {
+  private readonly logger = new Logger('TasksEthereum');
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
-  private readonly chain = Chain.ELA;
+  private readonly chain = Chain.FSN;
   private readonly rpc = this.web3Service.web3RPC[this.chain];
-  private readonly stickerContract =
-    ConfigContract[this.configService.get('NETWORK')][this.chain].stickerContract;
   private readonly pasarContract =
     ConfigContract[this.configService.get('NETWORK')][this.chain].pasarContract;
   private readonly registerContract =
@@ -43,119 +40,6 @@ export class TasksService {
     private web3Service: Web3Service,
     @InjectConnection() private readonly connection: Connection,
   ) {}
-
-  @Timeout('transfer', 1000)
-  async handleTransferEvent() {
-    const nowHeight = await this.rpc.eth.getBlockNumber();
-    const lastHeight = await this.dbService.getTokenEventLastHeight(
-      this.chain,
-      this.stickerContract,
-    );
-
-    let syncStartBlock = lastHeight;
-
-    if (nowHeight - lastHeight > this.step + 1) {
-      syncStartBlock = nowHeight;
-
-      let fromBlock = lastHeight + 1;
-      let toBlock = fromBlock + this.step;
-      while (fromBlock <= nowHeight) {
-        this.logger.log(`Sync [${this.chain}] Transfer events from [${fromBlock}] to [${toBlock}]`);
-
-        this.stickerContractWS
-          .getPastEvents('TransferSingle', {
-            fromBlock,
-            toBlock,
-          })
-          .then((events) => {
-            events.forEach(async (event) => {
-              await this.handleTransferEventData(event);
-            });
-          });
-        fromBlock = toBlock + 1;
-        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
-        await Sleep(this.stepInterval);
-      }
-
-      this.logger.log(
-        `Sync [${this.chain}] Transfer events from [${
-          lastHeight + 1
-        }] to [${nowHeight}] finished ✅☕🚾️`,
-      );
-    }
-
-    this.logger.log(
-      `Start sync [${this.chain}] Transfer events from [${syncStartBlock + 1}] 💪💪💪 `,
-    );
-
-    this.stickerContractWS.events
-      .TransferSingle({
-        fromBlock: syncStartBlock + 1,
-      })
-      .on('error', (error) => {
-        this.logger.error(error);
-      })
-      .on('data', async (event) => {
-        await this.handleTransferEventData(event);
-      });
-  }
-
-  private async handleTransferEventData(event: any) {
-    const eventInfo = {
-      blockNumber: event.blockNumber,
-      transactionHash: event.transactionHash,
-      from: event.returnValues._from,
-      to: event.returnValues._to,
-      tokenId: event.returnValues._id,
-      operator: event.returnValues._operator,
-      value: event.returnValues._value,
-    };
-
-    this.logger.log(`Received [${this.chain}] Transfer Event: ${JSON.stringify(eventInfo)}`);
-
-    const [blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
-      [
-        ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
-        {
-          method: this.stickerContractRPC.methods.tokenInfo(event.returnValues._id).call,
-          params: {},
-        },
-      ],
-      this.chain,
-    );
-
-    const contractTokenInfo = { ...tokenInfo };
-    contractTokenInfo.chain = this.chain;
-    contractTokenInfo.contract = this.stickerContract;
-    contractTokenInfo.uniqueKey = `${this.chain}-${this.stickerContract}-${eventInfo.tokenId}`;
-
-    const TokenEventModel = getTokenEventModel(this.connection);
-    const tokenEvent = new TokenEventModel({
-      ...eventInfo,
-      chain: this.chain,
-      contract: this.stickerContract,
-      gasFee: blockInfo.gasUsed,
-      timestamp: blockInfo.timestamp,
-    });
-
-    await tokenEvent.save();
-
-    if (eventInfo.from === Constants.BURN_ADDRESS) {
-      await this.subTasksService.dealWithNewToken(
-        contractTokenInfo as ContractTokenInfo,
-        eventInfo.blockNumber,
-      );
-    } else {
-      if (eventInfo.to !== this.pasarContract) {
-        await this.subTasksService.updateTokenOwner(
-          this.chain,
-          this.stickerContract,
-          eventInfo.tokenId,
-          eventInfo.to,
-        );
-      }
-    }
-  }
 
   @Timeout('orderForAuction', 30 * 1000)
   async handleOrderForAuctionEvent() {

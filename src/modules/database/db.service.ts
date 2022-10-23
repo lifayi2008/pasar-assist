@@ -66,14 +66,16 @@ export class DbService {
     }
   }
 
-  async updateOrder(orderId: number, params: UpdateOrderParams) {
-    return await this.connection.collection('orders').updateOne({ orderId }, { $set: params });
+  async updateOrder(chain: Chain, orderId: number, params: UpdateOrderParams) {
+    return await this.connection
+      .collection('orders')
+      .updateOne({ chain, orderId }, { $set: params });
   }
 
-  async updateTokenOwner(tokenId: string, to: string) {
+  async updateTokenOwner(chain: Chain, contract: string, tokenId: string, to: string) {
     return await this.connection
       .collection('tokens')
-      .updateOne({ tokenId: tokenId }, { $set: { tokenOwner: to } });
+      .updateOne({ chain, contract, tokenId }, { $set: { tokenOwner: to } });
   }
 
   async updateCollection(token: string, chain: Chain, collection: UpdateCollectionParams) {

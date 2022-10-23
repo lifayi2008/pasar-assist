@@ -142,7 +142,12 @@ export class PasarV1Service {
       );
     } else {
       if (eventInfo.to !== this.pasarContract) {
-        await this.subTasksService.updateTokenOwner(eventInfo.tokenId, eventInfo.to);
+        await this.subTasksService.updateTokenOwner(
+          this.chain,
+          this.stickerContract,
+          eventInfo.tokenId,
+          eventInfo.to,
+        );
       }
     }
   }
@@ -327,7 +332,7 @@ export class PasarV1Service {
 
     await orderEvent.save();
 
-    await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
+    await this.subTasksService.updateOrder(this.chain, parseInt(eventInfo.orderId), {
       price: parseInt(eventInfo.newPrice),
       updateTime: orderEvent.timestamp,
     });
@@ -421,7 +426,7 @@ export class PasarV1Service {
 
     await orderEvent.save();
 
-    await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
+    await this.subTasksService.updateOrder(this.chain, parseInt(eventInfo.orderId), {
       orderState: parseInt(contractOrderInfo.orderState),
       buyerAddr: contractOrderInfo.buyerAddr,
       buyerUri: contractOrderInfo.buyerUri,
@@ -511,7 +516,7 @@ export class PasarV1Service {
 
     await orderEvent.save();
 
-    await this.subTasksService.updateOrder(parseInt(eventInfo.orderId), {
+    await this.subTasksService.updateOrder(this.chain, parseInt(eventInfo.orderId), {
       orderState: OrderState.Cancelled,
       updateTime: orderEvent.timestamp,
     });

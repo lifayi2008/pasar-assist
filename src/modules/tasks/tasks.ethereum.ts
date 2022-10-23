@@ -17,12 +17,12 @@ import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 
 @Injectable()
-export class TasksService {
-  private readonly logger = new Logger('TasksService');
+export class TasksEthereum {
+  private readonly logger = new Logger('TasksEthereum');
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
-  private readonly chain = Chain.ELA;
+  private readonly chain = Chain.ETH;
   private readonly rpc = this.web3Service.web3RPC[this.chain];
   private readonly stickerContract =
     ConfigContract[this.configService.get('NETWORK')][this.chain].stickerContract;

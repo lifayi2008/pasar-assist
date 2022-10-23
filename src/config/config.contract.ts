@@ -113,8 +113,8 @@ export const ConfigContract = {
       pasarContract: '0xa18279eBDfA5747e79DBFc23fa999b4Eaf2A9780',
       registerContract: '0x020c7303664bc88ae92cE3D380BF361E03B78B81',
 
-      pasarContractDeploy: 1,
-      registerContractDeploy: 1,
+      pasarContractDeploy: 7400000,
+      registerContractDeploy: 7300000,
 
       ELAToken: '0x471a525f12804f3eb45573f60b7c4ac29b3460e2',
     },
