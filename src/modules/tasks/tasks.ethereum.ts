@@ -44,7 +44,7 @@ export class TasksEthereum {
     @InjectConnection() private readonly connection: Connection,
   ) {}
 
-  @Timeout('transfer', 1000)
+  @Timeout('transfer' + Chain.ETH, 1000)
   async handleTransferEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getTokenEventLastHeight(
@@ -157,7 +157,7 @@ export class TasksEthereum {
     }
   }
 
-  @Timeout('orderForAuction', 30 * 1000)
+  @Timeout(`orderForAuction` + Chain.ETH, 30 * 1000)
   async handleOrderForAuctionEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -263,7 +263,7 @@ export class TasksEthereum {
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  @Timeout('orderBid', 60 * 1000)
+  @Timeout('orderBid' + Chain.ETH, 60 * 1000)
   async handleOrderBidEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -356,7 +356,7 @@ export class TasksEthereum {
     });
   }
 
-  @Timeout('orderForSale', 30 * 1000)
+  @Timeout('orderForSale' + Chain.ETH, 30 * 1000)
   async handleOrderForSaleEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -458,7 +458,7 @@ export class TasksEthereum {
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  @Timeout('orderPriceChanged', 60 * 1000)
+  @Timeout('orderPriceChanged' + Chain.ETH, 60 * 1000)
   async handleOrderPriceChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -562,7 +562,7 @@ export class TasksEthereum {
     });
   }
 
-  @Timeout('orderFilled', 60 * 1000)
+  @Timeout('orderFilled' + Chain.ETH, 60 * 1000)
   async handleOrderFilledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -669,7 +669,7 @@ export class TasksEthereum {
     });
   }
 
-  @Timeout('orderCancelled', 60 * 1000)
+  @Timeout('orderCancelled' + Chain.ETH, 60 * 1000)
   async handleOrderCancelledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -759,7 +759,7 @@ export class TasksEthereum {
     });
   }
 
-  @Timeout('tokenRegistered', 60 * 1000)
+  @Timeout('tokenRegistered' + Chain.ETH, 60 * 1000)
   async handleTokenRegisteredEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
@@ -868,7 +868,7 @@ export class TasksEthereum {
     }
   }
 
-  @Timeout('tokenRoyaltyChanged', 60 * 1000)
+  @Timeout('tokenRoyaltyChanged' + Chain.ETH, 60 * 1000)
   async handleRoyaltyChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
@@ -960,7 +960,7 @@ export class TasksEthereum {
     });
   }
 
-  @Timeout('tokenInfoUpdated', 60 * 1000)
+  @Timeout('tokenInfoUpdated' + Chain.ETH, 60 * 1000)
   async handleTokenInfoUpdatedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(

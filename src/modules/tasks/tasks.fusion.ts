@@ -41,7 +41,7 @@ export class TasksFusion {
     @InjectConnection() private readonly connection: Connection,
   ) {}
 
-  @Timeout('orderForAuction', 30 * 1000)
+  @Timeout(`orderForAuction-${Chain.FSN}`, 30 * 1000)
   async handleOrderForAuctionEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -147,7 +147,7 @@ export class TasksFusion {
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  @Timeout('orderBid', 60 * 1000)
+  @Timeout(`OrderBid-${Chain.FSN}`, 60 * 1000)
   async handleOrderBidEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -240,7 +240,7 @@ export class TasksFusion {
     });
   }
 
-  @Timeout('orderForSale', 30 * 1000)
+  @Timeout(`OrderForSale-${Chain.FSN}`, 30 * 1000)
   async handleOrderForSaleEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -342,7 +342,7 @@ export class TasksFusion {
     await this.subTasksService.dealWithNewOrder(contractOrderInfo);
   }
 
-  @Timeout('orderPriceChanged', 60 * 1000)
+  @Timeout(`OrderPriceChanged-${Chain.FSN}`, 60 * 1000)
   async handleOrderPriceChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -446,7 +446,7 @@ export class TasksFusion {
     });
   }
 
-  @Timeout('orderFilled', 60 * 1000)
+  @Timeout(`OrderFilled-${Chain.FSN}`, 60 * 1000)
   async handleOrderFilledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -553,7 +553,7 @@ export class TasksFusion {
     });
   }
 
-  @Timeout('orderCancelled', 60 * 1000)
+  @Timeout(`OrderCanceled-${Chain.FSN}`, 60 * 1000)
   async handleOrderCancelledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
@@ -643,7 +643,7 @@ export class TasksFusion {
     });
   }
 
-  @Timeout('tokenRegistered', 60 * 1000)
+  @Timeout(`TokenRegistered-${Chain.FSN}`, 60 * 1000)
   async handleTokenRegisteredEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
@@ -752,7 +752,7 @@ export class TasksFusion {
     }
   }
 
-  @Timeout('tokenRoyaltyChanged', 60 * 1000)
+  @Timeout(`TokenRoyaltyChanged-${Chain.FSN}`, 60 * 1000)
   async handleRoyaltyChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
@@ -844,7 +844,7 @@ export class TasksFusion {
     });
   }
 
-  @Timeout('tokenInfoUpdated', 60 * 1000)
+  @Timeout(`TokenInfoUpdated-${Chain.FSN}`, 60 * 1000)
   async handleTokenInfoUpdatedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getCollectionEventLastHeight(
