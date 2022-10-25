@@ -326,6 +326,23 @@ export class AppService {
     //   },
     // );
 
+    // const [tx, blockInfo] = await this.web3Service.web3BatchRequest(
+    //   [
+    //     {
+    //       method: this.web3Service.web3RPC['ela'].eth.getTransactionReceipt,
+    //       params: '0x8a13bb881fcd24f0e9d89183d1f2181bb2dbcbe5dd21f0a3bfcf63d2a7058c81',
+    //     },
+    //     {
+    //       method: this.web3Service.web3RPC['ela'].eth.getBlock,
+    //       params: 12715368,
+    //     },
+    //   ],
+    //   Chain.ELA,
+    // );
+    //
+    // console.log(tx);
+    // console.log(blockInfo);
+
     // await tokenContract.methods.symbol().call().then(console.log);
     // await tokenContract.methods.supportsInterface('0x80ac58cd').call().then(console.log);
     // await tokenContract.methods.supportsInterface('0xd9b67a26').call().then(console.log);
@@ -1689,5 +1706,13 @@ export class AppService {
       ])
       .toArray();
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async reGetTokenDetail() {
+    const result = await this.connection
+      .collection('tokens')
+      .updateMany({ notGetDetail: true, retryTimes: 5 }, { $set: { retryTimes: 0 } });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
   }
 }

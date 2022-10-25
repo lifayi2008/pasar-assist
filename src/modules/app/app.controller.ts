@@ -327,4 +327,9 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.getSoldCollectiblesByWalletAddr(walletAddr, chain, sort);
   }
+
+  @Get('/reGetTokenDetail')
+  async reGetTokenDetail(): Promise<CommonResponse> {
+    return await this.appService.reGetTokenDetail();
+  }
 }
