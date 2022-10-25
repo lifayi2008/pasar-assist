@@ -113,7 +113,7 @@ export class TasksCommonService {
           let toBlock = fromBlock + this.step;
           while (fromBlock <= nowHeight) {
             this.logger.log(
-              `Sync past user Collection ${collection.token} Transfer events from [${fromBlock}] to [${toBlock}]`,
+              `Sync [${collection.chain}] user Collection ${collection.token} Transfer events from [${fromBlock}] to [${toBlock}]`,
             );
 
             contractWs

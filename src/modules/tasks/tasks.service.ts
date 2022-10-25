@@ -113,7 +113,7 @@ export class TasksService {
 
     this.logger.log(`Received [${this.chain}] Transfer Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -134,7 +134,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       contract: this.stickerContract,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -233,7 +233,7 @@ export class TasksService {
 
     this.logger.log(`Received [${this.chain}] OrderForAuction Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -255,7 +255,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderForAuction,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -329,7 +329,7 @@ export class TasksService {
 
     this.logger.log(`Received [${this.chain}] BidOrder Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -345,7 +345,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderBid,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -429,7 +429,7 @@ export class TasksService {
 
     this.logger.log(`Received [${this.chain}] OrderForSale Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -449,7 +449,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderForSale,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -537,7 +537,7 @@ export class TasksService {
       `Received [${this.chain}] OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`,
     );
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
@@ -547,7 +547,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderPriceChanged,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -636,7 +636,7 @@ export class TasksService {
 
     this.logger.log(`Received [${this.chain}] OrderFilled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -652,7 +652,7 @@ export class TasksService {
       ...eventInfo,
       eventType: OrderEventType.OrderFilled,
       chain: this.chain,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -737,7 +737,7 @@ export class TasksService {
 
     this.logger.log(`Received [${this.chain}] OrderCancelled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
@@ -747,7 +747,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderCancelled,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -834,7 +834,7 @@ export class TasksService {
       eventInfo.token,
     );
 
-    const [blockInfo, is721, symbol] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, is721, symbol] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         { method: tokenContract.methods.supportsInterface('0x80ac58cd').call, params: {} },
@@ -848,7 +848,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: CollectionEventType.TokenRegistered,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -939,7 +939,7 @@ export class TasksService {
       `Received [${this.chain}] TokenRoyaltyChanged Event: ${JSON.stringify(eventInfo)}`,
     );
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
@@ -949,7 +949,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: CollectionEventType.TokenRoyaltyChanged,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -1031,7 +1031,7 @@ export class TasksService {
       `Received [${this.chain}] TokenInfoUpdatedEventData Event: ${JSON.stringify(eventInfo)}`,
     );
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
@@ -1041,7 +1041,7 @@ export class TasksService {
       ...eventInfo,
       chain: this.chain,
       eventType: CollectionEventType.TokenInfoUpdated,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 

@@ -112,7 +112,7 @@ export class PasarV1Service {
 
     this.logger.log(`Received [${this.chain}] Transfer Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, tokenInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -133,7 +133,7 @@ export class PasarV1Service {
       ...eventInfo,
       chain: this.chain,
       contract: this.stickerContract,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -227,7 +227,7 @@ export class PasarV1Service {
 
     this.logger.log(`Received [${this.chain}] OrderForSale Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, contractOrder] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -249,7 +249,7 @@ export class PasarV1Service {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderForSale,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -330,7 +330,7 @@ export class PasarV1Service {
       `Received [${this.chain}] OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`,
     );
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
@@ -340,7 +340,7 @@ export class PasarV1Service {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderPriceChanged,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -424,7 +424,7 @@ export class PasarV1Service {
 
     this.logger.log(`Received [${this.chain}] OrderFilled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
         {
@@ -440,7 +440,7 @@ export class PasarV1Service {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderFilled,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 
@@ -524,7 +524,7 @@ export class PasarV1Service {
 
     this.logger.log(`Received [${this.chain}] OrderCancelled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [blockInfo] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
       [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
       this.chain,
     );
@@ -534,7 +534,7 @@ export class PasarV1Service {
       ...eventInfo,
       chain: this.chain,
       eventType: OrderEventType.OrderCancelled,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
 

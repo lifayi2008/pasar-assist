@@ -180,7 +180,7 @@ export class SubTasksService {
       ? contractRPC.methods.tokenURI(tokenId).call
       : contractRPC.methods.uri(tokenId).call;
 
-    const [blockInfo, tokenUri] = await this.web3Service.web3BatchRequest(
+    const [txInfo, blockInfo, tokenUri] = await this.web3Service.web3BatchRequest(
       [
         ...this.web3Service.getBaseBatchRequestParam(event, chain),
         {
@@ -201,7 +201,7 @@ export class SubTasksService {
       value: is721 ? 1 : parseInt(event.returnValues._value),
       chain,
       contract,
-      gasFee: blockInfo.gasUsed,
+      gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     };
 
