@@ -137,14 +137,14 @@ export class TasksCommonService {
           }
 
           this.logger.log(
-            `Sync past user Collection ${collection.token} Transfer events from [${fromBlock}] to [${toBlock}] ✅☕🚾️`,
+            `Sync ${collection.chain} user Collection ${collection.token} Transfer events from [${fromBlock}] to [${toBlock}] ✅☕🚾️`,
           );
         }
 
         this.logger.log(
-          `Start sync user Collection ${collection.token} Transfer events from [${
-            syncStartBlock + 1
-          }] 💪💪💪 `,
+          `Start sync ${collection.chain} user Collection ${
+            collection.token
+          } Transfer events from [${syncStartBlock + 1}] 💪💪💪 `,
         );
 
         contractWs.events[event]({

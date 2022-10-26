@@ -1701,7 +1701,7 @@ export class AppService {
     result.forEach((item) => {
       let rate = 1;
       if (item.quoteToken && item.quoteToken !== Constants.BURN_ADDRESS) {
-        rate = rates[item.chain][item.quoteToken];
+        rate = rates[item.chain][item.quoteToken.toLowerCase()];
       }
       const amount = item.amount ? item.amount : 1;
       total += (amount * item.price * rate) / Constants.ELA_ESC_PRECISION;
