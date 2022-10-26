@@ -21,17 +21,16 @@ export class PasarV1Service {
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
-  private readonly chain = Chain.V1;
+  private readonly chain = Chain.ELA;
   private readonly rpc: Web3;
   private readonly stickerContract =
-    ConfigContract[this.configService.get('NETWORK')][this.chain].stickerContract;
+    ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract;
   private readonly pasarContract =
-    ConfigContract[this.configService.get('NETWORK')][this.chain].pasarContract;
-
-  private readonly stickerContractWS = this.web3Service.stickerContractWS[this.chain];
-  private readonly stickerContractRPC = this.web3Service.stickerContractRPC[this.chain];
-  private readonly pasarContractWS = this.web3Service.pasarContractWS[this.chain];
-  private readonly pasarContractRPC = this.web3Service.pasarContractRPC[this.chain];
+    ConfigContract[this.configService.get('NETWORK')][Chain.V1].pasarContract;
+  private readonly stickerContractWS = this.web3Service.stickerContractWS[Chain.V1];
+  private readonly stickerContractRPC = this.web3Service.stickerContractRPC[Chain.V1];
+  private readonly pasarContractWS = this.web3Service.pasarContractWS[Chain.V1];
+  private readonly pasarContractRPC = this.web3Service.pasarContractRPC[Chain.V1];
 
   constructor(
     private subTasksService: SubTasksService,
