@@ -1691,6 +1691,9 @@ export class AppService {
     const tokenRates = await this.connection.collection('token_rates').find().toArray();
     const rates = {};
     tokenRates.forEach((item) => {
+      if (!rates[item.chain]) {
+        rates[item.chain] = {};
+      }
       rates[item.chain][item.token] = item.rate;
     });
 
