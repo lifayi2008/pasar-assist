@@ -21,16 +21,16 @@ export class PasarV1Service {
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
-  private readonly chain = Chain.ELA;
+  private readonly chain = Chain.V1;
   private readonly rpc: Web3;
   private readonly stickerContract =
-    ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract;
+    ConfigContract[this.configService.get('NETWORK')][this.chain].stickerContract;
   private readonly pasarContract =
-    ConfigContract[this.configService.get('NETWORK')][Chain.V1].pasarContract;
-  private readonly stickerContractWS = this.web3Service.stickerContractWS[Chain.V1];
-  private readonly stickerContractRPC = this.web3Service.stickerContractRPC[Chain.V1];
-  private readonly pasarContractWS = this.web3Service.pasarContractWS[Chain.V1];
-  private readonly pasarContractRPC = this.web3Service.pasarContractRPC[Chain.V1];
+    ConfigContract[this.configService.get('NETWORK')][this.chain].pasarContract;
+  private readonly stickerContractWS = this.web3Service.stickerContractWS[this.chain];
+  private readonly stickerContractRPC = this.web3Service.stickerContractRPC[this.chain];
+  private readonly pasarContractWS = this.web3Service.pasarContractWS[this.chain];
+  private readonly pasarContractRPC = this.web3Service.pasarContractRPC[this.chain];
 
   constructor(
     private subTasksService: SubTasksService,
@@ -46,7 +46,7 @@ export class PasarV1Service {
   async handleTransferEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getTokenEventLastHeight(
-      this.chain,
+      Chain.ELA,
       this.stickerContract,
     );
 
@@ -123,14 +123,14 @@ export class PasarV1Service {
     );
 
     const contractTokenInfo = { ...tokenInfo };
-    contractTokenInfo.chain = this.chain;
+    contractTokenInfo.chain = Chain.ELA;
     contractTokenInfo.contract = this.stickerContract;
-    contractTokenInfo.uniqueKey = `${this.chain}-${this.stickerContract}-${eventInfo.tokenId}`;
+    contractTokenInfo.uniqueKey = `${Chain.ELA}-${this.stickerContract}-${eventInfo.tokenId}`;
 
     const TokenEventModel = getTokenEventModel(this.connection);
     const tokenEvent = new TokenEventModel({
       ...eventInfo,
-      chain: this.chain,
+      chain: Chain.ELA,
       contract: this.stickerContract,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -146,7 +146,7 @@ export class PasarV1Service {
     } else {
       if (eventInfo.to !== this.pasarContract) {
         await this.subTasksService.updateTokenOwner(
-          this.chain,
+          Chain.ELA,
           this.stickerContract,
           eventInfo.tokenId,
           eventInfo.to,
@@ -159,7 +159,7 @@ export class PasarV1Service {
   async handleOrderForSaleEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
-      this.chain,
+      Chain.ELA,
       OrderEventType.OrderForSale,
     );
 
@@ -238,15 +238,15 @@ export class PasarV1Service {
     );
 
     const contractOrderInfo = { ...contractOrder };
-    contractOrderInfo.chain = this.chain;
+    contractOrderInfo.chain = Chain.ELA;
     contractOrderInfo.baseToken = this.stickerContract;
     contractOrderInfo.quoteToken = Constants.BURN_ADDRESS;
-    contractOrderInfo.uniqueKey = `${this.chain}-${this.stickerContract}-${eventInfo.tokenId}`;
+    contractOrderInfo.uniqueKey = `${Chain.ELA}-${this.stickerContract}-${eventInfo.tokenId}`;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
-      chain: this.chain,
+      chain: Chain.ELA,
       eventType: OrderEventType.OrderForSale,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -260,7 +260,7 @@ export class PasarV1Service {
   async handleOrderPriceChangedEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
-      this.chain,
+      Chain.ELA,
       OrderEventType.OrderPriceChanged,
     );
 
@@ -337,7 +337,7 @@ export class PasarV1Service {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
-      chain: this.chain,
+      chain: Chain.ELA,
       eventType: OrderEventType.OrderPriceChanged,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -345,7 +345,7 @@ export class PasarV1Service {
 
     await orderEvent.save();
 
-    await this.subTasksService.updateOrder(this.chain, parseInt(eventInfo.orderId), {
+    await this.subTasksService.updateOrder(Chain.ELA, parseInt(eventInfo.orderId), {
       price: parseInt(eventInfo.newPrice),
       updateTime: orderEvent.timestamp,
     });
@@ -355,7 +355,7 @@ export class PasarV1Service {
   async handleOrderFilledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
-      this.chain,
+      Chain.ELA,
       OrderEventType.OrderFilled,
     );
 
@@ -437,7 +437,7 @@ export class PasarV1Service {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
-      chain: this.chain,
+      chain: Chain.ELA,
       eventType: OrderEventType.OrderFilled,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -445,7 +445,7 @@ export class PasarV1Service {
 
     await orderEvent.save();
 
-    await this.subTasksService.updateOrder(this.chain, parseInt(eventInfo.orderId), {
+    await this.subTasksService.updateOrder(Chain.ELA, parseInt(eventInfo.orderId), {
       orderState: parseInt(contractOrderInfo.orderState),
       buyerAddr: contractOrderInfo.buyerAddr,
       buyerUri: contractOrderInfo.buyerUri,
@@ -459,7 +459,7 @@ export class PasarV1Service {
   async handleOrderCancelledEvent() {
     const nowHeight = await this.rpc.eth.getBlockNumber();
     const lastHeight = await this.dbService.getOrderEventLastHeight(
-      this.chain,
+      Chain.ELA,
       OrderEventType.OrderCancelled,
     );
 
@@ -531,7 +531,7 @@ export class PasarV1Service {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
-      chain: this.chain,
+      chain: Chain.ELA,
       eventType: OrderEventType.OrderCancelled,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -539,7 +539,7 @@ export class PasarV1Service {
 
     await orderEvent.save();
 
-    await this.subTasksService.updateOrder(this.chain, parseInt(eventInfo.orderId), {
+    await this.subTasksService.updateOrder(Chain.ELA, parseInt(eventInfo.orderId), {
       orderState: OrderState.Cancelled,
       updateTime: orderEvent.timestamp,
     });
