@@ -81,7 +81,7 @@ export class SubTasksService {
   async dealWithNewOrder(orderInfo: ContractOrderInfo) {
     let ipfsUserInfo;
     if (
-      orderInfo.contract !==
+      orderInfo.baseToken !==
       ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract
     ) {
       ipfsUserInfo = await this.getInfoByIpfsUri(orderInfo.sellerUri);
