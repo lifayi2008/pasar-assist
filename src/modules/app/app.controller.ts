@@ -78,26 +78,6 @@ export class AppController {
     return await this.appService.listTrans(pageNum, pageSize, timeOrder);
   }
 
-  @Get('/nftnumber')
-  async nftNumber(): Promise<CommonResponse> {
-    return await this.appService.nftNumber();
-  }
-
-  @Get('/relatednftnum')
-  async relatedNftNumber(): Promise<CommonResponse> {
-    return await this.appService.relatedNftNumber();
-  }
-
-  @Get('/owneraddressnum')
-  async ownerAddressNumber(): Promise<CommonResponse> {
-    return await this.appService.ownerAddressNumber();
-  }
-
-  @Get('/gettv')
-  async getTotalVolume(): Promise<CommonResponse> {
-    return await this.appService.getTotalVolume();
-  }
-
   @Get('/getNftPriceByTokenId/:tokenId/:baseToken')
   async getNftPriceByTokenId(
     @Query('tokenId') tokenId: string,
@@ -326,6 +306,26 @@ export class AppController {
     @Query('sort') sort: string = '',
   ): Promise<CommonResponse> {
     return await this.appService.getSoldCollectiblesByWalletAddr(walletAddr, chain, sort);
+  }
+
+  @Get('/getItems')
+  async getItems(): Promise<CommonResponse> {
+    return await this.appService.getItems();
+  }
+
+  @Get('/getTransactions')
+  async getTransactions(): Promise<CommonResponse> {
+    return await this.appService.getTransactions();
+  }
+
+  @Get('/getOwners')
+  async getOwners(): Promise<CommonResponse> {
+    return await this.appService.getOwners();
+  }
+
+  @Get('/getTradingVolume')
+  async getTradingVolume(): Promise<CommonResponse> {
+    return await this.appService.getTradingVolume();
   }
 
   @Get('/reGetTokenDetail')

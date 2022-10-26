@@ -483,57 +483,6 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { result, total } };
   }
 
-  async nftNumber() {
-    const data = await this.connection
-      .collection('tokens')
-      .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
-
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
-  }
-
-  async relatedNftNumber() {
-    const countTokens = await this.connection.collection('token_events').countDocuments();
-    const countOrders = await this.connection.collection('order_events').countDocuments();
-    const data = countTokens + countOrders;
-
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
-  }
-
-  async ownerAddressNumber() {
-    const data = await this.connection
-      .collection('tokens')
-      .distinct('tokenOwner')
-      .then((res) => res.length);
-
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
-  }
-
-  //TODO: need to change logic here, find all filled orders then calculate the total amount is not a good idea; this value should be calculated when order is filled
-  async getTotalVolume() {
-    const result = await this.connection
-      .collection('orders')
-      .find({ orderState: OrderState.Filled })
-      .toArray();
-
-    const tokenRates = await this.connection.collection('token_rates').find().toArray();
-    const rates = {};
-    tokenRates.forEach((item) => {
-      rates[item.chain][item.token] = item.rate;
-    });
-
-    let total = 0;
-    result.forEach((item) => {
-      let rate = 1;
-      if (item.quoteToken && item.quoteToken !== Constants.BURN_ADDRESS) {
-        rate = rates[item.chain][item.quoteToken];
-      }
-      const amount = item.amount ? item.amount : 1;
-      total += (amount * item.price * rate) / Constants.ELA_ESC_PRECISION;
-    });
-
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: total };
-  }
-
   async getNftPriceByTokenId(tokenId: string, baseToken: string) {
     const data = await this.connection
       .collection('tokens')
@@ -1708,10 +1657,60 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
+  async getItems() {
+    const data = await this.connection
+      .collection('tokens')
+      .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getTransactions() {
+    const countTokens = await this.connection.collection('token_events').countDocuments();
+    const countOrders = await this.connection.collection('order_events').countDocuments();
+    const data = countTokens + countOrders;
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getOwners() {
+    const data = await this.connection
+      .collection('tokens')
+      .distinct('tokenOwner')
+      .then((res) => res.length);
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getTradingVolume() {
+    const result = await this.connection
+      .collection('orders')
+      .find({ orderState: OrderState.Filled })
+      .toArray();
+
+    const tokenRates = await this.connection.collection('token_rates').find().toArray();
+    const rates = {};
+    tokenRates.forEach((item) => {
+      rates[item.chain][item.token] = item.rate;
+    });
+
+    let total = 0;
+    result.forEach((item) => {
+      let rate = 1;
+      if (item.quoteToken && item.quoteToken !== Constants.BURN_ADDRESS) {
+        rate = rates[item.chain][item.quoteToken];
+      }
+      const amount = item.amount ? item.amount : 1;
+      total += (amount * item.price * rate) / Constants.ELA_ESC_PRECISION;
+    });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: total };
+  }
+
   async reGetTokenDetail() {
     const result = await this.connection
       .collection('tokens')
-      .updateMany({ notGetDetail: true, retryTimes: 5 }, { $set: { retryTimes: 0 } });
+      .updateMany({ notGetDetail: true, retryTimes: { $gt: 4 } }, { $set: { retryTimes: 0 } });
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
   }
