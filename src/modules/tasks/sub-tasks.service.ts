@@ -150,24 +150,25 @@ export class SubTasksService {
 
     if (result.upsertedCount === 1) {
       const key = `${chain}-${token}`;
-      const oldCollections = JSON.parse(
-        await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS),
-      );
-      for (const id of Object.keys(oldCollections)) {
-        if (id === key) {
-          oldCollections[id] = { ...oldCollections[id], ...collection };
-          await this.cacheManager.set(
-            Constants.CACHE_KEY_COLLECTIONS,
-            JSON.stringify(oldCollections),
-          );
-          return;
+      const cachedData = await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS);
+      if (cachedData) {
+        const oldCollections = JSON.parse(cachedData as string);
+        for (const id of Object.keys(oldCollections)) {
+          if (id === key) {
+            oldCollections[id] = { ...oldCollections[id], ...collection };
+            await this.cacheManager.set(
+              Constants.CACHE_KEY_COLLECTIONS,
+              JSON.stringify(oldCollections),
+            );
+            return;
+          }
         }
-      }
 
-      await this.cacheManager.set(
-        Constants.CACHE_KEY_COLLECTIONS,
-        JSON.stringify({ ...oldCollections, [key]: collection }),
-      );
+        await this.cacheManager.set(
+          Constants.CACHE_KEY_COLLECTIONS,
+          JSON.stringify({ ...oldCollections, [key]: collection }),
+        );
+      }
     }
   }
 
