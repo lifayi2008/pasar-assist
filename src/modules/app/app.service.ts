@@ -36,6 +36,17 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS };
   }
 
+  async LoadCollectionsInfo() {
+    const data = await this.connection.collection('collections').find().toArray();
+    const collections = {};
+    for (const item of data) {
+      collections[`${item.chain}-${item.token}`] = item;
+    }
+
+    await this.cacheManager.set(Constants.CACHE_KEY_COLLECTIONS, JSON.stringify(collections));
+    this.logger.log('Load collections information successfully...');
+  }
+
   // async getCollectibleByTokenId(tokenId: string) {
   //   const data = await this.connection.collection('tokens').findOne({ tokenId });
   //

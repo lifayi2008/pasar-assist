@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import {
   ContractOrderInfo,
   ContractTokenInfo,
@@ -25,6 +25,7 @@ import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
 import { ConfigContract } from '../../config/config.contract';
 import { getTokenEventModel } from '../common/models/TokenEventModel';
 import { Constants } from '../../constants';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class SubTasksService {
@@ -34,6 +35,7 @@ export class SubTasksService {
     private configService: ConfigService,
     private dbService: DbService,
     private web3Service: Web3Service,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @InjectConnection() private readonly connection: Connection,
     @InjectQueue('order-data-queue-local') private orderDataQueueLocal: Queue,
     @InjectQueue('token-data-queue-local') private tokenDataQueueLocal: Queue,
@@ -143,6 +145,28 @@ export class SubTasksService {
         'update-collection',
         { token, chain, params },
         { removeOnComplete: true },
+      );
+    }
+
+    if (result.upsertedCount === 1) {
+      const key = `${chain}-${token}`;
+      const oldCollections = JSON.parse(
+        await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS),
+      );
+      for (const id of Object.keys(oldCollections)) {
+        if (id === key) {
+          oldCollections[id] = { ...oldCollections[id], ...collection };
+          await this.cacheManager.set(
+            Constants.CACHE_KEY_COLLECTIONS,
+            JSON.stringify(oldCollections),
+          );
+          return;
+        }
+      }
+
+      await this.cacheManager.set(
+        Constants.CACHE_KEY_COLLECTIONS,
+        JSON.stringify({ ...oldCollections, [key]: collection }),
       );
     }
   }

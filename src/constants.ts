@@ -3,4 +3,5 @@ export class Constants {
   static MSG_SUCCESS = 'Success';
   static ROYALTY_FEE_RATE = 100 * 10000;
   static ELA_ESC_PRECISION = 10 ** 18;
+  static CACHE_KEY_COLLECTIONS = 'cache-key-collections';
 }

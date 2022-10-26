@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, Timeout } from '@nestjs/schedule';
 import { SubTasksService } from './sub-tasks.service';
 import { DbService } from '../database/db.service';
@@ -9,6 +9,8 @@ import { TOKEN1155_ABI } from '../../contracts/Token1155ABI';
 import { ConfigTokens } from '../../config/config.tokens';
 import { ConfigService } from '@nestjs/config';
 import { Chain } from '../utils/enums';
+import { Cache } from 'cache-manager';
+import { Constants } from '../../constants';
 
 @Injectable()
 export class TasksCommonService {
@@ -17,6 +19,7 @@ export class TasksCommonService {
     private configService: ConfigService,
     private subTasksService: SubTasksService,
     private web3Service: Web3Service,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   private readonly logger = new Logger('TasksCommonService');
@@ -38,6 +41,9 @@ export class TasksCommonService {
               name: tokenInfo.name,
               description: tokenInfo.description,
               image: tokenInfo.image ? tokenInfo.image : '',
+              royaltyOwner: JSON.parse(
+                await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS),
+              )[`${token.chain}-${token.token}`].royaltyOwners[0],
               type: tokenInfo.type ? tokenInfo.type : 'image',
               adult: tokenInfo.adult ? tokenInfo.adult : false,
               version: tokenInfo.version ? tokenInfo.version : 2,
