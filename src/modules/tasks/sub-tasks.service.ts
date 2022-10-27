@@ -63,7 +63,7 @@ export class SubTasksService {
     }
 
     // const TokenInfoModel = getTokenInfoModel(this.connection);
-    await this.connection.collection('tokens').findOneAndUpdate(
+    await this.connection.collection('tokens').updateOne(
       { uniqueKey: tokenInfo.uniqueKey },
       {
         tokenIdHex: '0x' + BigInt(tokenInfo.tokenId).toString(16),
