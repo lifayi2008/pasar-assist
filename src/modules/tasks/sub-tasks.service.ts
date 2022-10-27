@@ -26,7 +26,6 @@ import { ConfigContract } from '../../config/config.contract';
 import { getTokenEventModel } from '../common/models/TokenEventModel';
 import { Constants } from '../../constants';
 import { Cache } from 'cache-manager';
-import { ApplicationConfig } from '@nestjs/core';
 
 @Injectable()
 export class SubTasksService {
@@ -82,8 +81,8 @@ export class SubTasksService {
   async dealWithNewOrder(orderInfo: ContractOrderInfo) {
     let ipfsUserInfo;
     if (
-      orderInfo.contract !==
-      ApplicationConfig[this.configService.get('NETWORK')][Chain.V1].stickerContract
+      orderInfo.baseToken !==
+      ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract
     ) {
       ipfsUserInfo = await this.getInfoByIpfsUri(orderInfo.sellerUri);
       if (ipfsUserInfo && ipfsUserInfo.did) {
