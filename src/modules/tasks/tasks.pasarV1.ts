@@ -125,7 +125,7 @@ export class PasarV1Service {
     const contractTokenInfo = { ...tokenInfo };
     contractTokenInfo.chain = Chain.ELA;
     contractTokenInfo.contract = this.stickerContract;
-    contractTokenInfo.uniqueKey = `${Chain.ELA}-${this.stickerContract}-${eventInfo.tokenId}`;
+    contractTokenInfo.uniqueKey = `${Chain.ELA}-${eventInfo.tokenId}`;
 
     const TokenEventModel = getTokenEventModel(this.connection);
     const tokenEvent = new TokenEventModel({
@@ -161,6 +161,7 @@ export class PasarV1Service {
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       OrderEventType.OrderForSale,
+      Chain.V1,
     );
 
     let syncStartBlock = lastHeight;
@@ -241,7 +242,7 @@ export class PasarV1Service {
     contractOrderInfo.chain = Chain.ELA;
     contractOrderInfo.baseToken = this.stickerContract;
     contractOrderInfo.quoteToken = Constants.BURN_ADDRESS;
-    contractOrderInfo.uniqueKey = `${Chain.ELA}-${this.stickerContract}-${eventInfo.tokenId}`;
+    contractOrderInfo.uniqueKey = `${Chain.ELA}-${eventInfo.tokenId}`;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
@@ -262,6 +263,7 @@ export class PasarV1Service {
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       OrderEventType.OrderPriceChanged,
+      Chain.V1,
     );
 
     let syncStartBlock = lastHeight;
@@ -357,6 +359,7 @@ export class PasarV1Service {
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       OrderEventType.OrderFilled,
+      Chain.V1,
     );
 
     let syncStartBlock = lastHeight;
@@ -461,6 +464,7 @@ export class PasarV1Service {
     const lastHeight = await this.dbService.getOrderEventLastHeight(
       Chain.ELA,
       OrderEventType.OrderCancelled,
+      Chain.V1,
     );
 
     let syncStartBlock = lastHeight;
