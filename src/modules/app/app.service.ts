@@ -1008,6 +1008,42 @@ export class AppService {
       })
       .splice(pageSize * (pageNum - 1), pageSize);
 
+    data.forEach((item) => {
+      let eventTypeName = '';
+      if (item.order) {
+        switch (item.eventType) {
+          case OrderEventType.OrderForSale:
+            eventTypeName = 'CreateOrderForSale';
+            break;
+          case OrderEventType.OrderForAuction:
+            eventTypeName = 'CreateOrderForAuction';
+            break;
+          case OrderEventType.OrderBid:
+            eventTypeName = 'BidForOrder';
+            break;
+          case OrderEventType.OrderCancelled:
+            eventTypeName = 'CancelOrder';
+            break;
+          case OrderEventType.OrderPriceChanged:
+            eventTypeName = 'ChangeOrderPrice';
+            break;
+          case OrderEventType.OrderFilled:
+            eventTypeName = 'BuyOrder';
+            break;
+        }
+      } else {
+        if (item.from === Constants.BURN_ADDRESS) {
+          eventTypeName = 'Mint';
+        } else if (item.to === Constants.BURN_ADDRESS) {
+          eventTypeName = 'Burn';
+        } else {
+          eventTypeName = 'SafeTransferFrom';
+        }
+      }
+
+      item.eventTypeName = eventTypeName;
+    });
+
     return {
       status: HttpStatus.OK,
       message: Constants.MSG_SUCCESS,
