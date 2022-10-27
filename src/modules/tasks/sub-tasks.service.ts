@@ -161,7 +161,7 @@ export class SubTasksService {
       );
     }
 
-    if (result.upsertedCount === 1) {
+    if (result.upsertedCount === 1 || result.modifiedCount === 1) {
       const key = `${chain}-${token}`;
       const cachedData = await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS);
       if (cachedData) {
