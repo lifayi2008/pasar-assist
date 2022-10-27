@@ -181,6 +181,11 @@ export class SubTasksService {
           Constants.CACHE_KEY_COLLECTIONS,
           JSON.stringify({ ...oldCollections, [key]: collection }),
         );
+      } else {
+        await this.cacheManager.set(
+          Constants.CACHE_KEY_COLLECTIONS,
+          JSON.stringify({ [key]: collection }),
+        );
       }
     }
   }
@@ -270,7 +275,6 @@ export class SubTasksService {
   }
 
   public async getTokenInfoByUri(uri: string) {
-    this.logger.warn(`Get token info by uri ${uri}`);
     if (uri.startsWith('pasar:json') || uri.startsWith('feeds:json')) {
       return await this.getInfoByIpfsUri(uri);
     }
@@ -281,12 +285,11 @@ export class SubTasksService {
       return (await axios(ipfsUri)).data;
     }
 
-    if (uri.includes('/ipfs/')) {
-      const ipfsHash = uri.split('/ipfs/')[1];
-      const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
-      this.logger.warn(`--------------------------- ${ipfsUri}`);
-      return (await axios(ipfsUri)).data;
-    }
+    // if (uri.includes('/ipfs/')) {
+    //   const ipfsHash = uri.split('/ipfs/')[1];
+    //   const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
+    //   return (await axios(ipfsUri)).data;
+    // }
 
     if (uri.startsWith('https://')) {
       return (await axios(uri)).data;
