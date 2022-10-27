@@ -58,11 +58,14 @@ export class SubTasksService {
   async dealWithNewToken(tokenInfo: ContractTokenInfo, blockNumber: number) {
     const ipfsTokenInfo = (await this.getInfoByIpfsUri(tokenInfo.tokenUri)) as IPFSTokenInfo;
 
-    if (ipfsTokenInfo.data.image) {
-      ipfsTokenInfo.image = ipfsTokenInfo.data.image;
-    }
-    if (ipfsTokenInfo.data.thumbnail) {
-      ipfsTokenInfo.thumbnail = ipfsTokenInfo.data.thumbnail;
+    if (ipfsTokenInfo.version === 1) {
+      ipfsTokenInfo.data = {
+        image: ipfsTokenInfo.image,
+        kind: ipfsTokenInfo.kind,
+        thumbnail: ipfsTokenInfo.thumbnail,
+        size: ipfsTokenInfo.size,
+        signature: '',
+      };
     }
 
     if (ipfsTokenInfo.creator && ipfsTokenInfo.creator.did) {

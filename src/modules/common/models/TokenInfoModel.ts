@@ -18,8 +18,6 @@ export const TokenInfoSchema = new mongoose.Schema(
     description: String,
     creator: { did: String, description: String, name: String },
     data: { image: String, kind: String, size: Number, thumbnail: String, signature: String },
-    image: String,
-    thumbnail: String,
     adult: Boolean,
     properties: Object,
     blockNumber: Number,
