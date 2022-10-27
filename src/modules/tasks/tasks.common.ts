@@ -37,7 +37,6 @@ export class TasksCommonService {
           this.logger.log(JSON.stringify(tokenInfo));
 
           const collection = await this.dbService.getCollectionByToken(token.contract, token.chain);
-          this.logger.warn(JSON.stringify(collection));
 
           if (tokenInfo) {
             const tokenDetail = {
@@ -62,7 +61,7 @@ export class TasksCommonService {
             );
           }
         } catch (e) {
-          this.logger.error(e);
+          this.logger.error(`Can not get token info from ${tokenUri}`);
           await this.dbService.increaseTokenRetryTimes(token.tokenId, token.chain, token.contract);
         }
       }

@@ -285,11 +285,11 @@ export class SubTasksService {
       return (await axios(ipfsUri)).data;
     }
 
-    // if (uri.includes('/ipfs/')) {
-    //   const ipfsHash = uri.split('/ipfs/')[1];
-    //   const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
-    //   return (await axios(ipfsUri)).data;
-    // }
+    if (uri.includes('/ipfs/')) {
+      const ipfsHash = uri.split('/ipfs/')[1];
+      const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
+      return (await axios(ipfsUri)).data;
+    }
 
     if (uri.startsWith('https://')) {
       return (await axios(uri)).data;
