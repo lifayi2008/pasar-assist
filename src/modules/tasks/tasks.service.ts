@@ -357,7 +357,11 @@ export class TasksService {
     await orderEvent.save();
 
     await this.subTasksService.updateOrder(this.chain, parseInt(eventInfo.orderId), {
-      ...contractOrderInfo,
+      bids: contractOrderInfo.bids,
+      lastBid: contractOrderInfo.lastBid,
+      lastBidder: contractOrderInfo.lastBidder,
+      buyerUri: contractOrderInfo.buyerUri,
+      updateTime: contractOrderInfo.updateTime,
     });
   }
 
