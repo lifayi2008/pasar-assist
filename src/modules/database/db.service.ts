@@ -21,7 +21,7 @@ export class DbService {
     private configService: ConfigService,
   ) {}
 
-  async getTokenEventLastHeight(chain: Chain, contract: string): Promise<number> {
+  async getTokenEventLastHeight(chain: Chain, contract: string, chain2?: Chain): Promise<number> {
     const results = await this.connection
       .collection('token_events')
       .find({ chain, contract })
@@ -33,7 +33,8 @@ export class DbService {
     } else {
       //TODO: change to more universal method to get contract deploy block
       return parseInt(
-        ConfigContract[this.configService.get('NETWORK')][chain].stickerContractDeploy,
+        ConfigContract[this.configService.get('NETWORK')][chain2 ? chain2 : chain]
+          .stickerContractDeploy,
       );
     }
   }

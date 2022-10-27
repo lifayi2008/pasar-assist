@@ -48,6 +48,7 @@ export class PasarV1Service {
     const lastHeight = await this.dbService.getTokenEventLastHeight(
       Chain.ELA,
       this.stickerContract,
+      Chain.V1,
     );
 
     let syncStartBlock = lastHeight;
