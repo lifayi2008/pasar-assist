@@ -180,4 +180,8 @@ export class DbService {
     await this.connection.collection('token_rates').deleteMany({});
     return await this.connection.collection('token_rates').insertMany(data);
   }
+
+  async getCollectionByToken(token: string, chain: string) {
+    return await this.connection.collection('collections').findOne({ token, chain });
+  }
 }

@@ -36,14 +36,14 @@ export class TasksCommonService {
           const tokenInfo = await this.subTasksService.getTokenInfoByUri(tokenUri);
           this.logger.log(JSON.stringify(tokenInfo));
 
+          const collection = await this.dbService.getCollectionByToken(token.token, token.chain);
+
           if (tokenInfo) {
             const tokenDetail = {
               name: tokenInfo.name,
               description: tokenInfo.description,
               image: tokenInfo.image ? tokenInfo.image : '',
-              royaltyOwner: JSON.parse(
-                await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS),
-              )[`${token.chain}-${token.token}`].royaltyOwners[0],
+              royaltyOwner: collection.royaltyOwners[0],
               type: tokenInfo.type ? tokenInfo.type : 'image',
               adult: tokenInfo.adult ? tokenInfo.adult : false,
               version: tokenInfo.version ? tokenInfo.version : 2,
