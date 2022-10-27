@@ -62,8 +62,8 @@ export class SubTasksService {
       await this.dbService.updateUser(tokenInfo.royaltyOwner, ipfsTokenInfo.creator);
     }
 
-    const TokenInfoModel = getTokenInfoModel(this.connection);
-    await TokenInfoModel.findOneAndUpdate(
+    // const TokenInfoModel = getTokenInfoModel(this.connection);
+    await this.connection.collection('tokens').findOneAndUpdate(
       { uniqueKey: tokenInfo.uniqueKey },
       {
         tokenIdHex: '0x' + BigInt(tokenInfo.tokenId).toString(16),
