@@ -21,16 +21,16 @@ export class PasarV1Service {
 
   private readonly step = 5000;
   private readonly stepInterval = 1000 * 10;
-  private readonly chain = Chain.ELA;
+  private readonly chain = Chain.V1;
   private readonly rpc: Web3;
   private readonly stickerContract =
-    ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract;
+    ConfigContract[this.configService.get('NETWORK')][this.chain].stickerContract;
   private readonly pasarContract =
-    ConfigContract[this.configService.get('NETWORK')][Chain.V1].pasarContract;
-  private readonly stickerContractWS = this.web3Service.stickerContractWS[Chain.V1];
-  private readonly stickerContractRPC = this.web3Service.stickerContractRPC[Chain.V1];
-  private readonly pasarContractWS = this.web3Service.pasarContractWS[Chain.V1];
-  private readonly pasarContractRPC = this.web3Service.pasarContractRPC[Chain.V1];
+    ConfigContract[this.configService.get('NETWORK')][this.chain].pasarContract;
+  private readonly stickerContractWS = this.web3Service.stickerContractWS[this.chain];
+  private readonly stickerContractRPC = this.web3Service.stickerContractRPC[this.chain];
+  private readonly pasarContractWS = this.web3Service.pasarContractWS[this.chain];
+  private readonly pasarContractRPC = this.web3Service.pasarContractRPC[this.chain];
 
   constructor(
     private subTasksService: SubTasksService,
@@ -125,7 +125,7 @@ export class PasarV1Service {
     const contractTokenInfo = { ...tokenInfo };
     contractTokenInfo.chain = this.chain;
     contractTokenInfo.contract = this.stickerContract;
-    contractTokenInfo.uniqueKey = `${this.chain}-${this.stickerContract}-${eventInfo.tokenId}`;
+    contractTokenInfo.uniqueKey = eventInfo.tokenId;
 
     const TokenEventModel = getTokenEventModel(this.connection);
     const tokenEvent = new TokenEventModel({
@@ -241,7 +241,7 @@ export class PasarV1Service {
     contractOrderInfo.chain = this.chain;
     contractOrderInfo.baseToken = this.stickerContract;
     contractOrderInfo.quoteToken = Constants.BURN_ADDRESS;
-    contractOrderInfo.uniqueKey = `${this.chain}-${this.stickerContract}-${eventInfo.tokenId}`;
+    contractOrderInfo.uniqueKey = eventInfo.tokenId;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({

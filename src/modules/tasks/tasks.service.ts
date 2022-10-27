@@ -127,7 +127,7 @@ export class TasksService {
     const contractTokenInfo = { ...tokenInfo };
     contractTokenInfo.chain = this.chain;
     contractTokenInfo.contract = this.stickerContract;
-    contractTokenInfo.uniqueKey = `${this.chain}-${this.stickerContract}-${eventInfo.tokenId}`;
+    contractTokenInfo.uniqueKey = eventInfo.tokenId;
 
     const TokenEventModel = getTokenEventModel(this.connection);
     const tokenEvent = new TokenEventModel({
@@ -248,7 +248,12 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.uniqueKey = `${this.chain}-${eventInfo.baseToken}-${eventInfo.tokenId}`;
+    contractOrderInfo.uniqueKey = this.subTasksService.checkIsBaseCollection(
+      eventInfo.baseToken,
+      Chain.ELA,
+    )
+      ? eventInfo.tokenId
+      : `${this.chain}-${eventInfo.baseToken}-${eventInfo.tokenId}`;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
@@ -442,7 +447,12 @@ export class TasksService {
 
     const contractOrderInfo = { ...contractOrder };
     contractOrderInfo.chain = this.chain;
-    contractOrderInfo.uniqueKey = `${this.chain}-${eventInfo.baseToken}-${eventInfo.tokenId}`;
+    contractOrderInfo.uniqueKey = this.subTasksService.checkIsBaseCollection(
+      eventInfo.baseToken,
+      Chain.ELA,
+    )
+      ? eventInfo.tokenId
+      : `${this.chain}-${eventInfo.baseToken}-${eventInfo.tokenId}`;
 
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
