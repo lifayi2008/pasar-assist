@@ -122,6 +122,7 @@ export class DbService {
     tokenOwner: string;
     tokenIdHex: string;
     contract: string;
+    is721: boolean;
     blockNumber: number;
     updateTime: number;
     notGetDetail: boolean;
