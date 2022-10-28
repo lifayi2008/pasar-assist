@@ -1277,6 +1277,13 @@ export class AppService {
 
   async getCollectibleInfo(chain: Chain, tokenId: string, contract: string) {
     const data = await this.connection.collection('tokens').findOne({ chain, tokenId, contract });
+    const order = await this.connection
+      .collection('orders')
+      .find({ chain, tokenId, baseToken: contract })
+      .sort({ createTime: -1 })
+      .limit(1)
+      .toArray();
+    data.listed = order.length === 1 && order[0].orderState === OrderState.Created;
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
