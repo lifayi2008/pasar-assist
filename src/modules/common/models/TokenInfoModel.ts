@@ -4,6 +4,7 @@ export const TokenInfoSchema = new mongoose.Schema(
   {
     tokenIdHex: String,
     tokenId: String,
+    tokenSupply: Number,
     tokenIndex: Number,
     tokenOwner: String,
     tokenUri: String,
