@@ -707,6 +707,10 @@ export class AppService {
   async getMarketplace(dto: QueryMarketplaceDTO) {
     const now = Date.now();
     const match = {};
+    const matchToken = {};
+    const pipeline = [];
+    let data = [];
+    let total = 0;
     if (dto.status && dto.status.length > 0 && dto.status.length < 5) {
       match['$or'] = [];
       if (dto.status.includes(OrderTag.BuyNow)) {
@@ -746,53 +750,89 @@ export class AppService {
       match['price'] = priceMatch;
     }
 
-    const pipeline = [];
+    if (!dto.adult) {
+      matchToken['$or'] = [{ 'token.adult': { $exists: false } }, { 'token.adult': false }];
+    }
+    if (dto.type !== 'all') {
+      if (dto.type === 'avatar') {
+        matchToken['order.type'] = 'avatar';
+      } else {
+        matchToken['order.type'] = { $ne: 'avatar' };
+      }
+    }
+
+    let sort = {};
+    switch (dto.sort) {
+      case 0:
+        sort = { createTime: -1 };
+        break;
+      case 1:
+        sort = { 'token.createTime': -1 };
+        break;
+      case 2:
+        sort = { createTime: 1 };
+        break;
+      case 3:
+        sort = { 'token.createTime': 1 };
+        break;
+      case 4:
+        sort = { price: 1 };
+        break;
+      case 5:
+        sort = { price: -1 };
+        break;
+      case 6:
+        sort = { endTime: 1 };
+        match['endTime'] = { $gt: now };
+        break;
+    }
+
+    const pagination = [
+      { $sort: sort },
+      { $skip: (dto.pageNum - 1) * dto.pageSize },
+      { $limit: dto.pageSize },
+    ];
+    const unionToken = [
+      {
+        $lookup: {
+          from: 'tokens',
+          localField: 'uniqueKey',
+          foreignField: 'uniqueKey',
+          as: 'token',
+        },
+      },
+      { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+    ];
+
     if (Object.keys(match).length > 0) {
       pipeline.push({ $match: match });
     }
 
-    pipeline.push(
-      ...[
-        {
-          $lookup: {
-            from: 'tokens',
-            localField: 'uniqueKey',
-            foreignField: 'uniqueKey',
-            as: 'token',
-          },
-        },
-        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-      ],
-    );
-
-    const match2 = { 'order.adult': dto.adult };
-    if (dto.type !== 'all') {
-      if (dto.type === 'avatar') {
-        match2['order.type'] = 'avatar';
-      } else {
-        match2['order.type'] = { $ne: 'avatar' };
+    let paginationFirst = false;
+    if (dto.sort in [0, 2, 4, 5, 6] && Object.keys(matchToken).length === 0) {
+      paginationFirst = true;
+    } else {
+      pipeline.push(...unionToken);
+      if (Object.keys(matchToken).length > 0) {
+        pipeline.push({ $match: matchToken });
       }
     }
-
-    pipeline.push({ $match: match2 });
 
     const result = await this.connection
       .collection('orders')
       .aggregate([...pipeline, { $count: 'total' }])
       .toArray();
 
-    const total = result.length > 0 ? result[0].total : 0;
-    let data = [];
+    total = result.length > 0 ? result[0].total : 0;
 
     if (total > 0) {
+      paginationFirst
+        ? pipeline.push(...[...pagination, ...unionToken])
+        : pipeline.push(...pagination);
+
       data = await this.connection
         .collection('orders')
-        .aggregate([
-          ...pipeline,
-          { $sort: { createTime: -1 } },
-          { $skip: (dto.pageNum - 1) * dto.pageSize },
-          { $limit: dto.pageSize },
-        ])
+        .aggregate([...pipeline])
         .toArray();
     }
 
