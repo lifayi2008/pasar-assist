@@ -15,7 +15,6 @@ import { ConfigContract } from '../../config/config.contract';
 import { Timeout } from '@nestjs/schedule';
 import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
-import { ApplicationConfig } from '@nestjs/core';
 
 @Injectable()
 export class TasksService {
@@ -871,7 +870,7 @@ export class TasksService {
 
     const chain =
       eventInfo.token ===
-      ApplicationConfig[this.configService.get('NETWORK')][Chain.V1].stickerContract
+      ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract
         ? Chain.V1
         : this.chain;
     await this.subTasksService.updateCollection(eventInfo.token, this.chain, {

@@ -785,6 +785,9 @@ export class AppService {
         sort = { endTime: 1 };
         match['endTime'] = { $gt: now };
         break;
+      default:
+        sort = { createTime: -1 };
+        break;
     }
 
     const pagination = [
