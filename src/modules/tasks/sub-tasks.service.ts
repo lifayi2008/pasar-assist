@@ -256,6 +256,7 @@ export class SubTasksService {
       const tokenInfo = {
         tokenId,
         tokenUri,
+        tokenSupply: 1,
         tokenOwner: event.returnValues._to,
         tokenIdHex: '0x' + BigInt(tokenId).toString(16),
         chain,

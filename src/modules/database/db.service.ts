@@ -118,6 +118,7 @@ export class DbService {
     uniqueKey: string;
     createTime: number;
     tokenUri: string;
+    tokenSupply: number;
     tokenOwner: string;
     tokenIdHex: string;
     contract: string;

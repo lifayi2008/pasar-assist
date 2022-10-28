@@ -44,6 +44,7 @@ export class TasksCommonService {
               description: tokenInfo.description,
               image: tokenInfo.image ? tokenInfo.image : '',
               royaltyOwner: collection.royaltyOwners[0],
+              royaltyFee: collection.royaltyFees[0],
               type: tokenInfo.type ? tokenInfo.type : 'image',
               adult: tokenInfo.adult ? tokenInfo.adult : false,
               version: tokenInfo.version ? tokenInfo.version : 2,
