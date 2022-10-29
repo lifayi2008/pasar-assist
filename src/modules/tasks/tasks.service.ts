@@ -349,6 +349,7 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
+      baseToken: contractOrderInfo.baseToken,
       eventType: OrderEventType.OrderBid,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -551,8 +552,14 @@ export class TasksService {
       `Received [${this.chain}] OrderPriceChanged Event: ${JSON.stringify(eventInfo)}`,
     );
 
-    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
-      [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
+    const [txInfo, blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+      [
+        ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
+        {
+          method: this.pasarContractRPC.methods.getOrderById(event.returnValues._orderId).call,
+          params: {},
+        },
+      ],
       this.chain,
     );
 
@@ -560,6 +567,7 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
+      baseToken: contractOrderInfo.baseToken,
       eventType: OrderEventType.OrderPriceChanged,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -664,8 +672,9 @@ export class TasksService {
     const OrderEventModel = getOrderEventModel(this.connection);
     const orderEvent = new OrderEventModel({
       ...eventInfo,
-      eventType: OrderEventType.OrderFilled,
       chain: this.chain,
+      baseToken: contractOrderInfo.baseToken,
+      eventType: OrderEventType.OrderFilled,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
     });
@@ -751,8 +760,14 @@ export class TasksService {
 
     this.logger.log(`Received [${this.chain}] OrderCancelled Event: ${JSON.stringify(eventInfo)}`);
 
-    const [txInfo, blockInfo] = await this.web3Service.web3BatchRequest(
-      [...this.web3Service.getBaseBatchRequestParam(event, this.chain)],
+    const [txInfo, blockInfo, contractOrderInfo] = await this.web3Service.web3BatchRequest(
+      [
+        ...this.web3Service.getBaseBatchRequestParam(event, this.chain),
+        {
+          method: this.pasarContractRPC.methods.getOrderById(event.returnValues._orderId).call,
+          params: {},
+        },
+      ],
       this.chain,
     );
 
@@ -760,6 +775,7 @@ export class TasksService {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
+      baseToken: contractOrderInfo.baseToken,
       eventType: OrderEventType.OrderCancelled,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,

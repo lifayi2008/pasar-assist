@@ -1112,7 +1112,7 @@ export class AppService {
 
     const orderIds = orders.map((order) => order.orderId);
 
-    const matchOrder = { orderId: { $in: orderIds } };
+    const matchOrder = { chain, baseToken, orderId: { $in: orderIds } };
     const matchToken = { chain, tokenId, contract: baseToken, $or: [] };
     let userSpecifiedOrderFilter = false;
     let userSpecifiedTokenFilter = false;
