@@ -951,12 +951,16 @@ export class AppService {
       {
         $lookup: {
           from: 'orders',
-          let: { chain: '$chain', orderId: '$orderId' },
+          let: { chain: '$chain', baseToken: '$baseToken', orderId: '$orderId' },
           pipeline: [
             {
               $match: {
                 $expr: {
-                  $and: [{ $eq: ['$chain', '$$chain'] }, { $eq: ['$orderId', '$$orderId'] }],
+                  $and: [
+                    { $eq: ['$chain', '$$chain'] },
+                    { $eq: ['$baseToken', '$$baseToken'] },
+                    { $eq: ['$orderId', '$$orderId'] },
+                  ],
                 },
               },
             },
@@ -1182,7 +1186,31 @@ export class AppService {
       matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
     }
 
-    const pipeline1 = [{ $match: matchOrder }, { $sort: { timestamp: sort } }];
+    const pipeline1 = [
+      { $match: matchOrder },
+      {
+        $lookup: {
+          from: 'orders',
+          let: { chain: '$chain', baseToken: '$baseToken', orderId: '$orderId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$chain', '$$chain'] },
+                    { $eq: ['$baseToken', '$$baseToken'] },
+                    { $eq: ['$orderId', '$$orderId'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'order',
+        },
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+      { $sort: { timestamp: sort } },
+    ];
     const pipeline2 = [{ $match: matchToken }, { $sort: { timestamp: sort } }];
 
     let totalOrder = 0;
