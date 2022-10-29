@@ -1103,7 +1103,11 @@ export class AppService {
   ) {
     const orders = await this.connection
       .collection('orders')
-      .find({ chain, tokenId, baseToken })
+      .find({
+        chain: chain === Chain.V1 ? { $in: [Chain.V1, Chain.ELA] } : chain,
+        tokenId,
+        baseToken,
+      })
       .toArray();
 
     const orderIds = orders.map((order) => order.orderId);
