@@ -166,7 +166,7 @@ export class AppController {
     @Query('tokenId') tokenId: string,
     @Query('baseToken') baseToken: string,
     @Query('eventType') eventType: string = '',
-    @Query('sort') sort: 1 | -1 = -1,
+    @Query('sort', ParseIntPipe) sort: 1 | -1 = -1,
   ): Promise<CommonResponse> {
     return await this.appService.getTransactionsByToken(chain, tokenId, baseToken, eventType, sort);
   }
