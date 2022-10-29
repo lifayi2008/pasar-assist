@@ -247,6 +247,7 @@ export class PasarV1Service {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
+      baseToken: this.stickerContract,
       eventType: OrderEventType.OrderForSale,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -338,6 +339,7 @@ export class PasarV1Service {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
+      baseToken: this.stickerContract,
       eventType: OrderEventType.OrderPriceChanged,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -438,6 +440,7 @@ export class PasarV1Service {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
+      baseToken: this.stickerContract,
       eventType: OrderEventType.OrderFilled,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
@@ -532,6 +535,7 @@ export class PasarV1Service {
     const orderEvent = new OrderEventModel({
       ...eventInfo,
       chain: this.chain,
+      baseToken: this.stickerContract,
       eventType: OrderEventType.OrderCancelled,
       gasFee: txInfo.gasUsed,
       timestamp: blockInfo.timestamp,
