@@ -6,6 +6,7 @@ import {
   CollectionEventType,
   ContractUserInfo,
   OrderEventType,
+  OrderState,
   UpdateCollectionParams,
 } from '../tasks/interfaces';
 import { UpdateOrderParams } from './interfaces';
@@ -184,5 +185,59 @@ export class DbService {
 
   async getCollectionByToken(token: string, chain: string) {
     return await this.connection.collection('collections').findOne({ token, chain });
+  }
+
+  async getAllCollections() {
+    return await this.connection.collection('collections').find().toArray();
+  }
+
+  async getCollectionItems(collection: string, chain: string) {
+    const items = await this.connection
+      .collection('tokens')
+      .aggregate([
+        { $match: { chain, contract: collection } },
+        { $group: { _id: '$chain', items: { $sum: 1 } } },
+      ])
+      .toArray();
+    return items.length > 0 ? items[0].items : 0;
+  }
+
+  async getCollectionOwners(collection: string, chain: string) {
+    return await this.connection
+      .collection('tokens')
+      .distinct('tokenOwner', { chain, contract: collection })
+      .then((res) => res.length);
+  }
+
+  async getCollectionTradeCount(collection: string, chain: string) {
+    const tv = await this.connection
+      .collection('orders')
+      .aggregate([
+        { $match: { chain, baseToken: collection, orderState: OrderState.Filled } },
+        { $group: { _id: '$chain', tv: { $sum: '$filled' } } },
+      ])
+      .toArray();
+
+    return tv.length > 0 ? tv[0].tv : 0;
+  }
+
+  async getCollectionLowestPrice(collection: string, chain: string) {
+    const lowestPrice = await this.connection
+      .collection('orders')
+      .find({ chain, baseToken: collection, orderState: { $ne: OrderState.Cancelled } })
+      .sort({ price: 1 })
+      .limit(1)
+      .toArray();
+    return lowestPrice.length > 0 ? lowestPrice[0].price : 0;
+  }
+
+  async updateCollectionStatisticsInfo(
+    token: string,
+    chain: string,
+    param: { tradeVolume: number; lowestPrice: number; owners: number; items: number },
+  ) {
+    return await this.connection
+      .collection('collections')
+      .updateOne({ token, chain }, { $set: param });
   }
 }

@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { Chain } from '../utils/enums';
 import { Cache } from 'cache-manager';
 import { Constants } from '../../constants';
+import { OrderState } from './interfaces';
 
 @Injectable()
 export class TasksCommonService {
@@ -91,6 +92,31 @@ export class TasksCommonService {
     }
 
     await this.dbService.insertTokenRates(data);
+  }
+
+  @Cron('0 */10 * * * *')
+  async statisticCollectionItems() {
+    const collections = await this.dbService.getAllCollections();
+    for (const collection of collections) {
+      const items = await this.dbService.getCollectionItems(collection.token, collection.chain);
+      const owners = await this.dbService.getCollectionOwners(collection.token, collection.chain);
+
+      const tradeVolume = await this.dbService.getCollectionTradeCount(
+        collection.token,
+        collection.chain,
+      );
+      const lowestPrice = await this.dbService.getCollectionLowestPrice(
+        collection.token,
+        collection.chain,
+      );
+
+      await this.dbService.updateCollectionStatisticsInfo(collection.token, collection.chain, {
+        items,
+        owners,
+        tradeVolume,
+        lowestPrice,
+      });
+    }
   }
 
   @Timeout('userCollection', 0)
