@@ -1120,7 +1120,10 @@ export class AppService {
       orderId: order.orderId,
     }));
 
-    const matchOrder = { $or: orderConditions };
+    const matchOrder = {};
+    if (orderConditions.length > 0) {
+      matchOrder['$or'] = orderConditions;
+    }
     const matchToken = { chain, tokenId, contract: baseToken, $or: [] };
     let userSpecifiedOrderFilter = false;
     let userSpecifiedTokenFilter = false;
@@ -1222,8 +1225,13 @@ export class AppService {
       (!userSpecifiedOrderFilter && !userSpecifiedTokenFilter) ||
       (userSpecifiedOrderFilter && userSpecifiedTokenFilter)
     ) {
-      totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
-      orderEvents = await this.connection.collection('order_events').aggregate(pipeline1).toArray();
+      if (orderConditions.length > 0) {
+        totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+        orderEvents = await this.connection
+          .collection('order_events')
+          .aggregate(pipeline1)
+          .toArray();
+      }
 
       totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
       tokenEvents = await this.connection.collection('token_events').aggregate(pipeline2).toArray();
@@ -1235,11 +1243,13 @@ export class AppService {
           .aggregate(pipeline2)
           .toArray();
       } else {
-        totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
-        orderEvents = await this.connection
-          .collection('order_events')
-          .aggregate(pipeline1)
-          .toArray();
+        if (orderConditions.length > 0) {
+          totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+          orderEvents = await this.connection
+            .collection('order_events')
+            .aggregate(pipeline1)
+            .toArray();
+        }
       }
     }
 
