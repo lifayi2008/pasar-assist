@@ -459,6 +459,8 @@ export class PasarV1Service {
       royaltyFee: parseInt(eventInfo.royaltyFee),
       updateTime: parseInt(contractOrderInfo.updateTime),
     });
+
+    await this.subTasksService.addUserIncomeRecords(contractOrderInfo);
   }
 
   @Timeout('orderCancelledV1', 60 * 1000)

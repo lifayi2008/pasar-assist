@@ -322,10 +322,15 @@ export class SubTasksService {
     const platformFee = contractOrderInfo.platformFee ? contractOrderInfo.platformFee : 0;
     const buyerIncome = contractOrderInfo.price - contractOrderInfo.royaltyFee - platformFee;
 
+    const quoteToken = contractOrderInfo.quoteToken
+      ? contractOrderInfo.quoteToken
+      : Constants.BURN_ADDRESS;
+
     const records = [
       {
         address: contractOrderInfo.sellerAddr,
         income: buyerIncome,
+        quoteToken,
         type: IncomeType.Sale,
         timestamp: contractOrderInfo.updateTime,
       },
@@ -337,6 +342,7 @@ export class SubTasksService {
         records.push({
           address: royaltyOwners[i],
           income: contractOrderInfo.royaltyFees[i],
+          quoteToken,
           type: IncomeType.Royalty,
           timestamp: contractOrderInfo.updateTime,
         });
@@ -345,6 +351,7 @@ export class SubTasksService {
       records.push({
         address: contractOrderInfo.royaltyOwner,
         income: contractOrderInfo.royaltyFee,
+        quoteToken,
         type: IncomeType.Royalty,
         timestamp: contractOrderInfo.updateTime,
       });
