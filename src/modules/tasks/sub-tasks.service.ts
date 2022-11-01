@@ -320,8 +320,10 @@ export class SubTasksService {
 
   async addUserIncomeRecords(contractOrderInfo: any) {
     const platformFee = contractOrderInfo.platformFee ? parseInt(contractOrderInfo.platformFee) : 0;
-    const buyerIncome =
-      parseInt(contractOrderInfo.price) - parseInt(contractOrderInfo.royaltyFee) - platformFee;
+    const royaltyFee = contractOrderInfo.royaltyFeeTotal
+      ? parseInt(contractOrderInfo.royaltyFeeTotal)
+      : parseInt(contractOrderInfo.royaltyFee);
+    const buyerIncome = parseInt(contractOrderInfo.price) - royaltyFee - platformFee;
 
     const quoteToken = contractOrderInfo.quoteToken
       ? contractOrderInfo.quoteToken
@@ -359,8 +361,6 @@ export class SubTasksService {
         timestamp,
       });
     }
-
-    this.logger.warn(`addUserIncomeRecords ${JSON.stringify(records)}`);
 
     await this.dbService.insertUserIncomeRecords(records);
   }
