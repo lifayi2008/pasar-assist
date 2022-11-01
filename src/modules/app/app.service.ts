@@ -19,6 +19,7 @@ import { Category, Chain, OrderTag } from '../utils/enums';
 import { ConfigContract } from '../../config/config.contract';
 import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
 import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
+import { QueryTransactionsOfUserDTO } from './dto/QueryTransactionsOfUserDTO';
 
 @Injectable()
 export class AppService {
@@ -1924,5 +1925,9 @@ export class AppService {
       message: Constants.MSG_SUCCESS,
       data: { created, sold, purchased, transactions: transactionsToken + transactionsOrder },
     };
+  }
+
+  async listTransactionsOfUser(dto: QueryTransactionsOfUserDTO) {
+    return undefined;
   }
 }

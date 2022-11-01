@@ -564,6 +564,8 @@ export class TasksFusion {
       royaltyFee: parseInt(eventInfo.royaltyFee),
       updateTime: parseInt(contractOrderInfo.updateTime),
     });
+
+    await this.subTasksService.addUserIncomeRecords(contractOrderInfo);
   }
 
   @Timeout(`OrderCanceled-${Chain.FSN}`, 60 * 1000)

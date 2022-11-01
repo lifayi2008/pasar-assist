@@ -145,3 +145,8 @@ export enum OrderState {
   Cancelled,
   TakenDown,
 }
+
+export enum IncomeType {
+  Sale = 1,
+  Royalty,
+}

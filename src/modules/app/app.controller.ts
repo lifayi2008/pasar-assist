@@ -5,6 +5,7 @@ import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Category, Chain, OrderTag } from '../utils/enums';
 import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
 import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
+import { QueryTransactionsOfUserDTO } from './dto/QueryTransactionsOfUserDTO';
 
 @Controller()
 export class AppController {
@@ -336,5 +337,10 @@ export class AppController {
   @Get('/getStatisticsOfUser')
   async getStatisticsOfUser(@Query('walletAddr') walletAddr: string): Promise<CommonResponse> {
     return await this.appService.getStatisticsOfUser(walletAddr);
+  }
+
+  @Get('/listTransactionsOfUser')
+  async listTransactionsOfUser(@Body() dto: QueryTransactionsOfUserDTO): Promise<CommonResponse> {
+    return await this.appService.listTransactionsOfUser(dto);
   }
 }

@@ -3,6 +3,7 @@ import {
   ContractOrderInfo,
   ContractTokenInfo,
   ContractUserInfo,
+  IncomeType,
   IPFSCollectionInfo,
   IPFSTokenInfo,
   UpdateCollectionParams,
@@ -315,5 +316,40 @@ export class SubTasksService {
       },
       data: graphQLParams,
     });
+  }
+
+  async addUserIncomeRecords(contractOrderInfo: any) {
+    const platformFee = contractOrderInfo.platformFee ? contractOrderInfo.platformFee : 0;
+    const buyerIncome = contractOrderInfo.price - contractOrderInfo.royaltyFee - platformFee;
+
+    const records = [
+      {
+        address: contractOrderInfo.sellerAddr,
+        income: buyerIncome,
+        type: IncomeType.Sale,
+        timestamp: contractOrderInfo.updateTime,
+      },
+    ];
+
+    if (contractOrderInfo.royaltyOwners) {
+      const royaltyOwners = contractOrderInfo.royaltyOwners;
+      for (let i = 0; i < royaltyOwners.length; i++) {
+        records.push({
+          address: royaltyOwners[i],
+          income: contractOrderInfo.royaltyFees[i],
+          type: IncomeType.Royalty,
+          timestamp: contractOrderInfo.updateTime,
+        });
+      }
+    } else {
+      records.push({
+        address: contractOrderInfo.royaltyOwner,
+        income: contractOrderInfo.royaltyFee,
+        type: IncomeType.Royalty,
+        timestamp: contractOrderInfo.updateTime,
+      });
+    }
+
+    await this.dbService.insertUserIncomeRecords(records);
   }
 }

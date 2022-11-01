@@ -680,6 +680,8 @@ export class TasksEthereum {
       royaltyFee: parseInt(eventInfo.royaltyFee),
       updateTime: parseInt(contractOrderInfo.updateTime),
     });
+
+    await this.subTasksService.addUserIncomeRecords(contractOrderInfo);
   }
 
   @Timeout('orderCancelled' + Chain.ETH, 60 * 1000)

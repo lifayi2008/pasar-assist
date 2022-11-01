@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   CollectionEventType,
   ContractUserInfo,
+  IncomeType,
   OrderEventType,
   OrderState,
   UpdateCollectionParams,
@@ -239,5 +240,11 @@ export class DbService {
     return await this.connection
       .collection('collections')
       .updateOne({ token, chain }, { $set: param });
+  }
+
+  async insertUserIncomeRecords(
+    records: { income: number; address: any; type: IncomeType; timestamp: any }[],
+  ) {
+    return this.connection.collection('user_income_records').insertMany(records);
   }
 }

@@ -690,6 +690,8 @@ export class TasksService {
       royaltyFee: parseInt(eventInfo.royaltyFee),
       updateTime: parseInt(contractOrderInfo.updateTime),
     });
+
+    await this.subTasksService.addUserIncomeRecords(contractOrderInfo);
   }
 
   @Timeout('orderCancelled' + Chain.ELA, 60 * 1000)
