@@ -319,8 +319,9 @@ export class SubTasksService {
   }
 
   async addUserIncomeRecords(contractOrderInfo: any) {
-    const platformFee = contractOrderInfo.platformFee ? contractOrderInfo.platformFee : 0;
-    const buyerIncome = contractOrderInfo.price - contractOrderInfo.royaltyFee - platformFee;
+    const platformFee = contractOrderInfo.platformFee ? parseInt(contractOrderInfo.platformFee) : 0;
+    const buyerIncome =
+      parseInt(contractOrderInfo.price) - parseInt(contractOrderInfo.royaltyFee) - platformFee;
 
     const quoteToken = contractOrderInfo.quoteToken
       ? contractOrderInfo.quoteToken
