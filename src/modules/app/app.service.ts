@@ -1896,4 +1896,33 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
   }
+
+  async getStatisticsOfUser(address: string) {
+    const created = await this.connection
+      .collection('tokens')
+      .countDocuments({ royaltyOwner: address });
+    const sold = await this.connection
+      .collection('orders')
+      .countDocuments({ sellerAddr: address, OrderState: OrderState.Filled });
+    const purchased = await this.connection.collection('orders').countDocuments({
+      buyerAddr: address,
+      OrderState: OrderState.Filled,
+    });
+
+    const transactionsToken = await this.connection
+      .collection('token_events')
+      .countDocuments({ $or: [{ from: address }, { to: address }] });
+    const transactionsOrder = await this.connection.collection('order_events').countDocuments({
+      $or: [
+        { buyer: address, eventType: OrderEventType.OrderBid },
+        { seller: address, eventType: OrderEventType.OrderPriceChanged },
+      ],
+    });
+
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: { created, sold, purchased, transactions: transactionsToken + transactionsOrder },
+    };
+  }
 }

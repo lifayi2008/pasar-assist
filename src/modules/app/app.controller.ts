@@ -332,4 +332,9 @@ export class AppController {
   async reGetTokenDetail(): Promise<CommonResponse> {
     return await this.appService.reGetTokenDetail();
   }
+
+  @Get('/getStatisticsOfUser')
+  async getStatisticsOfUser(@Query('walletAddr') walletAddr: string): Promise<CommonResponse> {
+    return await this.appService.getStatisticsOfUser(walletAddr);
+  }
 }
