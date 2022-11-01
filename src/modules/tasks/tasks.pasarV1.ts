@@ -144,7 +144,10 @@ export class PasarV1Service {
         eventInfo.blockNumber,
       );
     } else {
-      if (eventInfo.to !== this.pasarContract) {
+      if (
+        eventInfo.to !== this.pasarContract &&
+        eventInfo.to !== ConfigContract[this.configService.get('NETWORK')][Chain.ELA].pasarContract
+      ) {
         await this.subTasksService.updateTokenOwner(
           this.chain,
           this.stickerContract,

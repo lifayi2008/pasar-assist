@@ -1651,13 +1651,13 @@ export class AppService {
   async getStatisticsByWalletAddr(address: string) {
     const listed = await this.connection
       .collection('orders')
-      .countDocuments({ seller: address, orderState: OrderState.Created });
+      .countDocuments({ sellerAddr: address, orderState: OrderState.Created });
     const owned = await this.connection
       .collection('tokens')
       .countDocuments({ tokenOwner: address });
     const sold = await this.connection
       .collection('orders')
-      .countDocuments({ seller: address, OrderState: OrderState.Filled });
+      .countDocuments({ sellerAddr: address, OrderState: OrderState.Filled });
     const minted = await this.connection
       .collection('tokens')
       .countDocuments({ royaltyOwner: address });
