@@ -360,6 +360,8 @@ export class SubTasksService {
       });
     }
 
+    this.logger.warn(`addUserIncomeRecords ${JSON.stringify(records)}`);
+
     await this.dbService.insertUserIncomeRecords(records);
   }
 }
