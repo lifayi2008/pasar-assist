@@ -327,13 +327,15 @@ export class SubTasksService {
       ? contractOrderInfo.quoteToken
       : Constants.BURN_ADDRESS;
 
+    const timestamp = parseInt(contractOrderInfo.updateTime);
+
     const records = [
       {
         address: contractOrderInfo.sellerAddr,
         income: buyerIncome,
         quoteToken,
         type: IncomeType.Sale,
-        timestamp: contractOrderInfo.updateTime,
+        timestamp,
       },
     ];
 
@@ -345,16 +347,16 @@ export class SubTasksService {
           income: parseInt(contractOrderInfo.royaltyFees[i]),
           quoteToken,
           type: IncomeType.Royalty,
-          timestamp: contractOrderInfo.updateTime,
+          timestamp,
         });
       }
     } else {
       records.push({
         address: contractOrderInfo.royaltyOwner,
-        income: contractOrderInfo.royaltyFee,
+        income: parseInt(contractOrderInfo.royaltyFee),
         quoteToken,
         type: IncomeType.Royalty,
-        timestamp: contractOrderInfo.updateTime,
+        timestamp,
       });
     }
 
