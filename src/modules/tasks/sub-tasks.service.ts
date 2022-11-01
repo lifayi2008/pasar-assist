@@ -336,12 +336,12 @@ export class SubTasksService {
       },
     ];
 
-    if (contractOrderInfo.royaltyOwners) {
+    if (contractOrderInfo.royaltyOwners.length > 0) {
       const royaltyOwners = contractOrderInfo.royaltyOwners;
       for (let i = 0; i < royaltyOwners.length; i++) {
         records.push({
           address: royaltyOwners[i],
-          income: contractOrderInfo.royaltyFees[i],
+          income: parseInt(contractOrderInfo.royaltyFees[i]),
           quoteToken,
           type: IncomeType.Royalty,
           timestamp: contractOrderInfo.updateTime,
