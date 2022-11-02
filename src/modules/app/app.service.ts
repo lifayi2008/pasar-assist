@@ -19,7 +19,6 @@ import { Category, Chain, OrderTag } from '../utils/enums';
 import { ConfigContract } from '../../config/config.contract';
 import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
 import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
-import { QueryTransactionsOfUserDTO } from './dto/QueryTransactionsOfUserDTO';
 
 @Injectable()
 export class AppService {
@@ -1965,11 +1964,225 @@ export class AppService {
     };
   }
 
-  async listTransactionsOfUser(dto: QueryTransactionsOfUserDTO) {
-    return undefined;
+  async listTransactionsOfUser(
+    walletAddr: string,
+    pageNum: number,
+    pageSize: number,
+    eventType: string,
+    performer: string,
+    sort: 1 | -1,
+  ) {
+    const addresses = this.getAllPasarAddress().push(Constants.BURN_ADDRESS);
+
+    const matchOrder = { $or: [{ buyer: walletAddr }, { seller: walletAddr }] };
+    let matchToken: { $or?: any; from?: string; to?: string } = {
+      $or: [
+        { from: walletAddr, to: { $nin: addresses } },
+        { to: walletAddr, from: { $nin: addresses } },
+      ],
+    };
+    let userSpecifiedTokenFilter = false;
+    let userSpecifiedOrderFilter = false;
+
+    if (eventType !== '') {
+      const eventTypes = eventType.split(',');
+      if (eventTypes.length !== 11) {
+        const orderTypes = [];
+        if (eventTypes.includes('BuyOrder')) {
+          orderTypes.push(OrderEventType.OrderFilled);
+        }
+        if (eventTypes.includes('CancelOrder')) {
+          orderTypes.push(OrderEventType.OrderCancelled);
+        }
+        if (eventTypes.includes('ChangeOrderPrice')) {
+          orderTypes.push(OrderEventType.OrderPriceChanged);
+        }
+        if (eventTypes.includes('CreateOrderForSale')) {
+          orderTypes.push(OrderEventType.OrderForSale);
+        }
+        if (eventTypes.includes('CreateOrderForAuction')) {
+          orderTypes.push(OrderEventType.OrderForAuction);
+        }
+        if (eventTypes.includes('BidForOrder')) {
+          orderTypes.push(OrderEventType.OrderBid);
+        }
+
+        if (orderTypes.length > 0) {
+          userSpecifiedOrderFilter = true;
+          matchOrder['eventType'] = { $in: orderTypes };
+        }
+
+        if (eventTypes.includes('Mint')) {
+          userSpecifiedTokenFilter = true;
+          matchToken = { from: Constants.BURN_ADDRESS, to: walletAddr };
+        }
+        if (eventTypes.includes('Burn')) {
+          userSpecifiedTokenFilter = true;
+          matchToken = { to: Constants.BURN_ADDRESS, from: walletAddr };
+        }
+        if (
+          eventTypes.includes('SafeTransferFrom') ||
+          eventTypes.includes('SafeTransferFromWithMemo')
+        ) {
+          userSpecifiedTokenFilter = true;
+        }
+      }
+    }
+
+    const pipeline1 = [
+      { $sort: { timestamp: sort } },
+      { $limit: pageSize * pageNum },
+      {
+        $lookup: {
+          from: 'orders',
+          let: { chain: '$chain', baseToken: '$baseToken', orderId: '$orderId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$chain', '$$chain'] },
+                    { $eq: ['$baseToken', '$$baseToken'] },
+                    { $eq: ['$orderId', '$$orderId'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'order',
+        },
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'tokens',
+          localField: 'order.uniqueKey',
+          foreignField: 'uniqueKey',
+          as: 'token',
+        },
+      },
+      { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+    ];
+
+    const pipeline2 = [
+      { $sort: { timestamp: sort } },
+      { $limit: pageSize * pageNum },
+      {
+        $lookup: {
+          from: 'tokens',
+          let: { tokenId: '$tokenId', chain: '$chain', contract: '$contract' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$tokenId', '$$tokenId'] },
+                    { $eq: ['$chain', '$$chain'] },
+                    { $eq: ['$contract', '$$contract'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'token',
+        },
+      },
+      { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+    ];
+
+    let totalOrder = 0;
+    let totalToken = 0;
+    let orderEvents = [];
+    let tokenEvents = [];
+
+    if (!userSpecifiedOrderFilter && !userSpecifiedTokenFilter) {
+      totalOrder = await this.connection.collection('order_events').countDocuments();
+      orderEvents = await this.connection.collection('order_events').aggregate(pipeline1).toArray();
+
+      totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+      tokenEvents = await this.connection
+        .collection('token_events')
+        .aggregate([{ $match: matchToken }, ...pipeline2])
+        .toArray();
+    } else if (userSpecifiedOrderFilter && userSpecifiedTokenFilter) {
+      totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+      orderEvents = await this.connection
+        .collection('order_events')
+        .aggregate([{ $match: matchOrder }, ...pipeline1])
+        .toArray();
+
+      totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+      tokenEvents = await this.connection
+        .collection('token_events')
+        .aggregate([{ $match: matchToken }, ...pipeline2])
+        .toArray();
+    } else {
+      if (userSpecifiedTokenFilter) {
+        totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
+        tokenEvents = await this.connection
+          .collection('token_events')
+          .aggregate([{ $match: matchToken }, ...pipeline2])
+          .toArray();
+      } else {
+        totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
+        orderEvents = await this.connection
+          .collection('order_events')
+          .aggregate([{ $match: matchOrder }, ...pipeline1])
+          .toArray();
+      }
+    }
+
+    const events = [...orderEvents, ...tokenEvents];
+    const data = events
+      .sort((a, b) => {
+        return sort === 1 ? a.timestamp - b.timestamp : b.timestamp - a.timestamp;
+      })
+      .splice(pageSize * (pageNum - 1), pageSize);
+
+    data.forEach((item) => {
+      let eventTypeName = '';
+      if (item.order) {
+        switch (item.eventType) {
+          case OrderEventType.OrderForSale:
+            eventTypeName = 'CreateOrderForSale';
+            break;
+          case OrderEventType.OrderForAuction:
+            eventTypeName = 'CreateOrderForAuction';
+            break;
+          case OrderEventType.OrderBid:
+            eventTypeName = 'BidForOrder';
+            break;
+          case OrderEventType.OrderCancelled:
+            eventTypeName = 'CancelOrder';
+            break;
+          case OrderEventType.OrderPriceChanged:
+            eventTypeName = 'ChangeOrderPrice';
+            break;
+          case OrderEventType.OrderFilled:
+            eventTypeName = 'BuyOrder';
+            break;
+        }
+      } else {
+        if (item.from === Constants.BURN_ADDRESS) {
+          eventTypeName = 'Mint';
+        } else if (item.to === Constants.BURN_ADDRESS) {
+          eventTypeName = 'Burn';
+        } else {
+          eventTypeName = 'SafeTransferFrom';
+        }
+      }
+
+      item.eventTypeName = eventTypeName;
+    });
+
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: { data, total: totalToken + totalOrder },
+    };
   }
 
-  async getIncomeOfUser(address: string, type: IncomeType) {
+  async getIncomesOfUser(address: string, type: IncomeType) {
     const data = await this.connection
       .collection('user_income_records')
       .find({ address, type })

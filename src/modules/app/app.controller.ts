@@ -5,7 +5,6 @@ import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Category, Chain, OrderTag } from '../utils/enums';
 import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
 import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
-import { QueryTransactionsOfUserDTO } from './dto/QueryTransactionsOfUserDTO';
 import { IncomeType } from '../tasks/interfaces';
 
 @Controller()
@@ -341,15 +340,29 @@ export class AppController {
   }
 
   @Get('/listTransactionsOfUser')
-  async listTransactionsOfUser(@Body() dto: QueryTransactionsOfUserDTO): Promise<CommonResponse> {
-    return await this.appService.listTransactionsOfUser(dto);
+  async listTransactionsOfUser(
+    @Query('walletAddr') walletAddr: string,
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
+    @Query('eventType') eventType: string = 'all',
+    @Query('performer') performer: string = 'By',
+    @Query('sort', ParseIntPipe) sort: 1 | -1 = -1,
+  ): Promise<CommonResponse> {
+    return await this.appService.listTransactionsOfUser(
+      walletAddr,
+      pageNum,
+      pageSize,
+      eventType,
+      performer,
+      sort,
+    );
   }
 
-  @Get('/getIncomeOfUser')
-  async getIncomeOfUser(
+  @Get('/getIncomesOfUser')
+  async getIncomesOfUser(
     @Query('walletAddr') walletAddr: string,
     @Query('type', ParseIntPipe) type: IncomeType = IncomeType.Royalty,
   ): Promise<CommonResponse> {
-    return await this.appService.getIncomeOfUser(walletAddr, type);
+    return await this.appService.getIncomesOfUser(walletAddr, type);
   }
 }
