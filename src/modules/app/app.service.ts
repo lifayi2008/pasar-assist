@@ -968,7 +968,8 @@ export class AppService {
           eventTypes.includes('SafeTransferFromWithMemo')
         ) {
           userSpecifiedTokenFilter = true;
-          const addresses = this.getAllPasarAddress().push(Constants.BURN_ADDRESS);
+          const addresses = this.getAllPasarAddress();
+          addresses.push(Constants.BURN_ADDRESS);
           matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
         }
       }
@@ -1212,7 +1213,8 @@ export class AppService {
           eventTypes.includes('SafeTransferFromWithMemo')
         ) {
           userSpecifiedTokenFilter = true;
-          const addresses = this.getAllPasarAddress().push(Constants.BURN_ADDRESS);
+          const addresses = this.getAllPasarAddress();
+          addresses.push(Constants.BURN_ADDRESS);
           matchToken['$or'].push({ from: { $nin: addresses }, to: { $nin: addresses } });
         }
       }
@@ -1972,7 +1974,8 @@ export class AppService {
     performer: string,
     sort: 1 | -1,
   ) {
-    const addresses = this.getAllPasarAddress().push(Constants.BURN_ADDRESS);
+    const addresses = this.getAllPasarAddress();
+    addresses.push(Constants.BURN_ADDRESS);
 
     const matchOrder = { $or: [{ buyer: walletAddr }, { seller: walletAddr }] };
     let matchToken: { $or?: any; from?: string; to?: string } = {
