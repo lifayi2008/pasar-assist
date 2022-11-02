@@ -6,6 +6,7 @@ import { Category, Chain, OrderTag } from '../utils/enums';
 import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
 import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
 import { QueryTransactionsOfUserDTO } from './dto/QueryTransactionsOfUserDTO';
+import { IncomeType } from '../tasks/interfaces';
 
 @Controller()
 export class AppController {
@@ -342,5 +343,13 @@ export class AppController {
   @Get('/listTransactionsOfUser')
   async listTransactionsOfUser(@Body() dto: QueryTransactionsOfUserDTO): Promise<CommonResponse> {
     return await this.appService.listTransactionsOfUser(dto);
+  }
+
+  @Get('/getIncomeOfUser')
+  async getIncomeOfUser(
+    @Query('walletAddr') walletAddr: string,
+    @Query('type', ParseIntPipe) type: IncomeType = IncomeType.Royalty,
+  ): Promise<CommonResponse> {
+    return await this.appService.getIncomeOfUser(walletAddr, type);
   }
 }

@@ -13,7 +13,7 @@ import { Constants } from '../../constants';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { Cache } from 'cache-manager';
-import { OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
+import { IncomeType, OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
 import { Category, Chain, OrderTag } from '../utils/enums';
 import { ConfigContract } from '../../config/config.contract';
@@ -1967,5 +1967,14 @@ export class AppService {
 
   async listTransactionsOfUser(dto: QueryTransactionsOfUserDTO) {
     return undefined;
+  }
+
+  async getIncomeOfUser(address: string, type: IncomeType) {
+    const data = await this.connection
+      .collection('user_income_records')
+      .find({ address, type })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 }
