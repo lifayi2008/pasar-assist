@@ -9,6 +9,7 @@ import { STICKER_ABI } from '../../contracts/StickerABI';
 import { REGISTER_ABI } from '../../contracts/RegisterABI';
 import { PASAR_V1_ABI } from '../../contracts/PasarV1ABI';
 import { STICKER_V1_ABI } from '../../contracts/StickerV1ABI';
+import { DIA_TOKEN_ABI } from '../../contracts/DIATokenABI';
 
 @Injectable()
 export class Web3Service {
@@ -20,6 +21,8 @@ export class Web3Service {
   public stickerContractRPC: [] = [];
   public pasarContractRPC: [] = [];
   public registerContractRPC: [] = [];
+
+  public diaContractRPC;
 
   constructor(private configService: ConfigService) {
     const env = this.configService.get('NETWORK');
@@ -172,6 +175,11 @@ export class Web3Service {
     this.stickerContractRPC[Chain.V1] = new this.web3RPC[Chain.V1].eth.Contract(
       STICKER_V1_ABI,
       ConfigContract[env][Chain.V1].stickerContract,
+    );
+
+    this.diaContractRPC = new this.web3RPC[Chain.ELA].eth.Contract(
+      DIA_TOKEN_ABI,
+      ConfigContract[env][Chain.ELA].diaContract,
     );
   }
 

@@ -235,7 +235,7 @@ export class DbService {
   async updateCollectionStatisticsInfo(
     token: string,
     chain: string,
-    param: { tradeVolume: number; lowestPrice: number; owners: number; items: number },
+    param: { tradeVolume: number; lowestPrice: number; owners: number; items: number; dia: number },
   ) {
     return await this.connection
       .collection('collections')
