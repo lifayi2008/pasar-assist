@@ -1,18 +1,25 @@
-import { BadRequestException, CACHE_MANAGER, HttpStatus, Inject, Injectable, Logger } from "@nestjs/common";
-import { Web3Service } from "../utils/web3.service";
-import { ConfigService } from "@nestjs/config";
-import { DbService } from "../database/db.service";
-import { Constants } from "../../constants";
-import { InjectConnection } from "@nestjs/mongoose";
-import { Connection } from "mongoose";
-import { Cache } from "cache-manager";
-import { OrderEventType, OrderState, OrderType } from "../tasks/interfaces";
-import { QueryLatestBidsDTO } from "./dto/QueryLatestBidsDTO";
-import { Category, Chain, OrderTag } from "../utils/enums";
-import { ConfigContract } from "../../config/config.contract";
-import { QueryMarketplaceDTO } from "./dto/QueryMarketplaceDTO";
-import { QueryCollectibleOfCollectionDTO } from "./dto/QueryCollectibleOfCollectionDTO";
-import { QueryTransactionsOfUserDTO } from "./dto/QueryTransactionsOfUserDTO";
+import {
+  BadRequestException,
+  CACHE_MANAGER,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
+import { Web3Service } from '../utils/web3.service';
+import { ConfigService } from '@nestjs/config';
+import { DbService } from '../database/db.service';
+import { Constants } from '../../constants';
+import { InjectConnection } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
+import { Cache } from 'cache-manager';
+import { OrderEventType, OrderState, OrderType } from '../tasks/interfaces';
+import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
+import { Category, Chain, OrderTag } from '../utils/enums';
+import { ConfigContract } from '../../config/config.contract';
+import { QueryMarketplaceDTO } from './dto/QueryMarketplaceDTO';
+import { QueryCollectibleOfCollectionDTO } from './dto/QueryCollectibleOfCollectionDTO';
+import { QueryTransactionsOfUserDTO } from './dto/QueryTransactionsOfUserDTO';
 
 @Injectable()
 export class AppService {
