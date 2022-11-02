@@ -678,7 +678,7 @@ export class AppService {
     pageSize: number,
     type: Chain | 'all',
     category: Category | 'all',
-    sort: string,
+    sort: number,
   ) {
     const filter = {};
     if (type !== 'all') {
@@ -686,6 +686,40 @@ export class AppService {
     }
     if (category !== 'all') {
       filter['data.category'] = category;
+    }
+
+    let sortObj;
+    switch (sort) {
+      case 0:
+        sortObj = { dia: -1 };
+        break;
+      case 1:
+        sortObj = { blockNumber: -1 };
+        break;
+      case 2:
+        sortObj = { blockNumber: 1 };
+        break;
+      case 3:
+        sortObj = { tradingVolume: 1 };
+        break;
+      case 4:
+        sortObj = { tradingVolume: -1 };
+        break;
+      case 5:
+        sortObj = { items: 1 };
+        break;
+      case 6:
+        sortObj = { items: -1 };
+        break;
+      case 7:
+        sortObj = { owners: 1 };
+        break;
+      case 8:
+        sortObj = { owners: -1 };
+        break;
+      default:
+        sortObj = { dia: -1 };
+        break;
     }
 
     const total = await this.connection.collection('collections').countDocuments(filter);
@@ -696,7 +730,7 @@ export class AppService {
       data = await this.connection
         .collection('collections')
         .find(filter)
-        .sort({ statics: -1 })
+        .sort(sortObj)
         .skip((pageNum - 1) * pageSize)
         .limit(pageSize)
         .toArray();

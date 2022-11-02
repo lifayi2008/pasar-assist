@@ -206,7 +206,7 @@ export class AppController {
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('chain') type: Chain | 'all' = 'all',
     @Query('category') category: Category | 'all' = 'all',
-    @Query('sort') sort: string = '',
+    @Query('sort') sort: number = 0,
   ): Promise<CommonResponse> {
     return await this.appService.listCollections(pageNum, pageSize, type, category, sort);
   }
