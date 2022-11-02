@@ -177,9 +177,9 @@ export class Web3Service {
       ConfigContract[env][Chain.V1].stickerContract,
     );
 
-    this.diaContractRPC = new this.web3RPC[Chain.ELA].eth.Contract(
+    this.diaContractRPC = new this.web3RPC[Chain.V1].eth.Contract(
       DIA_TOKEN_ABI,
-      ConfigContract[env][Chain.ELA].diaTokenContract,
+      ConfigContract[env][Chain.V1].diaTokenContract,
     );
   }
 
