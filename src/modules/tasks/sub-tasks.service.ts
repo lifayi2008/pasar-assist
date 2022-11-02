@@ -341,7 +341,7 @@ export class SubTasksService {
       },
     ];
 
-    if (contractOrderInfo.royaltyOwners.length > 0) {
+    if (contractOrderInfo.royaltyOwners && contractOrderInfo.royaltyOwners.length > 0) {
       const royaltyOwners = contractOrderInfo.royaltyOwners;
       for (let i = 0; i < royaltyOwners.length; i++) {
         records.push({
