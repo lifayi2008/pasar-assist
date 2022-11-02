@@ -109,7 +109,7 @@ export class TasksCommonService {
         collection.token,
         collection.chain,
       );
-      const dia = await this.web3Service.diaContractRPC.methods.balanceOf(collection.token).call();
+      const dia = await this.web3Service.diaContractRPC.methods.balanceOf(collection.owner).call();
 
       await this.dbService.updateCollectionStatisticsInfo(collection.token, collection.chain, {
         items,
