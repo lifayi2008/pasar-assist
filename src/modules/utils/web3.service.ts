@@ -179,7 +179,7 @@ export class Web3Service {
 
     this.diaContractRPC = new this.web3RPC[Chain.ELA].eth.Contract(
       DIA_TOKEN_ABI,
-      ConfigContract[env][Chain.ELA].diaContract,
+      ConfigContract[env][Chain.ELA].diaTokenContract,
     );
   }
 
