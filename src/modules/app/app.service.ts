@@ -1732,7 +1732,7 @@ export class AppService {
       .countDocuments({ tokenOwner: address });
     const sold = await this.connection
       .collection('orders')
-      .countDocuments({ sellerAddr: address, OrderState: OrderState.Filled });
+      .countDocuments({ sellerAddr: address, orderState: OrderState.Filled });
     const minted = await this.connection
       .collection('tokens')
       .countDocuments({ royaltyOwner: address });
@@ -1978,14 +1978,11 @@ export class AppService {
       .countDocuments({ royaltyOwner: address });
     const sold = await this.connection
       .collection('orders')
-      .countDocuments({ sellerAddr: address, OrderState: OrderState.Filled });
+      .countDocuments({ sellerAddr: address, orderState: OrderState.Filled });
     const purchased = await this.connection.collection('orders').countDocuments({
       buyerAddr: address,
-      OrderState: OrderState.Filled,
+      orderState: OrderState.Filled,
     });
-
-    this.logger.warn('purchased', purchased);
-    this.logger.warn('sold', sold);
 
     const transactionsToken = await this.connection
       .collection('token_events')
