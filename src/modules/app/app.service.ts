@@ -2098,16 +2098,10 @@ export class AppService {
     let orderEvents = [];
     let tokenEvents = [];
 
-    if (!userSpecifiedOrderFilter && !userSpecifiedTokenFilter) {
-      totalOrder = await this.connection.collection('order_events').countDocuments();
-      orderEvents = await this.connection.collection('order_events').aggregate(pipeline1).toArray();
-
-      totalToken = await this.connection.collection('token_events').countDocuments(matchToken);
-      tokenEvents = await this.connection
-        .collection('token_events')
-        .aggregate([{ $match: matchToken }, ...pipeline2])
-        .toArray();
-    } else if (userSpecifiedOrderFilter && userSpecifiedTokenFilter) {
+    if (
+      (!userSpecifiedOrderFilter && !userSpecifiedTokenFilter) ||
+      (userSpecifiedOrderFilter && userSpecifiedTokenFilter)
+    ) {
       totalOrder = await this.connection.collection('order_events').countDocuments(matchOrder);
       orderEvents = await this.connection
         .collection('order_events')
