@@ -606,7 +606,7 @@ export class AppService {
       .limit(3)
       .toArray();
 
-    const data = [];
+    const tokenIds = [];
     for (const collection of collections) {
       const result = await this.connection
         .collection('orders')
@@ -616,10 +616,19 @@ export class AppService {
           orderState: OrderState.Created,
         })
         .sort({ createTime: -1 })
-        .limit(3)
+        .limit(5)
         .toArray();
-      data.push(...result);
+
+      tokenIds.push(
+        ...result.map((item) => ({
+          tokenId: item.tokenId,
+          chain: item.chain,
+          contract: item.baseToken,
+        })),
+      );
     }
+
+    const data = await this.connection.collection('tokens').find({ $or: tokenIds }).toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
