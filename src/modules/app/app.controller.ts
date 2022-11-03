@@ -56,69 +56,6 @@ export class AppController {
     return await this.appService.getDidByAddress(address);
   }
 
-  @Get('/listStickers')
-  async listStickers(
-    @Query('pageNum') pageNum: number,
-    @Query('pageSize') pageSize: number,
-    @Query('timeOrder') timeOrder: number = -1,
-  ): Promise<CommonResponse> {
-    return await this.appService.listStickers(pageNum, pageSize, timeOrder);
-  }
-
-  @Get('/search/:key')
-  async search(@Query('key') key: string): Promise<CommonResponse> {
-    return await this.appService.search(key);
-  }
-
-  @Get('/listTrans')
-  async listTrans(
-    @Query('pageNum') pageNum: number,
-    @Query('pageSize') pageSize: number,
-    @Query('timeOrder') timeOrder: number = -1,
-  ): Promise<CommonResponse> {
-    return await this.appService.listTrans(pageNum, pageSize, timeOrder);
-  }
-
-  @Get('/getNftPriceByTokenId/:tokenId/:baseToken')
-  async getNftPriceByTokenId(
-    @Query('tokenId') tokenId: string,
-    @Query('baseToken') baseToken: string,
-  ): Promise<CommonResponse> {
-    return await this.appService.getNftPriceByTokenId(tokenId, baseToken);
-  }
-
-  @Get('/getTranDetailsByTokenId')
-  async getTranDetailsByTokenId(
-    @Query('tokenId') tokenId: string,
-    @Query('baseToken') baseToken: string,
-    @Query('timeOrder') timeOrder: number = -1,
-  ): Promise<CommonResponse> {
-    return await this.appService.getTranDetailsByTokenId(tokenId, baseToken, timeOrder);
-  }
-
-  @Get('/getCollectibleByTokenId/:tokenId/:baseToken')
-  async getCollectibleByTokenId(
-    @Query('tokenId') tokenId: string,
-    @Query('baseToken') baseToken: string,
-  ): Promise<CommonResponse> {
-    return await this.appService.getCollectibleByTokenId(tokenId, baseToken);
-  }
-
-  @Get('/getTotalRoyaltyandTotalSaleByWalletAddr/:walletAddr')
-  async getTotalRoyaltyAndTotalSaleByWalletAddr(
-    @Query('walletAddr') walletAddr: string,
-    @Query('type') type: number = 0,
-  ): Promise<CommonResponse> {
-    return await this.appService.getTotalRoyaltyAndTotalSaleByWalletAddr(walletAddr);
-  }
-
-  @Get('/getStastisDataByWalletAddr/:walletAddr')
-  async getStatisticDataByWalletAddr(
-    @Query('walletAddr') walletAddr: string,
-  ): Promise<CommonResponse> {
-    return await this.appService.getStatisticDataByWalletAddr(walletAddr);
-  }
-
   @Get('/getRecentOnSale')
   async getRecentOnSale(): Promise<CommonResponse> {
     return await this.appService.getRecentOnSale();
