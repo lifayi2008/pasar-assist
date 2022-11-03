@@ -1984,6 +1984,9 @@ export class AppService {
       OrderState: OrderState.Filled,
     });
 
+    this.logger.warn('purchased', purchased);
+    this.logger.warn('sold', sold);
+
     const transactionsToken = await this.connection
       .collection('token_events')
       .countDocuments({ $or: [{ from: address }, { to: address }] });
