@@ -119,6 +119,11 @@ export class AppController {
     return await this.appService.getStatisticDataByWalletAddr(walletAddr);
   }
 
+  @Get('/getRecentOnSale')
+  async getRecentOnSale(): Promise<CommonResponse> {
+    return await this.appService.getRecentOnSale();
+  }
+
   @Get('/listCollectibles')
   async listCollectibles(
     @Query('pageNum', ParseIntPipe) pageNum: number = 1,

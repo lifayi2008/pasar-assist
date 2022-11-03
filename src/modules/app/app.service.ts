@@ -598,6 +598,32 @@ export class AppService {
     };
   }
 
+  async getRecentOnSale() {
+    const collections = await this.connection
+      .collection('collections')
+      .find()
+      .sort({ dia: -1 })
+      .limit(3)
+      .toArray();
+
+    const data = [];
+    for (const collection of collections) {
+      const result = await this.connection
+        .collection('orders')
+        .find({
+          baseToken: collection.token,
+          chain: collection.chain,
+          orderState: OrderState.Created,
+        })
+        .sort({ createTime: -1 })
+        .limit(3)
+        .toArray();
+      data.push(...result);
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
   async listCollectibles(pageNum: number, pageSize: number, type: string, after: number) {
     const match = {};
     if (type !== '') {
