@@ -385,6 +385,7 @@ export class AppService {
       .toArray();
 
     const tokenIds = [];
+    const collectionNames = {};
     for (const collection of collections) {
       const result = await this.connection
         .collection('orders')
@@ -397,6 +398,8 @@ export class AppService {
         .limit(5)
         .toArray();
 
+      collectionNames[collection.token] = collection.name;
+
       tokenIds.push(
         ...result.map((item) => ({
           tokenId: item.tokenId,
@@ -407,6 +410,10 @@ export class AppService {
     }
 
     const data = await this.connection.collection('tokens').find({ $or: tokenIds }).toArray();
+
+    for (const item of data) {
+      item.collectionName = collectionNames[item.contract];
+    }
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
