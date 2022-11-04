@@ -398,7 +398,7 @@ export class AppService {
         .limit(5)
         .toArray();
 
-      collectionNames[collection.token] = collection.name;
+      collectionNames[collection.token + collection.chain] = collection.name;
 
       tokenIds.push(
         ...result.map((item) => ({
@@ -412,7 +412,7 @@ export class AppService {
     const data = await this.connection.collection('tokens').find({ $or: tokenIds }).toArray();
 
     for (const item of data) {
-      item.collectionName = collectionNames[item.contract];
+      item.collectionName = collectionNames[item.contract + item.chain];
     }
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
@@ -1794,6 +1794,7 @@ export class AppService {
     pageSize: number,
     eventType: string,
     performer: string,
+    keyword: string,
     sort: 1 | -1,
   ) {
     const addresses = this.getAllPasarAddress();

@@ -288,6 +288,7 @@ export class AppController {
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('eventType') eventType: string = 'all',
     @Query('performer') performer: string = 'By',
+    @Query('keyword') keyword: string = '',
     @Query('sort', ParseIntPipe) sort: 1 | -1 = -1,
   ): Promise<CommonResponse> {
     return await this.appService.listTransactionsOfUser(
@@ -296,6 +297,7 @@ export class AppController {
       pageSize,
       eventType,
       performer,
+      keyword,
       sort,
     );
   }
