@@ -28,7 +28,7 @@ export class Web3Service {
     const env = this.configService.get('NETWORK');
 
     const options = {
-      //timeout: 30000, // ms
+      timeout: 30000, // ms
       // Useful for credentialed urls, e.g: ws://username:password@localhost:8546
       //headers: {
       //    authorization: 'Basic username:password'
