@@ -143,7 +143,6 @@ export enum OrderState {
   Created = 1,
   Filled,
   Cancelled,
-  TakenDown,
 }
 
 export enum IncomeType {
