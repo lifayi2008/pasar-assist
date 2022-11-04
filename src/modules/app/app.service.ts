@@ -430,7 +430,7 @@ export class AppService {
       if (types.includes('listed')) {
         match['$or'].push({ 'order.orderState': OrderState.Created });
       }
-      if (types.includes('sale')) {
+      if (types.includes('sold')) {
         match['$or'].push({ 'order.orderState': OrderState.Filled });
       }
       if (match['$or'].length === 0 || match['$or'].length === 3) {
