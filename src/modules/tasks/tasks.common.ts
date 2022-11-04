@@ -63,6 +63,7 @@ export class TasksCommonService {
             );
           }
         } catch (e) {
+          this.logger.error(e);
           this.logger.error(`Can not get token info from ${tokenUri}`);
           await this.dbService.increaseTokenRetryTimes(token.tokenId, token.chain, token.contract);
         }
