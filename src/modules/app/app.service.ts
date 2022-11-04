@@ -1856,8 +1856,6 @@ export class AppService {
     }
 
     const pipeline1 = [
-      { $sort: { timestamp: sort } },
-      { $limit: pageSize * pageNum },
       {
         $lookup: {
           from: 'orders',
@@ -1888,7 +1886,7 @@ export class AppService {
         },
       },
       { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-    ];
+    ] as any;
 
     const pipeline2 = [
       { $sort: { timestamp: sort } },
@@ -1914,7 +1912,26 @@ export class AppService {
         },
       },
       { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-    ];
+    ] as any;
+
+    if (keyword !== '') {
+      const match = {
+        $match: {
+          $or: [
+            { 'token.royaltyOwner': keyword },
+            { 'token.tokenId': keyword },
+            { 'token.tokenIdHex': keyword },
+            { 'token.tokenOwner': keyword },
+            { 'token.name': { $regex: keyword, $options: 'i' } },
+            { 'token.description': { $regex: keyword, $options: 'i' } },
+          ],
+        },
+      };
+      pipeline1.push(match);
+      pipeline2.push(match);
+    }
+    pipeline1.push({ $sort: { timestamp: sort } }, { $limit: pageSize * pageNum });
+    pipeline2.push({ $sort: { timestamp: sort } }, { $limit: pageSize * pageNum });
 
     let totalOrder = 0;
     let totalToken = 0;
