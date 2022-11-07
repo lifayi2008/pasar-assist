@@ -449,6 +449,8 @@ export class AppService {
           let: { uniqueKey: '$uniqueKey' },
           pipeline: [
             { $sort: { createTime: -1 } },
+            { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' }, doc2: {} } },
+            { $replaceRoot: { newRoot: '$doc' } },
             {
               $match: {
                 $expr: {
@@ -458,6 +460,15 @@ export class AppService {
             },
           ],
           as: 'order',
+        },
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'orders',
+          localField: 'uniqueKey',
+          foreignField: 'uniqueKey',
+          as: 'orders',
         },
       },
     ] as any;
@@ -478,24 +489,24 @@ export class AppService {
       data = await this.connection
         .collection('tokens')
         .aggregate([
-          { $sort: { createTime: -1 } },
+          ...pipeline,
+          { $sort: { 'order.createTime': -1, createTime: -1 } },
           { $skip: (pageNum - 1) * pageSize },
           { $limit: pageSize },
-          ...pipeline,
         ])
         .toArray();
 
-      data.forEach((item) => {
-        const orders = item.order;
-        item.order = orders.length > 0 ? orders[0] : [];
-        orders.forEach((order) => {
+      for (const item of data) {
+        let primarySale = true;
+        for (const order of item.orders) {
           if (order.orderState === OrderState.Filled) {
-            item.primarySale = false;
-            return;
+            primarySale = false;
+            break;
           }
-        });
-        item.primarySale = true;
-      });
+        }
+        item.primarySale = primarySale;
+        item.orders = undefined;
+      }
     }
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
