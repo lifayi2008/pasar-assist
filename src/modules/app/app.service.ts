@@ -449,7 +449,7 @@ export class AppService {
           let: { uniqueKey: '$uniqueKey' },
           pipeline: [
             { $sort: { createTime: -1 } },
-            { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' }, doc2: {} } },
+            { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
             { $replaceRoot: { newRoot: '$doc' } },
             {
               $match: {
