@@ -460,7 +460,6 @@ export class AppService {
           as: 'order',
         },
       },
-      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
     ] as any;
 
     if (Object.keys(match).length > 0) {
