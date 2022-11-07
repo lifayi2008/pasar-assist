@@ -1,4 +1,4 @@
-import { Body, Controller, Get, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { CommonResponse } from '../utils/interfaces';
 import { QueryLatestBidsDTO } from './dto/QueryLatestBidsDTO';
@@ -98,7 +98,7 @@ export class AppController {
     @Query('pageNum', ParseIntPipe) pageNum: number = 1,
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('eventType') eventType: string = '',
-    @Query('sort', ParseIntPipe) sort: 1 | -1 = -1,
+    @Query('sort', new DefaultValuePipe(-1), ParseIntPipe) sort: 1 | -1,
   ): Promise<CommonResponse> {
     return await this.appService.listTransactions(pageNum, pageSize, eventType, sort);
   }
