@@ -66,7 +66,7 @@ export class AppController {
     @Query('pageNum', ParseIntPipe) pageNum: number = 1,
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('type') type: string = '',
-    @Query('after', ParseIntPipe) after: number = 0,
+    @Query('after', new DefaultValuePipe(0), ParseIntPipe) after: number,
   ): Promise<CommonResponse> {
     return await this.appService.listCollectibles(pageNum, pageSize, type, after);
   }
@@ -88,7 +88,7 @@ export class AppController {
   async listNFTs(
     @Query('pageNum', ParseIntPipe) pageNum: number = 1,
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
-    @Query('sort', ParseIntPipe) sort: 1 | -1 = -1,
+    @Query('sort', new DefaultValuePipe(-1), ParseIntPipe) sort: 1 | -1,
   ): Promise<CommonResponse> {
     return await this.appService.listNFTs(pageNum, pageSize, sort);
   }
@@ -109,7 +109,7 @@ export class AppController {
     @Query('tokenId') tokenId: string,
     @Query('baseToken') baseToken: string,
     @Query('eventType') eventType: string = '',
-    @Query('sort', ParseIntPipe) sort: 1 | -1 = -1,
+    @Query('sort', new DefaultValuePipe(-1), ParseIntPipe) sort: 1 | -1,
   ): Promise<CommonResponse> {
     return await this.appService.getTransactionsByToken(chain, tokenId, baseToken, eventType, sort);
   }
@@ -137,7 +137,7 @@ export class AppController {
     @Query('chain') chain: Chain,
     @Query('collection') collection: string,
     @Query('exceptToken') exceptToken: string,
-    @Query('num', ParseIntPipe) num: number = 4,
+    @Query('num', new DefaultValuePipe(4), ParseIntPipe) num: number,
   ): Promise<CommonResponse> {
     return await this.appService.getCollectiblesOfCollection(chain, collection, exceptToken, num);
   }
@@ -148,7 +148,7 @@ export class AppController {
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('chain') type: Chain | 'all' = 'all',
     @Query('category') category: Category | 'all' = 'all',
-    @Query('sort', ParseIntPipe) sort: number = 0,
+    @Query('sort', new DefaultValuePipe(0), ParseIntPipe) sort: number,
   ): Promise<CommonResponse> {
     return await this.appService.listCollections(pageNum, pageSize, type, category, sort);
   }

@@ -449,8 +449,6 @@ export class AppService {
           let: { uniqueKey: '$uniqueKey' },
           pipeline: [
             { $sort: { createTime: -1 } },
-            { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
-            { $replaceRoot: { newRoot: '$doc' } },
             {
               $match: {
                 $expr: {
@@ -481,12 +479,24 @@ export class AppService {
       data = await this.connection
         .collection('tokens')
         .aggregate([
-          ...pipeline,
-          { $sort: { 'order.createTime': -1, createTime: -1 } },
+          { $sort: { createTime: -1 } },
           { $skip: (pageNum - 1) * pageSize },
           { $limit: pageSize },
+          ...pipeline,
         ])
         .toArray();
+
+      data.forEach((item) => {
+        const orders = item.order;
+        item.order = orders.length > 0 ? orders[0] : [];
+        orders.forEach((order) => {
+          if (order.orderState === OrderState.Filled) {
+            item.primarySale = false;
+            return;
+          }
+        });
+        item.primarySale = true;
+      });
     }
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
