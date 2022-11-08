@@ -199,7 +199,7 @@ export class AppController {
   @Get('/getCollectionsByWalletAddr')
   async getCollectionsByWalletAddr(
     @Query('walletAddr') walletAddr: string,
-    @Query('chain') chain: Chain,
+    @Query('chain') chain: Chain | 'all',
   ): Promise<CommonResponse> {
     return await this.appService.getCollectionsByWalletAddr(walletAddr, chain);
   }

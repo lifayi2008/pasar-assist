@@ -1518,11 +1518,12 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
-  async getCollectionsByWalletAddr(walletAddr: string, chain: Chain) {
-    const data = await this.connection
-      .collection('collections')
-      .find({ chain, owner: walletAddr })
-      .toArray();
+  async getCollectionsByWalletAddr(walletAddr: string, chain: Chain | 'all') {
+    const match = { owner: walletAddr };
+    if (chain !== 'all') {
+      match['chain'] = chain;
+    }
+    const data = await this.connection.collection('collections').find(match).toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
