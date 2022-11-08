@@ -10,6 +10,7 @@ import { REGISTER_ABI } from '../../contracts/RegisterABI';
 import { PASAR_V1_ABI } from '../../contracts/PasarV1ABI';
 import { STICKER_V1_ABI } from '../../contracts/StickerV1ABI';
 import { DIA_TOKEN_ABI } from '../../contracts/DIATokenABI';
+import { PASAR_MINING_ABI } from '../../contracts/PasarMiningABI';
 
 @Injectable()
 export class Web3Service {
@@ -22,6 +23,8 @@ export class Web3Service {
   public pasarContractRPC: [] = [];
   public registerContractRPC: [] = [];
 
+  public pasarMiningContractRPC;
+  public pasarMiningContractWS;
   public diaContractRPC;
 
   constructor(private configService: ConfigService) {
@@ -175,6 +178,16 @@ export class Web3Service {
     this.stickerContractRPC[Chain.V1] = new this.web3RPC[Chain.V1].eth.Contract(
       STICKER_V1_ABI,
       ConfigContract[env][Chain.V1].stickerContract,
+    );
+
+    this.pasarMiningContractRPC = new this.web3RPC[Chain.ELA].eth.Contract(
+      PASAR_MINING_ABI,
+      ConfigContract[env][Chain.ELA].pasarMiningContract,
+    );
+
+    this.pasarMiningContractWS = new this.web3WS[Chain.ELA].eth.Contract(
+      PASAR_MINING_ABI,
+      ConfigContract[env][Chain.ELA].pasarMiningContract,
     );
 
     this.diaContractRPC = new this.web3RPC[Chain.V1].eth.Contract(

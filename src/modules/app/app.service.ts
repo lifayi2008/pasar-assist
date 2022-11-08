@@ -298,9 +298,12 @@ export class AppService {
     //     toBlock: 'latest',
     //   })
     //   .then(console.log);
-
-    const fromBlock =
-      ConfigContract[this.configService.get('NETWORK')][Chain.ELA].registerContractDeploy;
+    // const fromBlock =
+    // ConfigContract[this.configService.get('NETWORK')][Chain.ELA].pasarMiningContractDeploy;
+    // this.web3Service.pasarMiningContractWS
+    //   .getPastEvents('RewardsDistribution', { fromBlock, toBlock: 'latest' })
+    //   .then(console.log);
+    // console.log(await this.web3Service.pasarMiningContractRPC.methods.config.call());
     //
     // this.web3Service.stickerContractWS['V1']
     //   .getPastEvents('TransferSingle', {
@@ -308,7 +311,6 @@ export class AppService {
     //     toBlock: fromBlock + 100000,
     //   })
     //   .then(console.log);
-
     // this.web3Service.pasarContractRPC[Chain.ELA].methods.getOrderById(124).call().then(console.log);
     // this.web3Service.registerContractWS[Chain.ELA]
     //   .getPastEvents('TokenRegistered', {
@@ -324,19 +326,16 @@ export class AppService {
     //   .tokenInfo('0xE27934fB3683872e35b8d9E57c30978e1260c614')
     //   .call()
     //   .then(console.log);
-
     // const tokenContract = new this.web3Service.web3RPC[Chain.ELA].eth.Contract(
     //   TOKEN721_ABI,
     //   '0xcB262A92e2E3c8C3590b72A1fDe3c6768EE08B7e',
     // );
     // tokenContract.methods.tokenURI(1).call().then(console.log);
-
     // axios('https://gateway.pinata.cloud/ipfs/QmS9obSyBypporHKvvJTrcymGD21dmz8ofPz73AwyYc1vU').then(
     //   (result) => {
     //     console.log(result.data);
     //   },
     // );
-
     // const [tx, blockInfo] = await this.web3Service.web3BatchRequest(
     //   [
     //     {
@@ -353,11 +352,9 @@ export class AppService {
     //
     // console.log(tx);
     // console.log(blockInfo);
-
     // await tokenContract.methods.symbol().call().then(console.log);
     // await tokenContract.methods.supportsInterface('0x80ac58cd').call().then(console.log);
     // await tokenContract.methods.supportsInterface('0xd9b67a26').call().then(console.log);
-
     // const tokenContract = new this.web3Service.web3WS[Chain.ELA].eth.Contract(
     //   TOKEN721_ABI,
     //   '0xcB262A92e2E3c8C3590b72A1fDe3c6768EE08B7e',

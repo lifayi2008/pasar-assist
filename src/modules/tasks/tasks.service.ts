@@ -15,6 +15,7 @@ import { ConfigContract } from '../../config/config.contract';
 import { Timeout } from '@nestjs/schedule';
 import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
+import { getRewardDistributionInfoModel } from '../common/models/RewardsDistributionInfoModel';
 
 @Injectable()
 export class TasksService {
@@ -1088,5 +1089,76 @@ export class TasksService {
       uri: eventInfo.uri,
       name: eventInfo.name,
     });
+  }
+
+  @Timeout('RewardsDistribution' + Chain.ELA, 60 * 1000)
+  async handleRewardsDistributionEvent() {
+    const nowHeight = await this.rpc.eth.getBlockNumber();
+    const lastHeight = await this.dbService.getRewardsDistributionRecordLastHeight();
+
+    let syncStartBlock = lastHeight;
+
+    if (nowHeight - lastHeight > this.step + 1) {
+      syncStartBlock = nowHeight;
+
+      let fromBlock = lastHeight + 1;
+      let toBlock = fromBlock + this.step;
+
+      while (fromBlock <= nowHeight) {
+        this.logger.log(
+          `Sync [${this.chain}] RewardsDistribution events from [${fromBlock}] to [${toBlock}]`,
+        );
+
+        this.web3Service.pasarMiningContractWS
+          .getPastEvents('RewardsDistribution', {
+            fromBlock,
+            toBlock,
+          })
+          .then((events) => {
+            events.forEach(async (event) => {
+              await this.handleRewardsDistributionEventData(event);
+            });
+          });
+        fromBlock = toBlock + 1;
+        toBlock = fromBlock + this.step > nowHeight ? nowHeight : toBlock + this.step;
+        await Sleep(this.stepInterval);
+      }
+
+      this.logger.log(
+        `Sync [${this.chain}] RewardsDistribution events from [${
+          lastHeight + 1
+        }] to [${nowHeight}] finished ✅☕🚾️️`,
+      );
+    }
+
+    this.logger.log(
+      `Start sync [${this.chain}] RewardsDistribution events from [${syncStartBlock + 1}] 💪💪💪 `,
+    );
+    this.web3Service.pasarMiningContractWS.events
+      .RewardsDistribution({
+        fromBlock: syncStartBlock + 1,
+      })
+      .on('error', (error) => {
+        this.logger.error(error);
+      })
+      .on('data', async (event) => {
+        await this.handleRewardsDistributionEventData(event);
+      });
+  }
+
+  private async handleRewardsDistributionEventData(event: any) {
+    const data = {
+      blockNumber: event.blockNumber,
+      pool: parseInt(event.returnValues.pool),
+      amount: parseInt(event.returnValues.amount),
+      market: event.returnValues.market,
+      buyer: event.returnValues.buyer,
+      seller: event.returnValues.seller,
+      creator: event.returnValues.creator,
+    };
+
+    const RewardsDistributionInfoModel = getRewardDistributionInfoModel(this.connection);
+    const rewardsDistributionInfo = new RewardsDistributionInfoModel(data);
+    await rewardsDistributionInfo.save();
   }
 }

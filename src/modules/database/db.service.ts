@@ -247,4 +247,21 @@ export class DbService {
   ) {
     return this.connection.collection('user_income_records').insertMany(records);
   }
+
+  async getRewardsDistributionRecordLastHeight() {
+    const results = await this.connection
+      .collection('rewards_distribution_records')
+      .find()
+      .sort({ blockNumber: -1 })
+      .limit(1)
+      .toArray();
+
+    if (results.length > 0) {
+      return results[0].blockNumber;
+    } else {
+      return parseInt(
+        ConfigContract[this.configService.get('NETWORK')][Chain.ELA].pasarMiningContractDeploy,
+      );
+    }
+  }
 }
