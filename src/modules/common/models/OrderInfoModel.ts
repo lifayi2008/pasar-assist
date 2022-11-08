@@ -34,6 +34,8 @@ export const OrderInfoSchema = new mongoose.Schema(
     chain: String,
     contract: String,
     uniqueKey: String,
+    buyoutPrice: Number,
+    reservePrice: Number,
   },
   { versionKey: false },
 );

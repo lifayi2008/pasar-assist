@@ -25,7 +25,7 @@ export interface ContractOrderInfo {
   amount: number;
   quoteToken: string;
   price: number;
-  reservedPrice: number;
+  reservePrice: number;
   buyoutPrice: number;
   startTime: number;
   endTime: number;
