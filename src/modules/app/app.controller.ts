@@ -61,6 +61,11 @@ export class AppController {
     return await this.appService.getRecentOnSale();
   }
 
+  @Post('/checkFirstSale')
+  async checkFirstSale(@Body() uniqueKeys: string[]): Promise<CommonResponse> {
+    return await this.appService.checkFirstSale(uniqueKeys);
+  }
+
   @Get('/listCollectibles')
   async listCollectibles(
     @Query('pageNum', ParseIntPipe) pageNum: number = 1,

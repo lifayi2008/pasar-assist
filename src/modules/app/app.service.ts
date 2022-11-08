@@ -2047,4 +2047,60 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
+
+  async checkFirstSale(uniqueKeys: string[]) {
+    const match = [];
+    uniqueKeys.forEach((uniqueKey) => {
+      const [chain, contract, tokenId] = uniqueKey.split('-');
+      match.push({
+        chain,
+        contract,
+        tokenId,
+      });
+    });
+
+    const data = await this.connection
+      .collection('tokens')
+      .aggregate([
+        { $match: { $or: match } },
+        {
+          $lookup: {
+            from: 'orders',
+            let: { uniqueKey: '$uniqueKey' },
+            pipeline: [
+              { $sort: { createTime: -1 } },
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$uniqueKey', '$$uniqueKey'],
+                  },
+                },
+              },
+            ],
+            as: 'orders',
+          },
+        },
+      ])
+      .toArray();
+
+    const result = data.map((item) => {
+      const data = { uniqueKeys: item.uniqueKey, isOnSale: false, isFirstSale: true };
+      if (item.orders.length > 0) {
+        if (item.orders[0].orderState === OrderState.Created) {
+          data.isOnSale = true;
+        }
+
+        item.orders.forEach((order) => {
+          if (order.orderState === OrderState.Filled) {
+            data.isFirstSale = false;
+            return;
+          }
+        });
+      }
+
+      return data;
+    });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
+  }
 }
