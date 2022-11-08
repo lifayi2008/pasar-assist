@@ -2084,7 +2084,13 @@ export class AppService {
       .toArray();
 
     const result = data.map((item) => {
-      const data = { uniqueKeys: item.uniqueKey, isOnSale: false, isFirstSale: true };
+      const data = {
+        chain: item.chain,
+        contract: item.contract,
+        tokenId: item.tokenId,
+        isOnSale: false,
+        isFirstSale: true,
+      };
       if (item.orders.length > 0) {
         if (item.orders[0].orderState === OrderState.Created) {
           data.isOnSale = true;
