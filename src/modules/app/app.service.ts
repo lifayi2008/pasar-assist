@@ -2106,4 +2106,51 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: result };
   }
+
+  async getTokensCount() {
+    const totalCount = await this.connection
+      .collection('tokens')
+      .countDocuments({ tokenOwner: { $ne: Constants.BURN_ADDRESS } });
+    const nativeTokenCount = await this.connection.collection('tokens').countDocuments({
+      contract: ConfigContract[this.configService.get('NETWORK')][Chain.V1].stickerContract,
+      tokenOwner: { $ne: Constants.BURN_ADDRESS },
+    });
+
+    const pasarTokenCount = await this.connection.collection('tokens').countDocuments({
+      contract: ConfigContract[this.configService.get('NETWORK')][Chain.ELA].pasarContract,
+      tokenOwner: { $ne: Constants.BURN_ADDRESS },
+    });
+
+    const ecoTokenCount = await this.connection.collection('tokens').countDocuments({
+      contract: ConfigContract[this.configService.get('NETWORK')][Chain.ELA].ecoContract,
+      tokenOwner: { $ne: Constants.BURN_ADDRESS },
+    });
+
+    return {
+      status: HttpStatus.OK,
+      message: Constants.MSG_SUCCESS,
+      data: {
+        nativeTokenCount,
+        pasarTokenCount,
+        ecoTokenCount,
+        otherTokenCount: totalCount - nativeTokenCount - pasarTokenCount - ecoTokenCount,
+      },
+    };
+  }
+
+  async getPoolRewards() {
+    const data = await this.connection
+      .collection('rewards_distribution_records')
+      .aggregate([
+        {
+          $group: {
+            _id: '$pool',
+            total: { $sum: '$amount' },
+          },
+        },
+      ])
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
 }

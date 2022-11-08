@@ -314,4 +314,14 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.getIncomesOfUser(walletAddr, type);
   }
+
+  @Get('/getTokensCount')
+  async getTokensCount(): Promise<CommonResponse> {
+    return await this.appService.getTokensCount();
+  }
+
+  @Get('/getPoolRewards')
+  async getPoolRewards(): Promise<CommonResponse> {
+    return await this.appService.getPoolRewards();
+  }
 }
