@@ -324,4 +324,12 @@ export class AppController {
   async getPoolRewards(): Promise<CommonResponse> {
     return await this.appService.getPoolRewards();
   }
+
+  @Get('/getBidsHistory')
+  async getBidsHistory(
+    @Query('chain') chain: string,
+    @Query('orderId', ParseIntPipe) orderId: number,
+  ): Promise<CommonResponse> {
+    return await this.appService.getBidsHistory(chain, orderId);
+  }
 }

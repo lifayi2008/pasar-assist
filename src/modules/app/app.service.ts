@@ -2153,4 +2153,14 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
+
+  async getBidsHistory(chain: string, orderId: number) {
+    const data = await this.connection
+      .collection('order_events')
+      .find({ chain, orderId, eventType: OrderEventType.OrderBid })
+      .sort({ timestamp: -1 })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
 }
