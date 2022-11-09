@@ -1461,6 +1461,35 @@ export class AppService {
       match['price'] = priceMatch;
     }
 
+    let sort = {};
+    switch (dto.sort) {
+      case 0:
+        sort = { 'order.createTime': -1 };
+        break;
+      case 1:
+        sort = { createTime: -1 };
+        break;
+      case 2:
+        sort = { 'order.createTime': 1 };
+        break;
+      case 3:
+        sort = { createTime: 1 };
+        break;
+      case 4:
+        sort = { 'order.price': 1 };
+        break;
+      case 5:
+        sort = { 'order.price': -1 };
+        break;
+      case 6:
+        sort = { 'order.endTime': 1 };
+        match['order.endTime'] = { $gt: now };
+        break;
+      default:
+        sort = { createTime: -1 };
+        break;
+    }
+
     const pipeline = [
       {
         $match: {
@@ -1508,7 +1537,7 @@ export class AppService {
         .collection('tokens')
         .aggregate([
           ...pipeline,
-          { $sort: { createTime: -1 } },
+          { $sort: sort },
           { $skip: (dto.pageNum - 1) * dto.pageSize },
           { $limit: dto.pageSize },
         ])

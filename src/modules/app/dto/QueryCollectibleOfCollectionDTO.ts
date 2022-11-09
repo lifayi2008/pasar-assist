@@ -6,7 +6,7 @@ export class QueryCollectibleOfCollectionDTO extends QueryPageDTO {
   collection: string;
   status?: OrderTag[];
   token?: string[];
-  sort?: string;
+  sort?: number;
   minPrice?: number;
   maxPrice?: number;
 }
