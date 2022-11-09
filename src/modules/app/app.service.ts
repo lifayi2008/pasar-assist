@@ -1433,21 +1433,21 @@ export class AppService {
     if (dto.status && dto.status.length > 0 && dto.status.length < 5) {
       match['$or'] = [];
       if (dto.status.includes(OrderTag.BuyNow)) {
-        match['$or'].push({ orderType: OrderType.Sale });
+        match['$or'].push({ 'order.orderType': OrderType.Sale });
       }
       if (dto.status.includes(OrderTag.OnAuction)) {
-        match['$or'].push({ endTime: { $gt: now } });
+        match['$or'].push({ 'order.endTime': { $gt: now } });
       }
       if (dto.status.includes(OrderTag.HasEnded)) {
-        match['$or'].push({ endTime: { $lt: now, $ne: 0 } });
+        match['$or'].push({ 'order.endTime': { $lt: now, $ne: 0 } });
       }
       if (dto.status.includes(OrderTag.HasBids)) {
-        match['$or'].push({ lastBid: { $gt: 0 } });
+        match['$or'].push({ 'order.lastBid': { $gt: 0 } });
       }
     }
 
     if (dto.token && dto.token.length > 0) {
-      match['quoteToken'] = { $in: dto.token };
+      match['order.quoteToken'] = { $in: dto.token };
     }
 
     const priceMatch = {};
@@ -1458,7 +1458,7 @@ export class AppService {
       priceMatch['$lte'] = dto.maxPrice * 1e18;
     }
     if (Object.keys(priceMatch).length > 0) {
-      match['price'] = priceMatch;
+      match['order.price'] = priceMatch;
     }
 
     let sort = {};
