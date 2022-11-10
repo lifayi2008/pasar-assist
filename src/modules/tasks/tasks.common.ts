@@ -52,8 +52,22 @@ export class TasksCommonService {
               properties: tokenInfo.properties ? tokenInfo.properties : {},
               creator: tokenInfo.creator ? tokenInfo.creator : {},
               data: tokenInfo.data ? tokenInfo.data : {},
+              attributes: tokenInfo.attributes ? tokenInfo.attributes : [],
               notGetDetail: false,
             };
+
+            if (tokenInfo.attributes && tokenInfo.attributes.length > 0) {
+              const data = [];
+              for (const attribute of tokenInfo.attributes) {
+                data.push({
+                  chain: token.chain,
+                  collection: token.contract,
+                  key: attribute.trait_type,
+                  value: attribute.value,
+                });
+              }
+              await this.dbService.insertCollectionAttributes(data);
+            }
 
             await this.dbService.updateTokenDetail(
               token.tokenId,

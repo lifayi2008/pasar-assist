@@ -156,6 +156,7 @@ export class DbService {
       version: number;
       notGetDetail: boolean;
       properties: any;
+      attributes: any;
     },
   ) {
     return await this.connection
@@ -263,5 +264,13 @@ export class DbService {
         ConfigContract[this.configService.get('NETWORK')][Chain.ELA].pasarMiningContractDeploy,
       );
     }
+  }
+
+  async insertCollectionAttributes(
+    data: { chain: string; collection: string; key: string; value: string }[],
+  ) {
+    return await this.connection
+      .collection('collection_attributes')
+      .updateMany(data, data, { upsert: true });
   }
 }
