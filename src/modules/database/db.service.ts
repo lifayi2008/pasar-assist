@@ -266,11 +266,9 @@ export class DbService {
     }
   }
 
-  async insertCollectionAttributes(
-    data: { chain: string; collection: string; key: string; value: string }[],
-  ) {
+  async insertCollectionAttribute(chain: string, collection: string, key: string, value: string) {
     return await this.connection
       .collection('collection_attributes')
-      .updateMany(data, data, { upsert: true });
+      .updateOne({ chain, collection, key, value }, { $inc: { count: 1 } }, { upsert: true });
   }
 }

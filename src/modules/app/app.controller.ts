@@ -332,4 +332,12 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.getBidsHistory(chain, orderId);
   }
+
+  @Get('/getAttributesOfCollection')
+  async getAttributesOfCollection(
+    @Query('chain') chain: string,
+    @Query('collection') collection: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getAttributesOfCollection(chain, collection);
+  }
 }

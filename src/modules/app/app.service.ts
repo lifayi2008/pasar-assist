@@ -2193,4 +2193,21 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
+
+  async getAttributesOfCollection(chain: string, collection: string) {
+    const result = await this.connection
+      .collection('collection_attributes')
+      .find({ chain, collection })
+      .toArray();
+
+    const data = {};
+    result.forEach((item) => {
+      if (!data[item.key]) {
+        data[item.key] = {};
+      }
+      data[item.key][item.value] = item.count;
+    });
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
 }

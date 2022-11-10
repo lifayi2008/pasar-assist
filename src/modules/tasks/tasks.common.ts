@@ -57,16 +57,14 @@ export class TasksCommonService {
             };
 
             if (tokenInfo.attributes && tokenInfo.attributes.length > 0) {
-              const data = [];
               for (const attribute of tokenInfo.attributes) {
-                data.push({
-                  chain: token.chain,
-                  collection: token.contract,
-                  key: attribute.trait_type,
-                  value: attribute.value,
-                });
+                await this.dbService.insertCollectionAttribute(
+                  token.chain,
+                  token.contract,
+                  attribute.trait_type,
+                  attribute.value,
+                );
               }
-              await this.dbService.insertCollectionAttributes(data);
             }
 
             await this.dbService.updateTokenDetail(
