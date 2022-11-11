@@ -8,7 +8,7 @@ export class QueryMarketplaceDTO extends QueryPageDTO {
   token: string[];
   adult: boolean;
   sort: number;
-  minPrice: number;
-  maxPrice: number;
+  minPrice?: number;
+  maxPrice?: number;
   type: string;
 }
