@@ -628,7 +628,7 @@ export class AppService {
     if (!dto.adult) {
       matchToken['$or'] = [{ 'token.adult': { $exists: false } }, { 'token.adult': false }];
     }
-    if (dto.type !== 'all') {
+    if (dto.type && dto.type !== 'all') {
       if (dto.type === 'avatar') {
         matchToken['order.type'] = 'avatar';
       } else {
