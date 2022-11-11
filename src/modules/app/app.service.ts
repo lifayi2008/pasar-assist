@@ -602,7 +602,7 @@ export class AppService {
       }
     }
 
-    if (dto.collection && dto.type.length > 0) {
+    if (dto.collection && dto.collection.length > 0) {
       match['baseToken'] = { $in: dto.collection };
     }
 
