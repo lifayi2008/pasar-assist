@@ -40,6 +40,19 @@ export class TasksCommonService {
           );
           this.logger.log(JSON.stringify(tokenInfo));
 
+          const attributes = {};
+          if (tokenInfo.attributes && tokenInfo.attributes.length > 0) {
+            for (const attribute of tokenInfo.attributes) {
+              await this.dbService.insertCollectionAttribute(
+                token.chain,
+                token.contract,
+                attribute.trait_type,
+                attribute.value,
+              );
+              attributes[attribute.trait_type] = attribute.value;
+            }
+          }
+
           const collection = await this.dbService.getCollectionByToken(token.contract, token.chain);
 
           if (tokenInfo) {
@@ -55,20 +68,9 @@ export class TasksCommonService {
               properties: tokenInfo.properties ? tokenInfo.properties : {},
               creator: tokenInfo.creator ? tokenInfo.creator : {},
               data: tokenInfo.data ? tokenInfo.data : {},
-              attributes: tokenInfo.attributes ? tokenInfo.attributes : [],
+              attributes,
               notGetDetail: false,
             };
-
-            if (tokenInfo.attributes && tokenInfo.attributes.length > 0) {
-              for (const attribute of tokenInfo.attributes) {
-                await this.dbService.insertCollectionAttribute(
-                  token.chain,
-                  token.contract,
-                  attribute.trait_type,
-                  attribute.value,
-                );
-              }
-            }
 
             await this.dbService.updateTokenDetail(
               token.tokenId,

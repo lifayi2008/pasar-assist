@@ -1446,6 +1446,13 @@ export class AppService {
       }
     }
 
+    if (dto.attribute && Object.keys(dto.attribute).length > 0) {
+      match['$and'] = [];
+      Object.keys(dto.attribute).forEach((key) => {
+        match['$and'].push({ [`attributes.${key}`]: { $in: dto.attribute[key] } });
+      });
+    }
+
     if (dto.token && dto.token.length > 0) {
       match['order.quoteToken'] = { $in: dto.token };
     }

@@ -9,4 +9,5 @@ export class QueryCollectibleOfCollectionDTO extends QueryPageDTO {
   sort?: number;
   minPrice?: number;
   maxPrice?: number;
+  attribute?: { trait_type: string; value: string[] };
 }
