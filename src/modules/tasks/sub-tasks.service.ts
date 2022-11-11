@@ -290,7 +290,15 @@ export class SubTasksService {
     if (retryTimes >= 3 && uri.includes('/ipfs/')) {
       const ipfsHash = uri.split('/ipfs/')[1];
       const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
-      return (await axios(ipfsUri)).data;
+      return (
+        await axios(ipfsUri, {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
+          },
+          timeout: 30000,
+        })
+      ).data;
     }
 
     if (uri.startsWith('https://')) {
@@ -300,6 +308,7 @@ export class SubTasksService {
             'User-Agent':
               'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
           },
+          timeout: 30000,
         })
       ).data;
     }

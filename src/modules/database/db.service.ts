@@ -137,7 +137,7 @@ export class DbService {
       .collection('tokens')
       .find({ notGetDetail: true, retryTimes: { $lt: 5 } })
       .sort({ createTime: 1 })
-      .limit(5)
+      .limit(10)
       .toArray();
   }
 
