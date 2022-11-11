@@ -276,7 +276,7 @@ export class SubTasksService {
     }
   }
 
-  public async getTokenInfoByUri(uri: string) {
+  public async getTokenInfoByUri(uri: string, retryTimes = 0) {
     if (uri.startsWith('pasar:json') || uri.startsWith('feeds:json')) {
       return await this.getInfoByIpfsUri(uri);
     }
@@ -287,24 +287,21 @@ export class SubTasksService {
       return (await axios(ipfsUri)).data;
     }
 
+    if (retryTimes >= 3 && uri.includes('/ipfs/')) {
+      const ipfsHash = uri.split('/ipfs/')[1];
+      const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
+      return (await axios(ipfsUri)).data;
+    }
+
     if (uri.startsWith('https://')) {
-      try {
-        return (
-          await axios(encodeURI(uri), {
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
-            },
-          })
-        ).data;
-      } catch (e) {
-        if (uri.includes('/ipfs/')) {
-          const ipfsHash = uri.split('/ipfs/')[1];
-          const ipfsUri = this.configService.get('IPFS_GATEWAY') + ipfsHash;
-          return (await axios(ipfsUri)).data;
-        }
-        throw e;
-      }
+      return (
+        await axios(encodeURI(uri), {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
+          },
+        })
+      ).data;
     }
     return null;
   }

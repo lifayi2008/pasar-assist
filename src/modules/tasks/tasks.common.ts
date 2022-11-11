@@ -34,7 +34,10 @@ export class TasksCommonService {
       for (const token of tokens) {
         const tokenUri = token.tokenUri;
         try {
-          const tokenInfo = await this.subTasksService.getTokenInfoByUri(tokenUri);
+          const tokenInfo = await this.subTasksService.getTokenInfoByUri(
+            tokenUri,
+            token.retryTimes,
+          );
           this.logger.log(JSON.stringify(tokenInfo));
 
           const collection = await this.dbService.getCollectionByToken(token.contract, token.chain);
