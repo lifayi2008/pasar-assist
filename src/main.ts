@@ -9,6 +9,7 @@ async function bootstrap() {
   app.setGlobalPrefix('/api/v1');
   //for testing
   const appService = app.get(AppService);
+  await appService.loadCollectionsInfo();
   await appService.test();
 
   const configService = app.get(ConfigService);
