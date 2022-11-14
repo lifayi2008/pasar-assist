@@ -1291,6 +1291,33 @@ export class AppService {
         .limit(1)
         .toArray();
       data.listed = order.length === 1 && order[0].orderState === OrderState.Created;
+
+      const attributes = await this.connection
+        .collection('collection_attributes')
+        .aggregate([
+          { $match: { chain, collection: contract } },
+          {
+            $group: {
+              _id: '$key',
+              values: { $push: '$value' },
+              counts: { $push: '$count' },
+              total: { $sum: '$count' },
+            },
+          },
+        ])
+        .toArray();
+
+      const attributesCount = {};
+      attributes.forEach((item) => {
+        attributesCount[item._id] = {};
+        item.values.forEach((value, index) => {
+          attributesCount[item._id][value] = item.counts[index] / item.total;
+        });
+      });
+
+      data.attributes.forEach((item) => {
+        item.percentage = attributesCount[item.trait_type][item.value];
+      });
     }
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
