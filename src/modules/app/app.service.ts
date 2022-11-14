@@ -40,7 +40,7 @@ export class AppService {
     const data = await this.connection.collection('collections').find().toArray();
     const collections = {};
     for (const item of data) {
-      collections[`${item.chain}-${item.token}`] = item;
+      collections[`${item.chain}-${item.token}`] = item.name;
     }
 
     await this.cacheManager.set(Constants.CACHE_KEY_COLLECTIONS, JSON.stringify(collections));
@@ -492,6 +492,8 @@ export class AppService {
           { $limit: pageSize },
         ])
         .toArray();
+
+      this.logger.warn(JSON.parse(await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS)));
 
       for (const item of data) {
         let primarySale = true;
