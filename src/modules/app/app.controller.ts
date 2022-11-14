@@ -340,4 +340,11 @@ export class AppController {
   ): Promise<CommonResponse> {
     return await this.appService.getAttributesOfCollection(chain, collection);
   }
+
+  @Get('/getV1MarketNFTByWalletAddr')
+  async getV1MarketNFTByWalletAddr(
+    @Query('walletAddr') walletAddr: string,
+  ): Promise<CommonResponse> {
+    return await this.appService.getV1MarketNFTByWalletAddr(walletAddr);
+  }
 }

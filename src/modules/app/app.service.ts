@@ -2217,4 +2217,14 @@ export class AppService {
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
+
+  async getV1MarketNFTByWalletAddr(walletAddr: string) {
+    const data = await this.connection
+      .collection('orders')
+      .find({ sellerAddr: walletAddr, chain: Chain.V1, orderState: OrderState.Created })
+      .limit(5)
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
 }
