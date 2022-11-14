@@ -475,7 +475,7 @@ export class AppService {
     }
 
     const result = await this.connection
-      .collection('orders')
+      .collection('tokens')
       .aggregate([...pipeline, { $count: 'total' }])
       .toArray();
 
