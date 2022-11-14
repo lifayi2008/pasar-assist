@@ -1291,6 +1291,9 @@ export class AppService {
         .limit(1)
         .toArray();
       data.listed = order.length === 1 && order[0].orderState === OrderState.Created;
+      if (data.listed) {
+        data.listedOn = order[0].createTime;
+      }
 
       const attributes = await this.connection
         .collection('collection_attributes')
