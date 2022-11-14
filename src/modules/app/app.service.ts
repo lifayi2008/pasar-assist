@@ -493,7 +493,7 @@ export class AppService {
         ])
         .toArray();
 
-      this.logger.warn(JSON.parse(await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS)));
+      const collections = JSON.parse(await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS));
 
       for (const item of data) {
         let primarySale = true;
@@ -505,6 +505,8 @@ export class AppService {
         }
         item.primarySale = primarySale;
         item.orders = undefined;
+
+        item.collectionName = collections[item.contract + item.chain].name;
       }
     }
 
