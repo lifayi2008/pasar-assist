@@ -506,7 +506,7 @@ export class AppService {
         item.primarySale = primarySale;
         item.orders = undefined;
 
-        item.collectionName = collections[item.contract + item.chain].name;
+        item.collectionName = collections[`${item.chain}-${item.contract}`].name;
       }
     }
 
