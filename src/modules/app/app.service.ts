@@ -40,7 +40,7 @@ export class AppService {
     const data = await this.connection.collection('collections').find().toArray();
     const collections = {};
     for (const item of data) {
-      collections[`${item.chain}-${item.token}`] = item;
+      collections[`${item.chain}-${item.token}`] = { name: item.name };
     }
 
     await this.cacheManager.set(Constants.CACHE_KEY_COLLECTIONS, JSON.stringify(collections));

@@ -888,6 +888,8 @@ export class TasksEthereum {
     if (!this.subTasksService.checkIsBaseCollection(eventInfo.token, this.chain)) {
       await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain, is721);
     }
+
+    await this.subTasksService.updateCachedCollections(this.chain, eventInfo.token, eventInfo.name);
   }
 
   @Timeout('tokenRoyaltyChanged' + Chain.ETH, 60 * 1000)
@@ -1072,5 +1074,7 @@ export class TasksEthereum {
       uri: eventInfo.uri,
       name: eventInfo.name,
     });
+
+    await this.subTasksService.updateCachedCollections(this.chain, eventInfo.token, eventInfo.name);
   }
 }

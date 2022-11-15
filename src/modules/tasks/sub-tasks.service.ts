@@ -380,4 +380,19 @@ export class SubTasksService {
 
     await this.dbService.insertUserIncomeRecords(records);
   }
+
+  async updateCachedCollections(chain: Chain, token: string, name: string) {
+    const key = `${chain}-${token}`;
+    const cachedCollections = await this.cacheManager.get(Constants.CACHE_KEY_COLLECTIONS);
+    if (cachedCollections) {
+      const collections = JSON.parse(cachedCollections.toString());
+      const collection = collections[key];
+      if (collection) {
+        collection.name = name;
+      } else {
+        collections[key] = { name };
+      }
+      await this.cacheManager.set(Constants.CACHE_KEY_COLLECTIONS, JSON.stringify(collections));
+    }
+  }
 }

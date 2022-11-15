@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { DbService } from '../database/db.service';
 import { Web3Service } from '../utils/web3.service';
 import { InjectConnection } from '@nestjs/mongoose';
@@ -16,6 +16,7 @@ import { Timeout } from '@nestjs/schedule';
 import { getCollectionEventModel } from '../common/models/CollectionEventModel';
 import { TOKEN721_ABI } from '../../contracts/Token721ABI';
 import { getRewardDistributionInfoModel } from '../common/models/RewardsDistributionInfoModel';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class TasksService {
@@ -43,6 +44,7 @@ export class TasksService {
     private dbService: DbService,
     private web3Service: Web3Service,
     @InjectConnection() private readonly connection: Connection,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   @Timeout('transfer' + Chain.ELA, 1000)
@@ -905,6 +907,8 @@ export class TasksService {
     if (!this.subTasksService.checkIsBaseCollection(eventInfo.token, this.chain)) {
       await this.subTasksService.startupSyncCollection(eventInfo.token, this.chain, is721);
     }
+
+    await this.subTasksService.updateCachedCollections(this.chain, eventInfo.token, eventInfo.name);
   }
 
   @Timeout('tokenRoyaltyChanged' + Chain.ELA, 60 * 1000)
@@ -1089,6 +1093,8 @@ export class TasksService {
       uri: eventInfo.uri,
       name: eventInfo.name,
     });
+
+    await this.subTasksService.updateCachedCollections(this.chain, eventInfo.token, eventInfo.name);
   }
 
   @Timeout('RewardsDistribution' + Chain.ELA, 60 * 1000)
