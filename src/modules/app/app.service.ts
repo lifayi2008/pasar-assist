@@ -1293,6 +1293,7 @@ export class AppService {
       data.listed = order.length === 1 && order[0].orderState === OrderState.Created;
       if (data.listed) {
         data.listedOn = order[0].createTime;
+        data.order = order[0];
       }
 
       const attributes = await this.connection
