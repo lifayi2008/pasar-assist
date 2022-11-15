@@ -47,6 +47,99 @@ export class AppService {
     this.logger.log('Load collections information successfully...');
   }
 
+  private static getSortOfToken(sort: number) {
+    let sortObj;
+    switch (sort) {
+      case 0:
+        sortObj = { 'order.createTime': -1 };
+        break;
+      case 1:
+        sortObj = { createTime: -1 };
+        break;
+      case 2:
+        sortObj = { 'order.createTime': 1 };
+        break;
+      case 3:
+        sortObj = { createTime: 1 };
+        break;
+      case 4:
+        sortObj = { 'order.price': 1 };
+        break;
+      case 5:
+        sortObj = { 'order.price': -1 };
+        break;
+      case 6:
+        sortObj = { 'order.endTime': 1 };
+        break;
+      default:
+        sortObj = { 'order.createTime': -1 };
+        break;
+    }
+    return sortObj;
+  }
+
+  private static getSortOfOrder(sort: number) {
+    let sortObj;
+    switch (sort) {
+      case 0:
+        sortObj = { createTime: -1 };
+        break;
+      case 1:
+        sortObj = { 'token.createTime': -1 };
+        break;
+      case 2:
+        sortObj = { createTime: 1 };
+        break;
+      case 3:
+        sortObj = { 'token.createTime': 1 };
+        break;
+      case 4:
+        sortObj = { price: 1 };
+        break;
+      case 5:
+        sortObj = { price: -1 };
+        break;
+      case 6:
+        sortObj = { endTime: 1 };
+        break;
+      default:
+        sortObj = { createTime: -1 };
+        break;
+    }
+    return sortObj;
+  }
+
+  private static getSortOfTokenOrder(sort: number) {
+    let sortObj;
+    switch (sort) {
+      case 0:
+        sortObj = { 'order.createTime': -1 };
+        break;
+      case 1:
+        sortObj = { 'token.createTime': -1 };
+        break;
+      case 2:
+        sortObj = { 'order.createTime': 1 };
+        break;
+      case 3:
+        sortObj = { 'token.createTime': 1 };
+        break;
+      case 4:
+        sortObj = { 'order.price': 1 };
+        break;
+      case 5:
+        sortObj = { 'order.price': -1 };
+        break;
+      case 6:
+        sortObj = { 'order.endTime': 1 };
+        break;
+      default:
+        sortObj = { 'order.createTime': -1 };
+        break;
+    }
+    return sortObj;
+  }
+
   // async getCollectibleByTokenId(tokenId: string) {
   //   const data = await this.connection.collection('tokens').findOne({ tokenId });
   //
@@ -369,7 +462,7 @@ export class AppService {
   }
 
   async getDidByAddress(address: string) {
-    const data = await this.connection.collection('users').findOne({ address });
+    const data = await this.connection.collection('address_did').findOne({ address });
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
@@ -1589,16 +1682,6 @@ export class AppService {
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
-  async getCollectionsByWalletAddr(walletAddr: string, chain: Chain | 'all') {
-    const match = { owner: walletAddr };
-    if (chain !== 'all') {
-      match['chain'] = chain;
-    }
-    const data = await this.connection.collection('collections').find(match).toArray();
-
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
-  }
-
   async getStatisticsByWalletAddr(address: string) {
     const listed = await this.connection
       .collection('orders')
@@ -1626,10 +1709,28 @@ export class AppService {
     };
   }
 
-  async getListedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
-    const match = { sellerAddr: walletAddr, orderState: OrderState.Created };
+  async getCollectionsByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+    const match = { owner: walletAddr };
     if (chain !== 'all') {
       match['chain'] = chain;
+    }
+    const data = await this.connection
+      .collection('collections')
+      .find(match)
+      .sort({ blockNumber: sort === 1 ? -1 : 1 })
+      .toArray();
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+  }
+
+  async getListedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+    const match = { sellerAddr: walletAddr, orderState: OrderState.Created };
+    if (chain !== 'all') {
+      if (chain === Chain.ELA) {
+        match['chain'] = { $in: [Chain.ELA, Chain.V1] };
+      } else {
+        match['chain'] = chain;
+      }
     }
     const data = await this.connection
       .collection('orders')
@@ -1644,17 +1745,21 @@ export class AppService {
           },
         },
         { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+        { $sort: AppService.getSortOfOrder(sort) },
       ])
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getOwnedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+  async getOwnedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
     const match = { tokenOwner: walletAddr };
     if (chain !== 'all') {
-      match['chain'] = chain;
+      if (chain === Chain.ELA) {
+        match['chain'] = { $in: [Chain.ELA, Chain.V1] };
+      } else {
+        match['chain'] = chain;
+      }
     }
     const data = await this.connection
       .collection('tokens')
@@ -1680,16 +1785,20 @@ export class AppService {
           },
         },
         { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
-        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+        { $sort: AppService.getSortOfToken(sort) },
       ])
       .toArray();
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getBidsCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+  async getBidsCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
     const match = { buyer: walletAddr, eventType: OrderEventType.OrderBid };
     if (chain !== 'all') {
-      match['chain'] = chain;
+      if (chain === Chain.ELA) {
+        match['chain'] = { $in: [Chain.ELA, Chain.V1] };
+      } else {
+        match['chain'] = chain;
+      }
     }
     const data = await this.connection
       .collection('order_events')
@@ -1721,16 +1830,20 @@ export class AppService {
           },
         },
         { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-        { $sort: { timestamp: sort === 'asc' ? 1 : -1 } },
+        { $sort: AppService.getSortOfTokenOrder(sort) },
       ])
       .toArray();
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getMintedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+  async getMintedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
     const match = { royaltyOwner: walletAddr, tokenOwner: { $ne: Constants.BURN_ADDRESS } };
     if (chain !== 'all') {
-      match['chain'] = chain;
+      if (chain === Chain.ELA) {
+        match['chain'] = { $in: [Chain.ELA, Chain.V1] };
+      } else {
+        match['chain'] = chain;
+      }
     }
     const data = await this.connection
       .collection('tokens')
@@ -1756,17 +1869,21 @@ export class AppService {
           },
         },
         { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
-        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+        { $sort: AppService.getSortOfToken(sort) },
       ])
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getSoldCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: string) {
+  async getSoldCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
     const match = { seller: walletAddr, orderState: OrderState.Filled };
     if (chain !== 'all') {
-      match['chain'] = chain;
+      if (chain === Chain.ELA) {
+        match['chain'] = { $in: [Chain.ELA, Chain.V1] };
+      } else {
+        match['chain'] = chain;
+      }
     }
     const data = await this.connection
       .collection('orders')
@@ -1781,7 +1898,7 @@ export class AppService {
           },
         },
         { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-        { $sort: { createTime: sort === 'asc' ? 1 : -1 } },
+        { $sort: AppService.getSortOfOrder(sort) },
       ])
       .toArray();
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
