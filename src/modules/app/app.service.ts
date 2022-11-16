@@ -1709,7 +1709,13 @@ export class AppService {
     };
   }
 
-  async getCollectionsByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+  async getCollectionsByWalletAddr(
+    pageNum: number,
+    pageSize: number,
+    walletAddr: string,
+    chain: Chain | 'all',
+    sort: number,
+  ) {
     const match = { owner: walletAddr };
     if (chain !== 'all') {
       match['chain'] = chain;
@@ -1718,12 +1724,20 @@ export class AppService {
       .collection('collections')
       .find(match)
       .sort({ blockNumber: sort === 1 ? -1 : 1 })
+      .skip((pageNum - 1) * pageSize)
+      .limit(pageSize)
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getListedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+  async getListedCollectiblesByWalletAddr(
+    pageNum: number,
+    pageSize: number,
+    walletAddr: string,
+    chain: Chain | 'all',
+    sort: number,
+  ) {
     const match = { sellerAddr: walletAddr, orderState: OrderState.Created };
     if (chain !== 'all') {
       if (chain === Chain.ELA) {
@@ -1746,13 +1760,21 @@ export class AppService {
         },
         { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
         { $sort: AppService.getSortOfOrder(sort) },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
       ])
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getOwnedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+  async getOwnedCollectiblesByWalletAddr(
+    pageNum: number,
+    pageSize: number,
+    walletAddr: string,
+    chain: Chain | 'all',
+    sort: number,
+  ) {
     const match = { tokenOwner: walletAddr };
     if (chain !== 'all') {
       if (chain === Chain.ELA) {
@@ -1786,12 +1808,20 @@ export class AppService {
         },
         { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
         { $sort: AppService.getSortOfToken(sort) },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
       ])
       .toArray();
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getBidsCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+  async getBidsCollectiblesByWalletAddr(
+    pageNum: number,
+    pageSize: number,
+    walletAddr: string,
+    chain: Chain | 'all',
+    sort: number,
+  ) {
     const match = { buyer: walletAddr, eventType: OrderEventType.OrderBid };
     if (chain !== 'all') {
       if (chain === Chain.ELA) {
@@ -1831,12 +1861,20 @@ export class AppService {
         },
         { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
         { $sort: AppService.getSortOfTokenOrder(sort) },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
       ])
       .toArray();
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getMintedCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+  async getMintedCollectiblesByWalletAddr(
+    pageNum: number,
+    pageSize: number,
+    walletAddr: string,
+    chain: Chain | 'all',
+    sort: number,
+  ) {
     const match = { royaltyOwner: walletAddr, tokenOwner: { $ne: Constants.BURN_ADDRESS } };
     if (chain !== 'all') {
       if (chain === Chain.ELA) {
@@ -1870,13 +1908,21 @@ export class AppService {
         },
         { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
         { $sort: AppService.getSortOfToken(sort) },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
       ])
       .toArray();
 
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
   }
 
-  async getSoldCollectiblesByWalletAddr(walletAddr: string, chain: Chain | 'all', sort: number) {
+  async getSoldCollectiblesByWalletAddr(
+    pageNum: number,
+    pageSize: number,
+    walletAddr: string,
+    chain: Chain | 'all',
+    sort: number,
+  ) {
     const match = { seller: walletAddr, orderState: OrderState.Filled };
     if (chain !== 'all') {
       if (chain === Chain.ELA) {
@@ -1899,6 +1945,8 @@ export class AppService {
         },
         { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
         { $sort: AppService.getSortOfOrder(sort) },
+        { $skip: (pageNum - 1) * pageSize },
+        { $limit: pageSize },
       ])
       .toArray();
     return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };

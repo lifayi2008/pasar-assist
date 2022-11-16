@@ -205,56 +205,104 @@ export class AppController {
 
   @Get('/getCollectionsByWalletAddr')
   async getCollectionsByWalletAddr(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('walletAddr') walletAddr: string,
     @Query('chain') chain: Chain | 'all',
     @Query('sort', new DefaultValuePipe(1), ParseIntPipe) sort: number,
   ): Promise<CommonResponse> {
-    return await this.appService.getCollectionsByWalletAddr(walletAddr, chain, sort);
+    return await this.appService.getCollectionsByWalletAddr(
+      pageNum,
+      pageSize,
+      walletAddr,
+      chain,
+      sort,
+    );
   }
 
   @Get('/getListedCollectiblesByWalletAddr')
   async getListedCollectiblesByWalletAddr(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('walletAddr') walletAddr: string,
     @Query('chain') chain: Chain | 'all' = 'all',
     @Query('sort', new DefaultValuePipe(0), ParseIntPipe) sort: number,
   ): Promise<CommonResponse> {
-    return await this.appService.getListedCollectiblesByWalletAddr(walletAddr, chain, sort);
+    return await this.appService.getListedCollectiblesByWalletAddr(
+      pageNum,
+      pageSize,
+      walletAddr,
+      chain,
+      sort,
+    );
   }
 
   @Get('/getOwnedCollectiblesByWalletAddr')
   async getOwnedCollectiblesByWalletAddr(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('walletAddr') walletAddr: string,
     @Query('chain') chain: Chain | 'all' = 'all',
     @Query('sort', new DefaultValuePipe(0), ParseIntPipe) sort: number,
   ): Promise<CommonResponse> {
-    return await this.appService.getOwnedCollectiblesByWalletAddr(walletAddr, chain, sort);
+    return await this.appService.getOwnedCollectiblesByWalletAddr(
+      pageNum,
+      pageSize,
+      walletAddr,
+      chain,
+      sort,
+    );
   }
 
   @Get('/getBidsCollectiblesByWalletAddr')
   async getBidsCollectiblesByWalletAddr(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('walletAddr') walletAddr: string,
     @Query('chain') chain: Chain | 'all' = 'all',
     @Query('sort', new DefaultValuePipe(0), ParseIntPipe) sort: number,
   ): Promise<CommonResponse> {
-    return await this.appService.getBidsCollectiblesByWalletAddr(walletAddr, chain, sort);
+    return await this.appService.getBidsCollectiblesByWalletAddr(
+      pageNum,
+      pageSize,
+      walletAddr,
+      chain,
+      sort,
+    );
   }
 
   @Get('/getMintedCollectiblesByWalletAddr')
   async getMintedCollectiblesByWalletAddr(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('walletAddr') walletAddr: string,
     @Query('chain') chain: Chain | 'all' = 'all',
     @Query('sort', new DefaultValuePipe(0), ParseIntPipe) sort: number,
   ): Promise<CommonResponse> {
-    return await this.appService.getMintedCollectiblesByWalletAddr(walletAddr, chain, sort);
+    return await this.appService.getMintedCollectiblesByWalletAddr(
+      pageNum,
+      pageSize,
+      walletAddr,
+      chain,
+      sort,
+    );
   }
 
   @Get('/getSoldCollectiblesByWalletAddr')
   async getSoldCollectiblesByWalletAddr(
+    @Query('pageNum', ParseIntPipe) pageNum: number = 1,
+    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Query('walletAddr') walletAddr: string,
     @Query('chain') chain: Chain | 'all' = 'all',
     @Query('sort', new DefaultValuePipe(0), ParseIntPipe) sort: number,
   ): Promise<CommonResponse> {
-    return await this.appService.getSoldCollectiblesByWalletAddr(walletAddr, chain, sort);
+    return await this.appService.getSoldCollectiblesByWalletAddr(
+      pageNum,
+      pageSize,
+      walletAddr,
+      chain,
+      sort,
+    );
   }
 
   @Get('/getItems')
