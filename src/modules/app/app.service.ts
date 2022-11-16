@@ -1720,15 +1720,21 @@ export class AppService {
     if (chain !== 'all') {
       match['chain'] = chain;
     }
-    const data = await this.connection
-      .collection('collections')
-      .find(match)
-      .sort({ blockNumber: sort === 1 ? -1 : 1 })
-      .skip((pageNum - 1) * pageSize)
-      .limit(pageSize)
-      .toArray();
 
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+    const total = await this.connection.collection('collections').countDocuments(match);
+
+    let data = [];
+    if (total > 0) {
+      data = await this.connection
+        .collection('collections')
+        .find(match)
+        .sort({ blockNumber: sort === 1 ? -1 : 1 })
+        .skip((pageNum - 1) * pageSize)
+        .limit(pageSize)
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
   async getListedCollectiblesByWalletAddr(
@@ -1746,26 +1752,32 @@ export class AppService {
         match['chain'] = chain;
       }
     }
-    const data = await this.connection
-      .collection('orders')
-      .aggregate([
-        { $match: match },
-        {
-          $lookup: {
-            from: 'tokens',
-            localField: 'uniqueKey',
-            foreignField: 'uniqueKey',
-            as: 'token',
-          },
-        },
-        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-        { $sort: AppService.getSortOfOrder(sort) },
-        { $skip: (pageNum - 1) * pageSize },
-        { $limit: pageSize },
-      ])
-      .toArray();
 
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+    const total = await this.connection.collection('orders').countDocuments(match);
+
+    let data = [];
+    if (total > 0) {
+      data = await this.connection
+        .collection('orders')
+        .aggregate([
+          { $match: match },
+          {
+            $lookup: {
+              from: 'tokens',
+              localField: 'uniqueKey',
+              foreignField: 'uniqueKey',
+              as: 'token',
+            },
+          },
+          { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+          { $sort: AppService.getSortOfOrder(sort) },
+          { $skip: (pageNum - 1) * pageSize },
+          { $limit: pageSize },
+        ])
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
   async getOwnedCollectiblesByWalletAddr(
@@ -1783,36 +1795,43 @@ export class AppService {
         match['chain'] = chain;
       }
     }
-    const data = await this.connection
-      .collection('tokens')
-      .aggregate([
-        { $match: match },
-        {
-          $lookup: {
-            from: 'orders',
-            let: { uniqueKey: '$uniqueKey' },
-            pipeline: [
-              { $sort: { createTime: -1 } },
-              { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
-              { $replaceRoot: { newRoot: '$doc' } },
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$uniqueKey', '$$uniqueKey'],
+
+    const total = await this.connection.collection('tokens').countDocuments(match);
+
+    let data = [];
+    if (total > 0) {
+      data = await this.connection
+        .collection('tokens')
+        .aggregate([
+          { $match: match },
+          {
+            $lookup: {
+              from: 'orders',
+              let: { uniqueKey: '$uniqueKey' },
+              pipeline: [
+                { $sort: { createTime: -1 } },
+                { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+                { $replaceRoot: { newRoot: '$doc' } },
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$uniqueKey', '$$uniqueKey'],
+                    },
                   },
                 },
-              },
-            ],
-            as: 'order',
+              ],
+              as: 'order',
+            },
           },
-        },
-        { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
-        { $sort: AppService.getSortOfToken(sort) },
-        { $skip: (pageNum - 1) * pageSize },
-        { $limit: pageSize },
-      ])
-      .toArray();
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+          { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+          { $sort: AppService.getSortOfToken(sort) },
+          { $skip: (pageNum - 1) * pageSize },
+          { $limit: pageSize },
+        ])
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
   async getBidsCollectiblesByWalletAddr(
@@ -1830,42 +1849,49 @@ export class AppService {
         match['chain'] = chain;
       }
     }
-    const data = await this.connection
-      .collection('order_events')
-      .aggregate([
-        { $match: match },
-        {
-          $lookup: {
-            from: 'orders',
-            let: { orderId: '$orderId', chain: '$chain' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [{ $eq: ['$orderId', '$$orderId'] }, { $eq: ['$chain', '$$chain'] }],
+
+    const total = await this.connection.collection('order_events').countDocuments(match);
+
+    let data = [];
+    if (total > 0) {
+      data = await this.connection
+        .collection('order_events')
+        .aggregate([
+          { $match: match },
+          {
+            $lookup: {
+              from: 'orders',
+              let: { orderId: '$orderId', chain: '$chain' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [{ $eq: ['$orderId', '$$orderId'] }, { $eq: ['$chain', '$$chain'] }],
+                    },
                   },
                 },
-              },
-            ],
-            as: 'order',
+              ],
+              as: 'order',
+            },
           },
-        },
-        { $unwind: { path: '$events', preserveNullAndEmptyArrays: true } },
-        {
-          $lookup: {
-            from: 'tokens',
-            localField: 'order.uniqueKey',
-            foreignField: 'uniqueKey',
-            as: 'token',
+          { $unwind: { path: '$events', preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: 'tokens',
+              localField: 'order.uniqueKey',
+              foreignField: 'uniqueKey',
+              as: 'token',
+            },
           },
-        },
-        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-        { $sort: AppService.getSortOfTokenOrder(sort) },
-        { $skip: (pageNum - 1) * pageSize },
-        { $limit: pageSize },
-      ])
-      .toArray();
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+          { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+          { $sort: AppService.getSortOfTokenOrder(sort) },
+          { $skip: (pageNum - 1) * pageSize },
+          { $limit: pageSize },
+        ])
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
   async getMintedCollectiblesByWalletAddr(
@@ -1883,37 +1909,43 @@ export class AppService {
         match['chain'] = chain;
       }
     }
-    const data = await this.connection
-      .collection('tokens')
-      .aggregate([
-        { $match: match },
-        {
-          $lookup: {
-            from: 'orders',
-            let: { uniqueKey: '$uniqueKey' },
-            pipeline: [
-              { $sort: { createTime: -1 } },
-              { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
-              { $replaceRoot: { newRoot: '$doc' } },
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$uniqueKey', '$$uniqueKey'],
+
+    const total = await this.connection.collection('tokens').countDocuments(match);
+
+    let data = [];
+    if (total > 0) {
+      data = await this.connection
+        .collection('tokens')
+        .aggregate([
+          { $match: match },
+          {
+            $lookup: {
+              from: 'orders',
+              let: { uniqueKey: '$uniqueKey' },
+              pipeline: [
+                { $sort: { createTime: -1 } },
+                { $group: { _id: '$uniqueKey', doc: { $first: '$$ROOT' } } },
+                { $replaceRoot: { newRoot: '$doc' } },
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$uniqueKey', '$$uniqueKey'],
+                    },
                   },
                 },
-              },
-            ],
-            as: 'order',
+              ],
+              as: 'order',
+            },
           },
-        },
-        { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
-        { $sort: AppService.getSortOfToken(sort) },
-        { $skip: (pageNum - 1) * pageSize },
-        { $limit: pageSize },
-      ])
-      .toArray();
+          { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+          { $sort: AppService.getSortOfToken(sort) },
+          { $skip: (pageNum - 1) * pageSize },
+          { $limit: pageSize },
+        ])
+        .toArray();
+    }
 
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
   async getSoldCollectiblesByWalletAddr(
@@ -1931,25 +1963,32 @@ export class AppService {
         match['chain'] = chain;
       }
     }
-    const data = await this.connection
-      .collection('orders')
-      .aggregate([
-        { $match: match },
-        {
-          $lookup: {
-            from: 'tokens',
-            localField: 'uniqueKey',
-            foreignField: 'uniqueKey',
-            as: 'token',
+
+    const total = await this.connection.collection('orders').countDocuments(match);
+
+    let data = [];
+    if (total > 0) {
+      data = await this.connection
+        .collection('orders')
+        .aggregate([
+          { $match: match },
+          {
+            $lookup: {
+              from: 'tokens',
+              localField: 'uniqueKey',
+              foreignField: 'uniqueKey',
+              as: 'token',
+            },
           },
-        },
-        { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
-        { $sort: AppService.getSortOfOrder(sort) },
-        { $skip: (pageNum - 1) * pageSize },
-        { $limit: pageSize },
-      ])
-      .toArray();
-    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
+          { $unwind: { path: '$token', preserveNullAndEmptyArrays: true } },
+          { $sort: AppService.getSortOfOrder(sort) },
+          { $skip: (pageNum - 1) * pageSize },
+          { $limit: pageSize },
+        ])
+        .toArray();
+    }
+
+    return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data: { data, total } };
   }
 
   async getItems() {
