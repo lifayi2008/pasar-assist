@@ -140,24 +140,6 @@ export class AppService {
     return sortObj;
   }
 
-  // async getCollectibleByTokenId(tokenId: string) {
-  //   const data = await this.connection.collection('tokens').findOne({ tokenId });
-  //
-  //   if (data) {
-  //     const authorData = await this.cacheManager.get(data.royaltyOwner.toLowerCase());
-  //     if (authorData) {
-  //       data.authorAvatar = JSON.parse(authorData as string).avatar;
-  //     }
-  //
-  //     const ownerData = await this.cacheManager.get(data.tokenOwner.toLowerCase());
-  //     if (ownerData) {
-  //       data.holderName = JSON.parse(ownerData as string).name;
-  //     }
-  //   }
-  //
-  //   return { status: HttpStatus.OK, message: Constants.MSG_SUCCESS, data };
-  // }
-
   async getTokenOrderByTokenId(tokenId: string) {
     const result = await this.connection
       .collection('tokens')
